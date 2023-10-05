@@ -37,11 +37,13 @@ plot_hr_generic = function(hazard_ctrl, hazard_trt,
 #'   group before onset of the effect.
 #' @param hazard_trt (`numeric(1)`)\cr
 #'   True hazard rate of the treatment group after onset of the effect.
+#' @param delay (`numeric(1)`)\cr
+#'   The delay time until the treatment effect enters.
 #' @param xlab,ylab,... See `plot_hr_generic()`.
 #' 
 #' @export
 plot_hr_delay = function(hazard_ctrl, hazard_trt, delay,
-                         xlab = "Time", ylab = "Hazard rate",
+                         xlab = "Time", ylab = "Hazard ratio",
                          ...) {
   haz_ctrl = hpch_fun(0, hazard_ctrl)
   haz_trt = hpch_fun(c(0, delay), c(hazard_ctrl, hazard_trt))
@@ -63,7 +65,7 @@ plot_hr_delay = function(hazard_ctrl, hazard_trt, delay,
 #' 
 #' @export
 plot_hr_crossing = function(hazard_ctrl, hazard_trt_before, hazard_trt_after, crosstime,
-                            xlab = "Time", ylab = "Hazard rate",
+                            xlab = "Time", ylab = "Hazard ratio",
                             ...) {
   haz_ctrl = hpch_fun(0, hazard_ctrl)
   haz_trt = hpch_fun(c(0, crosstime), c(hazard_trt_before, hazard_trt_after))

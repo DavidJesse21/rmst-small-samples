@@ -42,6 +42,8 @@ plot_surv_generic = function(surv_ctrl, surv_trt,
 #'   group before onset of the effect.
 #' @param hazard_trt (`numeric(1)`)\cr
 #'   True hazard rate of the treatment group after onset of the effect.
+#' @param delay (`numeric(1)`)\cr
+#'   The delay time until the treatment effect enters.
 #' @param xlab,ylab,... See `plot_surv_generic()`.
 #' 
 #' @export
