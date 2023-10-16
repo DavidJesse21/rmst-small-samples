@@ -1032,6 +1032,17 @@
       ],
       "Hash": "3460beba7ccc8946249ba35327ba902a"
     },
+    "microbenchmark": {
+      "Package": "microbenchmark",
+      "Version": "1.4.10",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "graphics",
+        "stats"
+      ],
+      "Hash": "db81b552e393ed092872cf7023469bc2"
+    },
     "miniPCH": {
       "Package": "miniPCH",
       "Version": "0.2.0",
@@ -1567,6 +1578,16 @@
         "zoo"
       ],
       "Hash": "2367feed5d6f99ee1e380da3eac55ab6"
+    },
+    "survRM2": {
+      "Package": "survRM2",
+      "Version": "1.0-4",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "survival"
+      ],
+      "Hash": "6af75caf3bfa6dd6b0a6ef0fed599478"
     },
     "survival": {
       "Package": "survival",

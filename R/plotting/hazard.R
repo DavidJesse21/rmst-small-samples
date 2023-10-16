@@ -4,8 +4,12 @@ box::use(
   ggsci[scale_color_jco]
 )
 
+box::use(
+  ./utils_mixture[mixture_hazard]
+)
 
-#' Generic function for plotting the true hazard rates of a control and treatment arm
+
+#' Generic function for plotting the true hazards of a control and treatment arm
 #' 
 #' @param hazard_ctrl,hazard_trt (`function()`)\cr
 #'   Hazard functions of the control and treatment arm, respectively.
@@ -35,7 +39,7 @@ plot_hazard_generic = function(hazard_ctrl, hazard_trt,
 }
 
 
-#' Plot true delayed hazard rates
+#' Plot true hazards with a delayed effect in the treatment arm
 #' 
 #' @param hazard_ctrl (`numeric(1)`)\cr
 #'   True hazard rate of the control group throughout the study and of the treatment 
@@ -57,7 +61,7 @@ plot_hazard_delay = function(hazard_ctrl, hazard_trt, delay,
 }
 
 
-#' Plot true crossing hazard rates
+#' Plot true crossing hazards
 #' 
 #' @param hazard_ctrl (`numeric(1)`)\cr
 #'   The (constant) hazards rate of the control arm.
@@ -79,7 +83,39 @@ plot_hazard_crossing = function(hazard_ctrl, hazard_trt_before, hazard_trt_after
 }
 
 
+#' Plot true hazards with a mixture of populations in the treatment arm
+#' 
+#' @param hazard_ctrl (`numeric(1)`)\cr
+#'   The (constant) hazards rate of the control arm.
+#' @param hazard_trt,hazard_subgroup (`numeric(1)`)\cr
+#'   Hazard rates in the treatment arm for the two subgroups.
+#' @param prevalence (`numeric(1)`)\cr
+#'   Prevalence of the subgroup as a relative fraction (between 0 and 1).
+#' @param xlab,ylab,... See `plot_hazard_generic()`.
+#' 
+#' @references 
+#' Ristl, Robin, Nicolás M Ballarini, Heiko Götte, Armin Schüler, Martin Posch, and Franz König. 
+#' „Delayed treatment effects, treatment switching and heterogeneous patient populations: How to design and analyze RCTs in oncology“.
+#' Pharmaceutical Statistics 20, Nr. 1 (2021): 129–45. https://doi.org/10.1002/pst.2062.
+#' 
+#' @export
+plot_hazard_subgroup = function(hazard_ctrl, hazard_trt, hazard_subgroup, prevalence,
+                                xlab = "Time", ylab = "Hazard",
+                                ...) {
+  # Control arm: simple exponential model
+  haz_ctrl = hpch_fun(0, hazard_ctrl)
+  
+  # Treatment arm: mixture of subpopulations
+  haz_trt = \(x) mixture_hazard(
+    time = x,
+    hazards = c(hazard_trt, hazard_subgroup),
+    probs = c(1 - prevalence, prevalence)
+  )
+  
+  # Plot
+  plot_hazard_generic(haz_ctrl, haz_trt, xlab, ylab, ...)
+}
+
 # TBD
 # - progression
-# - subgroup
 # do not understand the data generating mechanisms yet

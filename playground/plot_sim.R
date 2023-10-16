@@ -63,3 +63,34 @@ jointplot$plot_joint_crossing(
   linewidth = 0.9, align = "column"
 ) &
   xlim(c(0, 1000))
+
+
+# Subpopulations ----
+
+params_surv = sim$assumptions_subgroup()
+params_study = sim$design_fixed_followup()
+params_all = merge(params_surv, params_study, by = NULL)
+setDT(params_all)
+
+# One sample scenario
+x = params_all[3]
+
+jointplot$plot_joint_subgroup(
+  x$hazard_ctrl, x$hazard_trt, x$hazard_subgroup, x$prevalence,
+  linewidth = 0.9, align = "row"
+) &
+  xlim(c(0, 1000))
+
+p_sub = jointplot$plot_joint_subgroup(
+  x$hazard_ctrl, x$hazard_trt, x$hazard_subgroup, x$prevalence,
+  linewidth = 0.9, align = "column"
+) &
+  xlim(c(0, 1000))
+
+p_sub
+
+jointplot$set_ylims(
+  p_sub,
+  surv = c(0, 1),
+  hr = c(0.2, 0.5)
+)

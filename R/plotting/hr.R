@@ -3,6 +3,10 @@ box::use(
   ggplot2[ggplot, geom_function, aes, theme_bw, labs]
 )
 
+box::use(
+  ./utils_mixture[mixture_hazard]
+)
+
 
 #' Generic function for plotting the true hazard ratio of treatments vs. control arm
 #' 
@@ -70,5 +74,39 @@ plot_hr_crossing = function(hazard_ctrl, hazard_trt_before, hazard_trt_after, cr
   haz_ctrl = hpch_fun(0, hazard_ctrl)
   haz_trt = hpch_fun(c(0, crosstime), c(hazard_trt_before, hazard_trt_after))
   
+  plot_hr_generic(haz_ctrl, haz_trt, xlab, ylab, ...)
+}
+
+
+#' Plot true hazard ratio in scenario with mixture of subpopulations in the treatment arm
+#' 
+#' @param hazard_ctrl (`numeric(1)`)\cr
+#'   The (constant) hazards rate of the control arm.
+#' @param hazard_trt,hazard_subgroup (`numeric(1)`)\cr
+#'   Hazard rates in the treatment arm for the two subgroups.
+#' @param prevalence (`numeric(1)`)\cr
+#'   Prevalence of the subgroup as a relative fraction (between 0 and 1).
+#' @param xlab,ylab,... See `plot_hazard_generic()`.
+#' 
+#' @references 
+#' Ristl, Robin, Nicolás M Ballarini, Heiko Götte, Armin Schüler, Martin Posch, and Franz König. 
+#' „Delayed treatment effects, treatment switching and heterogeneous patient populations: How to design and analyze RCTs in oncology“.
+#' Pharmaceutical Statistics 20, Nr. 1 (2021): 129–45. https://doi.org/10.1002/pst.2062.
+#' 
+#' @export
+plot_hr_subgroup = function(hazard_ctrl, hazard_trt, hazard_subgroup, prevalence,
+                            xlab = "Time", ylab = "Hazard",
+                            ...) {
+  # Control arm: simple exponential model
+  haz_ctrl = hpch_fun(0, hazard_ctrl)
+  
+  # Treatment arm: mixture of subpopulations
+  haz_trt = \(x) mixture_hazard(
+    time = x,
+    hazards = c(hazard_trt, hazard_subgroup),
+    probs = c(1 - prevalence, prevalence)
+  )
+  
+  # Plot
   plot_hr_generic(haz_ctrl, haz_trt, xlab, ylab, ...)
 }

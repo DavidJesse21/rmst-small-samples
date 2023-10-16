@@ -4,6 +4,10 @@ box::use(
   ggsci[scale_color_jco]
 )
 
+box::use(
+  ./utils_mixture[mixture_surv]
+)
+
 
 #' Generic function for plotting the true survival curves of a control and treatment arm
 #' 
@@ -83,7 +87,40 @@ plot_surv_crossing = function(hazard_ctrl, hazard_trt_before, hazard_trt_after, 
 }
 
 
+#' Plot true survival curves with mixture of subpopulations in treatment arm
+#' 
+#' @param hazard_ctrl (`numeric(1)`)\cr
+#'   The (constant) hazards rate of the control arm.
+#' @param hazard_trt,hazard_subgroup (`numeric(1)`)\cr
+#'   Hazard rates in the treatment arm for the two subgroups.
+#' @param prevalence (`numeric(1)`)\cr
+#'   Prevalence of the subgroup as a relative fraction (between 0 and 1).
+#' @param xlab,ylab,... See `plot_surv_generic()`.
+#' 
+#' @references 
+#' Ristl, Robin, Nicolás M Ballarini, Heiko Götte, Armin Schüler, Martin Posch, and Franz König. 
+#' „Delayed treatment effects, treatment switching and heterogeneous patient populations: How to design and analyze RCTs in oncology“.
+#' Pharmaceutical Statistics 20, Nr. 1 (2021): 129–45. https://doi.org/10.1002/pst.2062.
+#' 
+#' @export
+plot_surv_subgroup = function(hazard_ctrl, hazard_trt, hazard_subgroup, prevalence,
+                              xlab = "Time", ylab = "Hazard",
+                              ...) {
+  # Control arm: simple exponential model
+  surv_ctrl = spch_fun(0, hazard_ctrl)
+  
+  # Treatment arm: mixture of subpopulations
+  surv_trt = \(x) mixture_surv(
+    time = x,
+    hazards = c(hazard_trt, hazard_subgroup),
+    probs = c(1 - prevalence, prevalence)
+  )
+  
+  # Plot
+  plot_surv_generic(surv_ctrl, surv_trt, xlab, ylab, ...)
+}
+
+
 # TBD
 # - progression
-# - subgroup
 # do not understand the data generating mechanisms yet

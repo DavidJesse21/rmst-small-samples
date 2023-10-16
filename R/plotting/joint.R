@@ -6,7 +6,7 @@ box::use(
 
 box::use(
   patchwork[wrap_plots],
-  ggplot2[theme, element_blank]
+  ggplot2[theme, element_blank, ylim]
 )
 
 #' Jointly plot survival probabilities, hazards and hazard ratio in a delayed effect scenario
@@ -112,9 +112,58 @@ plot_joint_crossing = function(hazard_ctrl, hazard_trt_before, hazard_trt_after,
 }
 
 
+#' Jointly plot survival probabilities, hazards and hazard ratio in a subpopulation scenario
+#'
+#' @param hazard_ctrl (`numeric(1)`)\cr
+#'   The (constant) hazards rate of the control arm.
+#' @param hazard_trt,hazard_subgroup (`numeric(1)`)\cr
+#'   Hazard rates in the treatment arm for the two subgroups.
+#' @param prevalence (`numeric(1)`)\cr
+#'   Prevalence of the subgroup as a relative fraction (between 0 and 1).
+#' @param xlab (`character(1)`)\cr
+#'   x-axis title for *all* subplots.
+#' @param ylabs (`character(3)`)\cr
+#'   y-axis title for plot of survival probabilities, hazards and hazard ratio in that order.
+#' @param align (`character(1)`)\cr
+#'   One of `"row"` or `"column"` specifying, whether the subplots should be 
+#'   horizontally or vertically aligned.
+#' @param ... (any)\cr
+#'   Additional parameters passed to *all* functions `plot_surv_crossing()`, 
+#'   `plot_hazard_crossing()` and `plot_hr_crossing()`.
+#'   
+#' @note
+#' In order to modify the plot output of this function you cannot use the `+` operator 
+#' as we are dealing with a composition (list) of plots instead of a single on.
+#' Instead you have to use the `&` operator with which you can e.g. change the 
+#' axes limits for all plots.
+#' 
+#' @export
+plot_joint_subgroup = function(hazard_ctrl, hazard_trt, hazard_subgroup, prevalence,
+                               xlab = "Time",
+                               ylabs = c("Survival probability", "Hazard", "Hazard ratio"),
+                               align = c("row", "column"),
+                               ...) {
+  p_surv = survplot$plot_surv_subgroup(
+    hazard_ctrl, hazard_trt, hazard_subgroup, prevalence,
+    xlab = xlab, ylab = ylabs[1], ...
+  )
+  p_hazard = hazardplot$plot_hazard_subgroup(
+    hazard_ctrl, hazard_trt, hazard_subgroup, prevalence,
+    xlab = xlab, ylab = ylabs[2], ...
+  )
+  p_hr = hrplot$plot_hr_subgroup(
+    hazard_ctrl, hazard_trt, hazard_subgroup, prevalence,
+    xlab = xlab, ylab = ylabs[3], ...
+  )
+  
+  out = organize_plots(p_surv, p_hazard, p_hr, align = align)
+  return(out)
+}
 
 
-# Wrap and organize subplots (helper function)
+# Helper functions ----
+
+# Wrap and organize subplots (invisible)
 organize_plots = function(p_surv, p_hazard, p_hr,
                           align = c("row", "column")) {
   align = match.arg(align, choices = c("row", "column"))
@@ -149,7 +198,27 @@ organize_plots = function(p_surv, p_hazard, p_hr,
 }
 
 
+#' Set the y-axis limits for joint plots
+#' 
+#' @param plot (`patchwork`)\cr
+#'   A `patchwork` plot object returned by any of the joint plot functions.
+#' @param surv,hazard,hr (`numeric(2)`)\cr
+#'   Vectors for the respective y-axis limits (lower, upper).
+#'   
+#' @export
+set_ylims = function(plot, surv = NULL, hazard = NULL, hr = NULL) {
+  li_ylims = list(surv, hazard, hr)
+  
+  for (i in seq_along(plot)) {
+    if (!is.null(li_ylims[[i]])) {
+      plot[[i]] = plot[[i]] + ylim(li_ylims[[i]])
+    }
+  }
+  
+  return(plot)
+}
+
+
 # TBD
 # - progression
-# - subgroup
 # do not understand the data generating mechanisms yet
