@@ -144,7 +144,7 @@ rmst_diff = function(formula, data = environment(formula),
   out = numeric(2)
   names(out) = c("diff", "se(diff)")
   out[1] = mat_rmst[1, 1] - mat_rmst[2, 1]
-  out[2] = sum(mat_rmst[, 2])
+  out[2] = sqrt(sum(mat_rmst[, 2]^2))
   
   # Output
   return(out)
