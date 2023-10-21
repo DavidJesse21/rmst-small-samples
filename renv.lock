@@ -70,6 +70,13 @@
       ],
       "Hash": "470851b6d5d0ac559e9d01bb352b4021"
     },
+    "RApiSerialize": {
+      "Package": "RApiSerialize",
+      "Version": "0.1.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "d8a79c95f553670ceffbd190815bbfce"
+    },
     "RColorBrewer": {
       "Package": "RColorBrewer",
       "Version": "1.1-3",
@@ -117,6 +124,16 @@
         "utils"
       ],
       "Hash": "1e035db628cefb315c571202d70202fe"
+    },
+    "RcppParallel": {
+      "Package": "RcppParallel",
+      "Version": "5.1.7",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "a45594a00f5dbb073d5ec9f48592a08a"
     },
     "SimDesign": {
       "Package": "SimDesign",
@@ -1374,6 +1391,19 @@
       ],
       "Hash": "1cba04a4e9414bdefc9dcaa99649a8dc"
     },
+    "qs": {
+      "Package": "qs",
+      "Version": "0.25.5",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "RApiSerialize",
+        "Rcpp",
+        "stringfish"
+      ],
+      "Hash": "f40adbb81e0f84f4292c1a1a3e9dfaa5"
+    },
     "quantreg": {
       "Package": "quantreg",
       "Version": "5.97",
@@ -1525,6 +1555,18 @@
         "utils"
       ],
       "Hash": "3f9796a8d0a0e8c6eb49a4b029359d1f"
+    },
+    "stringfish": {
+      "Package": "stringfish",
+      "Version": "0.15.8",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "Rcpp",
+        "RcppParallel"
+      ],
+      "Hash": "2e67a1c9e054896ea7528535c1baf9b7"
     },
     "stringi": {
       "Package": "stringi",
