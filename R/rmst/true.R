@@ -25,6 +25,19 @@ numint = function(surv_fun, cutoff) {
 }
 
 
+#' Compute the RMST for an exponential distribution
+#' 
+#' @param hazard (`numeric(1)`)\cr
+#'   Rate parameter of the exponential distribution.
+#' @param cutoff (`numeric(1)`)\cr
+#'   The restriction time
+#'   
+#' @export
+expo = function(hazard, cutoff) {
+  (1 - exp(- hazard * cutoff)) / hazard
+}
+
+
 #' Compute the RMST for a piecewise exponential distribution
 #' 
 #' @description
