@@ -56,8 +56,11 @@ gen_data = function(params) {
     time = round(rexp(params$num_samples * 2, params$lambda)),
     time_cens = round(rexp(params$num_samples * 2, params$lambda_cens))
   )
-  dt[, status := fifelse(time <= time_cens, 1L, 0L)][, time_cens := NULL]
   
+  dt[, status := fifelse(time <= time_cens, 1L, 0L)][
+    , time := fifelse(status == 1L, time, time_cens)
+  ][, time_cens := NULL]
+
   return(dt[])
 }
 
