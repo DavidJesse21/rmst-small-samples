@@ -20,7 +20,7 @@ box::use(
 #' @param cutoff (`numeric(1)`)\cr
 #'   The restriction time.
 #' @param var_method (`character(1)`)\cr
-#'   One of `"greenwood"` and `"km"` to choose between the variance estimation method.
+#'   One of  `c("greenwood", "kaplan_meier", "nelson_aalen")` to choose between the variance estimation method.
 #' @param contrast (`character(2)`)\cr
 #'   A vector indicating which difference in RMST should be estimated.
 #'   E.g. `contrast = c("treatment", "control")` would imply to estimate \eqn{RMST_{trt} - RMST_{ctrl}}.
@@ -57,7 +57,7 @@ rmst = function(formula, data = environment(formula),
          "vectors appearing in the `fm` formula object.")
   }
   chk$assert_number(cutoff, lower = 0)
-  chk$assert_choice(var_method, choices = c("greenwood", "km"))
+  chk$assert_choice(var_method, choices = c("greenwood", "kaplan_meier","nelson_aalen"))
   
   # Kaplan-Meier estimate of survival curve
   fit = survfit(formula, data = data)
@@ -98,19 +98,32 @@ rmst = function(formula, data = environment(formula),
   areas = time_diffs * surv_probs
   rmst_mu = sum(areas)
   
-  # Variance estimation (Greenwood's formula)
-  t1 = cumsum(rev(areas[-1]))^2
-  t2 = dt_km[, fifelse(
-    (n_risk - n_event) == 0, 0,
-    n_event / (n_risk * (n_risk - n_event))
-  )]
-  rmst_var = sum(t1 * rev(t2))
-  
-  # Kaplan-Meier variance estimator (if requested)
-  if (var_method == "km") {
-    num_events = dt_km[, sum(n_event)]
-    rmst_var = (num_events / (num_events - 1)) * rmst_var
-  }
+  # Variance estimation
+  rmst_var = switch(var_method,
+    "greenwood" = {
+      t1 = cumsum(rev(areas[-1]))^2
+      t2 = dt_km[, fifelse(
+        (n_risk - n_event) == 0, 0,
+        n_event / (n_risk * (n_risk - n_event))
+      )]
+      sum(t1 * rev(t2))
+    },
+    "kaplan_meier" = {
+      t1 = cumsum(rev(areas[-1]))^2
+      t2 = dt_km[, fifelse(
+        (n_risk - n_event) == 0, 0,
+        n_event / (n_risk * (n_risk - n_event))
+      )]
+      var_greenwood = sum(t1 * rev(t2))
+      num_events = dt_km[, sum(n_event)]
+      (num_events / (num_events - 1)) * var_greenwood
+    },
+    "nelson_aalen" = {
+      t1 = cumsum(rev(areas[-1]))^2
+      t2 = dt_km[, n_event / n_risk^2]
+      sum(t1 * rev(t2))
+    }
+  )
   
   # Output
   out = c(rmst_mu, sqrt(rmst_var))
