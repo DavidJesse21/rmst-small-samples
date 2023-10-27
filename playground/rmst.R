@@ -12,6 +12,7 @@ box::help(rmst)
 
 dt = survival::veteran
 setDT(dt)
+dt[, trt := fifelse(trt == 1, "a", "b")]
 
 rmst(Surv(time, status) ~ 1, data = dt, cutoff = 400)
 rmst(Surv(dt$time, dt$status) ~ 1, cutoff = 400)

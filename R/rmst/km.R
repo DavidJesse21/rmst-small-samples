@@ -57,7 +57,7 @@ rmst = function(formula, data = environment(formula),
          "vectors appearing in the `fm` formula object.")
   }
   chk$assert_number(cutoff, lower = 0)
-  chk$assert_choice(var_method, choices = c("greenwood", "kaplan_meier","nelson_aalen"))
+  chk$assert_choice(var_method, choices = c("greenwood", "kaplan_meier", "nelson_aalen"))
   
   # Kaplan-Meier estimate of survival curve
   fit = survfit(formula, data = data)
@@ -138,8 +138,8 @@ rmst = function(formula, data = environment(formula),
 #' @export
 rmst_diff = function(formula, data = environment(formula),
                      cutoff,
-                     var_method = "greenwood",
-                     contrast) {
+                     contrast,
+                     var_method = "greenwood") {
   # Kaplan-Meier RMST estimation
   mat_rmst = rmst(formula, data, cutoff, var_method)
   
