@@ -60,7 +60,7 @@ rmst = function(formula, data = environment(formula),
   chk$assert_choice(var_method, choices = c("greenwood", "kaplan_meier", "nelson_aalen"))
   
   # Kaplan-Meier estimate of survival curve
-  fit = survfit(formula, data = data)
+  fit = survfit(formula, data = data, se.fit = FALSE)
   
   # Organize Kaplan-Meier data in a data.table
   dt = data.table(
@@ -68,12 +68,12 @@ rmst = function(formula, data = environment(formula),
     n_event = fit$n.event,
     n_risk = fit$n.risk,
     surv = fit$surv,
-    trt = rep(strata_labels(fit), times = fit$strata)
+    group = rep(strata_labels(fit), times = fit$strata)
   )
   
   # Either groups are present or not
-  if (!is.null(dt$trt)) {
-    li_dt = split(dt, by = "trt")
+  if (!is.null(dt$group)) {
+    li_dt = split(dt, by = "group")
     li_rmst = lapply(li_dt, \(dt) .rmst(dt, cutoff, var_method))
     out = do.call(rbind, li_rmst)
   } else {
@@ -126,8 +126,8 @@ rmst = function(formula, data = environment(formula),
   )
   
   # Output
-  out = c(rmst_mu, sqrt(rmst_var))
-  names(out) =  c("rmst", "se(rmst)")
+  out = c(rmst_mu, rmst_var)
+  names(out) =  c("rmst", "var_rmst")
   
   return(out)
 }
@@ -148,6 +148,7 @@ rmst_diff = function(formula, data = environment(formula),
     stop("`formula` must contain a group variable on the right-hand side for which ",
          "the RMST difference can be calculated.")
   }
+  
   # `contrast` must be specified and valid
   chk$assert_set_equal(contrast, rownames(mat_rmst))
   chk$assert_character(contrast, len = 2L)
@@ -155,9 +156,9 @@ rmst_diff = function(formula, data = environment(formula),
   # Sort and calculate/estimate RMST difference
   mat_rmst = mat_rmst[contrast, ]
   out = numeric(2)
-  names(out) = c("diff", "se(diff)")
+  names(out) = c("diff", "var_diff")
   out[1] = mat_rmst[1, 1] - mat_rmst[2, 1]
-  out[2] = sqrt(sum(mat_rmst[, 2]^2))
+  out[2] = sum(mat_rmst[, 2])
   
   # Output
   return(out)
