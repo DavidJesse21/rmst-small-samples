@@ -1,7 +1,8 @@
 box::use(
   chk = checkmate,
   survival[Surv, survfit],
-  data.table[...]
+  data.table[...],
+  stats[pchisq]
 )
 
 box::use(
@@ -155,8 +156,7 @@ rmst_diff = function(formula, data = environment(formula),
   
   # Sort and calculate/estimate RMST difference
   mat_rmst = mat_rmst[contrast, ]
-  out = numeric(2)
-  names(out) = c("diff", "var_diff")
+  out = c(diff = NA_real_, var_diff = NA_real_)
   out[1] = mat_rmst[1, 1] - mat_rmst[2, 1]
   out[2] = sum(mat_rmst[, 2])
   
@@ -164,3 +164,17 @@ rmst_diff = function(formula, data = environment(formula),
   return(out)
 }
 
+
+#' @rdname rmst
+#' @export
+rmst_diff_test = function(formula, data = environment(formula),
+                          cutoff,
+                          contrast,
+                          var_method = "greenwood") {
+  x = rmst_diff(formula, data, cutoff, contrast, var_method)
+  y = c(tstat = NA_real_, pval = NA_real_)
+  y[1] = unname(x[1] / sqrt(x[2]))
+  y[2] = unname(1 - pchisq(y[1]^2, df = 1))
+  
+  c(x, y)
+}

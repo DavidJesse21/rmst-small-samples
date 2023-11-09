@@ -6,14 +6,14 @@ box::use(
   survRM2[rmst2]
 )
 box::use(
-  rmst/km[rmst, rmst_diff]
+  rmst/km[rmst, rmst_diff, rmst_diff_test]
 )
 box::help(rmst)
 
 dt = survival::veteran
 setDT(dt)
-# dt[, trt := fifelse(trt == 1, "a", "b")]
 
+# Test basic functionality
 rmst(Surv(time, status) ~ 1, data = dt, cutoff = 400)
 rmst(Surv(dt$time, dt$status) ~ 1, cutoff = 400)
 rmst(Surv(time, status) ~ trt, data = dt, cutoff = 400)
@@ -29,3 +29,6 @@ rmst(Surv(time, status) ~ 1, data = dt, cutoff = 400, var_method = "nelson_aalen
 rmst(Surv(time, status) ~ 1, data = dt, cutoff = 400, var_method = "greenwood")
 rmst(Surv(time, status) ~ 1, data = dt, cutoff = 400, var_method = "kaplan_meier")
 
+# Testing function
+rmst_diff_test(Surv(time, status) ~ trt, data = dt, cutoff = 400, contrast = c("2", "1"))
+rmst2(dt$time, dt$status, dt$trt - 1, tau = 400)
