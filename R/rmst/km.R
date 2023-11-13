@@ -55,7 +55,7 @@ rmst = function(formula, data = environment(formula),
   chk$assert_formula(formula)
   if (!(chk$test_data_frame(data) || chk$test_environment(data))) {
     stop("`data` must be a data.frame or an environment containing the ",
-         "vectors appearing in the `fm` formula object.")
+         "vectors appearing in the `formula` object.")
   }
   chk$assert_number(cutoff, lower = 0)
   chk$assert_choice(var_method, choices = c("greenwood", "kaplan_meier", "nelson_aalen"))
