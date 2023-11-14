@@ -1,13 +1,15 @@
 options(box.path = "R")
 
 box::use(
+  rmst/km[rmst_diff_studperm]
+)
+box::help(rmst_diff_studperm)
+
+
+box::use(
   fs,
   data.table[...],
   survival[Surv]
-)
-
-box::use(
-  rmst/km_studperm[rmst_diff_studperm]
 )
 
 load(fs$path("data", "Hellmann", ext = "Rdata"))
