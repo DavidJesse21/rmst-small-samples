@@ -139,7 +139,7 @@ run_sim_all = function(params,
     time_taken = time_end - time_start
     
     out = list(
-      simulator = list(params = params, fun = fun_generate),
+      simulator = list(params = params[i], fun = fun_generate),
       results = result,
       duration = time_taken
     )
