@@ -14,6 +14,8 @@ minus_plus = \(x, add) c(x - add, x + add)
 
 # Load registry
 reg = bt$loadRegistry(fs$path("simulations", "registry"), writeable = TRUE)
+
+# Create cluster function
 reg$cluster.functions = bt$makeClusterFunctionsSocket(
   ncpus = availableCores(omit = 1), fs.latency = 0
 )
@@ -52,6 +54,19 @@ bt$getStatus()
 
 # Close connections
 reg$cluster.functions = bt$makeClusterFunctionsInteractive()
+
+x = vapply(
+  fs$dir_ls(fs$path("simulations", "registry", "results")),
+  fs$file_size,
+  numeric(1)
+) |>
+  sum()
+
+x * 1000 * 500
+
+fs$dir_ls(fs$path("simulations", "registry", "results"))
+
+test = fs$file_size(fs$path("simulations", "registry", "results", "6", ext = "rds"))
 
 
 # Retrieve and analyze results

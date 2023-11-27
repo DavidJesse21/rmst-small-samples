@@ -36,7 +36,7 @@ bt$addAlgorithm("all", fun = do_one)
 bt$addExperiments(
   prob.designs = list(
     ph = data.table(
-      num_samples = list(c(15, 15)),
+      num_samples = list(c(12, 18)),
       lambda_ctrl = med2rate(12),
       lambda_trt = med2rate(24),
       cens_ctrl =  med2rate(36),
@@ -49,15 +49,23 @@ bt$addExperiments(
       cutoff = months2days(36)
     )
   ),
-  repls = 2
+  repls = 10
 )
 
 # Quick overview
 bt$getJobPars()
+bt$unwrap(bt$getJobPars())
 
 # Test job
 bt$testJob(id = 1, external = TRUE)
 x = bt$testJob(id = 2, external = TRUE)
+
+# Check if working with list columns works
+dt = x$data
+dt[, .N, by = trt]
+# Yes, it does
+
+x$results
 
 x[3, error]
 
