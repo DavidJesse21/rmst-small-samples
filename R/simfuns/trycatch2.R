@@ -18,11 +18,13 @@ trycatch2 = function(expr) {
   
   value = withCallingHandlers(
     tryCatch(expr, error = \(e) {
-      err <<- e$message
+      #err <<- e$message
+      err <<- e
       NA
     }),
     warning = \(w) {
-      warn <<- w$message
+      #warn <<- w$message
+      warn <<- w
       invokeRestart("muffleWarning")
     }
   )
