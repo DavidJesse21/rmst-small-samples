@@ -24,7 +24,7 @@ reg = bt$makeExperimentRegistry(
   fs$path("simulations", "registry"),
   seed = 42L
 )
-reg = bt$loadRegistry(fs$path("simulations", "registry"), writeable = TRUE)
+# reg = bt$loadRegistry(fs$path("simulations", "registry"), writeable = TRUE)
 
 # Add the problem(s)
 bt$addProblem("ph", fun = gen_data, seed = 1L)

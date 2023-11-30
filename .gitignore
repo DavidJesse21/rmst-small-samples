@@ -4,3 +4,6 @@
 .Ruserdata
 *.qs
 simulations/registry/
+*.rds
+*.log
+!hpc/packages.rds
