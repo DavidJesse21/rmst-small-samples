@@ -93,7 +93,24 @@ m = rmeanglm(
   #model.censoring = "stratified", formula.censoring = ~ factor(trt)
 )
 
+rmeanglm(
+  Surv(time, status) ~ factor(trt), data = dt, time = 554#,
+  #model.censoring = "stratified", formula.censoring = ~ factor(trt)
+)
+rmeanglm(
+  Surv(time, status) ~ factor(trt), data = dt, time = 587#,
+  #model.censoring = "stratified", formula.censoring = ~ factor(trt)
+)
+rmeanglm(
+  Surv(time, status) ~ factor(trt), data = dt, time = 588#,
+  #model.censoring = "stratified", formula.censoring = ~ factor(trt)
+)
 
+dt[.N, status := 1L]
+rmeanglm(
+  Surv(time, status) ~ factor(trt), data = dt, time = 588#,
+  #model.censoring = "stratified", formula.censoring = ~ factor(trt)
+)
 
 summary(m)
 
