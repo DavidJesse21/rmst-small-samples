@@ -13,7 +13,7 @@ same_length = function(...) {
 #' with the pattern "trt=value".
 #' This function extracts the "values" from these patterns
 #' 
-#' @param x (`survfit()`)\cr
+#' @param x (`survfit`)\cr
 #'   A `survfit` object.
 #' 
 #' @export
@@ -24,5 +24,50 @@ strata_labels = function(x) {
     out = strsplit(names(x$strata), split = "=") |>
       vapply(\(x) x[[2]], character(1))
     return(out)
+  }
+}
+
+
+#' Check if the RMST is estimable for a single sample
+#' 
+#' @description
+#' If the cutoff value is larger than the latest event time and that event time is censored 
+#' and not observed, then the Kaplan-Meier estimator is not uniquely defined up to the cutoff 
+#' and therefore the RMST is actually not estimable.
+#' This function performs such a check.
+#' 
+#' @param dt_km (`data.table`)\cr
+#'   A data.table with organized results from Kaplan-Meier estimation for a single stratum.
+#' @param cutoff (`numeric(1)`)\cr
+#'   The restriction time.
+#' @param handler (`character(1)`)\cr
+#'   One out of `c("error", "warning", "ignore")`.
+#'   
+#' @export
+is_estimable = function(dt_km, cutoff) {
+  dt_km[.N, !((time < cutoff) && (n_event == 0))]
+}
+
+#' @export
+inest_handler = function(dt_km, cutoff, handler = "error") {
+  if (handler == "ignore") {
+    return(invisible(NULL))
+  }
+  
+  estimable = is_estimable(dt_km, cutoff)
+  
+  if (estimable) {
+    return(invisible(NULL))
+  } else {
+    x = dt_km[.N]
+    msg = sprintf(
+      "RMST not uniquely estimable%s%s beyond time point %s\n(cutoff specified at %s)",
+      if (!is.null(x$group)) " for group " else "", if (!is.null(x$group)) x$group else "",
+      x$time, cutoff
+    )
+    switch(handler,
+      "warning" = warning(msg, call. = FALSE),
+      "error" = stop(msg, call. = FALSE)
+    )
   }
 }

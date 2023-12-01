@@ -6,7 +6,7 @@ box::use(
 )
 
 box::use(
-  ./utils[strata_labels]
+  ./utils[strata_labels, is_estimable, inest_handler]
 )
 
 
@@ -22,6 +22,11 @@ box::use(
 #'   The restriction time.
 #' @param var_method (`character(1)`)\cr
 #'   One of  `c("greenwood", "kaplan_meier", "nelson_aalen", "none")` to choose between the variance estimation method.
+#' @param inest (`character(1)`)\cr
+#'   How to handle cases, in which the RMST is not uniquely defined and therefore actually not estimable.
+#'   Defaults to `"error"` which stops the execution.
+#'   With `"ignore"` this fact is simply ignored (which is the same as in the packages `survival` and `survRM2`).
+#'   `"warning"` also ignores it and continues the computation but informs the user with a warning message.
 #' @param contrast (`character(2)`)\cr
 #'   A vector indicating which difference in RMST should be estimated.
 #'   E.g. `contrast = c("treatment", "control")` would imply to estimate \eqn{RMST_{trt} - RMST_{ctrl}}.
@@ -51,7 +56,8 @@ NULL
 #' @export
 rmst = function(formula, data = environment(formula),
                 cutoff,
-                var_method = "greenwood") {
+                var_method = "greenwood",
+                inest = "error") {
   # Safety checks
   chk$assert_formula(formula)
   if (!(chk$test_data_frame(data) || chk$test_environment(data))) {
@@ -60,6 +66,7 @@ rmst = function(formula, data = environment(formula),
   }
   chk$assert_number(cutoff, lower = 0)
   chk$assert_choice(var_method, choices = c("greenwood", "kaplan_meier", "nelson_aalen", "none"))
+  chk$assert_choice(inest, choices = c("error", "warning", "ignore"))
   
   # Kaplan-Meier estimate of survival curve
   fit = survfit(formula, data = data, se.fit = FALSE)
@@ -76,10 +83,10 @@ rmst = function(formula, data = environment(formula),
   # Either groups are present or not
   if (!is.null(dt$group)) {
     li_dt = split(dt, by = "group")
-    li_rmst = lapply(li_dt, \(dt) .rmst(dt, cutoff, var_method))
+    li_rmst = lapply(li_dt, \(dt) .rmst(dt, cutoff, var_method, inest))
     out = do.call(rbind, li_rmst)
   } else {
-    out = .rmst(dt, cutoff, var_method)
+    out = .rmst(dt, cutoff, var_method, inest)
   }
   
   return(out)
@@ -90,7 +97,10 @@ rmst = function(formula, data = environment(formula),
 #' 
 #' @param dt_km (`data.table()`)\cr
 #'   A data.table with organized results from Kaplan-Meier estimation for a single stratum.
-.rmst = function(dt_km, cutoff, var_method) {
+.rmst = function(dt_km, cutoff, var_method, inest) {
+  # Check if RMST is estimable
+  inest_handler(dt_km, cutoff, handler = inest)
+  
   # Apply restriction time
   dt_km = dt_km[time <= cutoff]
   
@@ -142,9 +152,10 @@ rmst = function(formula, data = environment(formula),
 rmst_diff = function(formula, data = environment(formula),
                      cutoff,
                      contrast,
-                     var_method = "greenwood") {
+                     var_method = "greenwood",
+                     inest = "error") {
   # Kaplan-Meier RMST estimation
-  mat_rmst = rmst(formula, data, cutoff, var_method)
+  mat_rmst = rmst(formula, data, cutoff, var_method, inest)
   
   # Error if no grouping/treatment variable has been provided in `formula`
   if (!is.matrix(mat_rmst)) {
@@ -172,8 +183,9 @@ rmst_diff = function(formula, data = environment(formula),
 rmst_diff_test = function(formula, data = environment(formula),
                           cutoff,
                           contrast,
-                          var_method = "greenwood") {
-  x = rmst_diff(formula, data, cutoff, contrast, var_method)
+                          var_method = "greenwood",
+                          inest = "error") {
+  x = rmst_diff(formula, data, cutoff, contrast, var_method, inest)
   y = c(tstat = NA_real_, pval = NA_real_)
   y[1] = unname(x[1] / sqrt(x[2]))
   y[2] = unname(1 - pchisq(y[1]^2, df = 1))
@@ -257,73 +269,73 @@ rmst_diff_studperm = function(formula, data = environment(formula),
 }
 
 
-#' (Non-parametric) bootstrap of the difference in restricted mean survival time
+#' #' (Non-parametric) bootstrap of the difference in restricted mean survival time
+#' #'
+#' #' @inheritParams rmst
+#' #' @param num_samples (`numeric(1)`)\cr
+#' #'   The number of bootstrap replications.
+#' #' @param probs (`numeric(2)`)\cr
+#' #'   Vector of probabilities for the bootstrap quantiles.
+#' #' @param light (`numeric(1)`)\cr
+#' #'   Whether to discard or return the bootstrap estimates of the difference in
+#' #'   restricted mean survival time.
+#' #'
+#' #' @details
+#' #' This function computes a bootstrap percentile interval.
+#' #' However, other bootstrap confidence intervals can also be computed by setting `light = FALSE`,
+#' #' i.e. returning the bootstrap estimates.
+#' #' E.g. one could then compute a bootstrap t-interval.
+#' #'
+#' #'
+#' #' @export
+#' rmst_diff_boot = function(formula, data = environment(formula),
+#'                           cutoff,
+#'                           contrast,
+#'                           var_method = "nelson_aalen",
+#'                           num_samples = 1000L,
+#'                           probs = c(0.025, 0.975),
+#'                           light = TRUE) {
+#'   # Some safety checks
+#'   chk$assert_number(num_samples, lower = 1L)
+#'   chk$assert_numeric(probs, lower = 0, upper = 1, len = 2, sorted = TRUE)
+#'   chk$assert_flag(light)
 #' 
-#' @inheritParams rmst
-#' @param num_samples (`numeric(1)`)\cr
-#'   The number of bootstrap replications.
-#' @param probs (`numeric(2)`)\cr
-#'   Vector of probabilities for the bootstrap quantiles.
-#' @param light (`numeric(1)`)\cr
-#'   Whether to discard or return the bootstrap estimates of the difference in 
-#'   restricted mean survival time.
+#'   # Asymptotic results
+#'   res_asy = rmst_diff(formula, data, cutoff, contrast, var_method)
 #' 
-#' @details
-#' This function computes a bootstrap percentile interval.
-#' However, other bootstrap confidence intervals can also be computed by setting `light = FALSE`, 
-#' i.e. returning the bootstrap estimates.
-#' E.g. one could then compute a bootstrap t-interval.
+#'   # Obtain and organize original survival data
+#'   dt = get_all_vars(formula, data = data)
+#'   setDT(dt)
+#'   setnames(dt, new = c("time", "status", "group"))
+#'   li_dt = split(dt, by = "group")
 #' 
+#'   # Bootstrap samples
+#'   boot_samples = lapply(1:num_samples, function(i) {
+#'     dt_new = lapply(li_dt, function(.dt) {
+#'       idx = sample(1:nrow(.dt), replace = TRUE)
+#'       .dt[idx]
+#'     })
+#'     rbindlist(dt_new)
+#'   })
 #' 
-#' @export
-rmst_diff_boot = function(formula, data = environment(formula),
-                          cutoff,
-                          contrast,
-                          var_method = "nelson_aalen",
-                          num_samples = 1000L,
-                          probs = c(0.025, 0.975),
-                          light = TRUE) {
-  # Some safety checks
-  chk$assert_number(num_samples, lower = 1L)
-  chk$assert_numeric(probs, lower = 0, upper = 1, len = 2, sorted = TRUE)
-  chk$assert_flag(light)
-  
-  # Asymptotic results
-  res_asy = rmst_diff(formula, data, cutoff, contrast, var_method)
-  
-  # Obtain and organize original survival data
-  dt = get_all_vars(formula, data = data)
-  setDT(dt)
-  setnames(dt, new = c("time", "status", "group"))
-  li_dt = split(dt, by = "group")
-  
-  # Bootstrap samples
-  boot_samples = lapply(1:num_samples, function(i) {
-    dt_new = lapply(li_dt, function(.dt) {
-      idx = sample(1:nrow(.dt), replace = TRUE)
-      .dt[idx]
-    })
-    rbindlist(dt_new)
-  })
-  
-  # RMSTD bootstrap estimates
-  boot_rmstd = t(vapply(
-    boot_samples,
-    function(.dt) {
-      rmst_diff(
-        Surv(time, status) ~ group, data = .dt,
-        cutoff, contrast, var_method
-      )
-    },
-    numeric(2)
-  ))
-  
-  # Output
-  out = list(
-    asymptotic = res_asy,
-    boot_ci = quantile(boot_rmstd[, 1], probs = probs),
-    boot_rmstd = if (light) NULL else boot_rmstd
-  )
-  
-  return(out)
-}
+#'   # RMSTD bootstrap estimates
+#'   boot_rmstd = t(vapply(
+#'     boot_samples,
+#'     function(.dt) {
+#'       rmst_diff(
+#'         Surv(time, status) ~ group, data = .dt,
+#'         cutoff, contrast, var_method
+#'       )
+#'     },
+#'     numeric(2)
+#'   ))
+#' 
+#'   # Output
+#'   out = list(
+#'     asymptotic = res_asy,
+#'     boot_ci = quantile(boot_rmstd[, 1], probs = probs),
+#'     boot_rmstd = if (light) NULL else boot_rmstd
+#'   )
+#' 
+#'   return(out)
+#' }

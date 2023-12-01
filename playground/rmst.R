@@ -32,3 +32,21 @@ rmst(Surv(time, status) ~ 1, data = dt, cutoff = 400, var_method = "kaplan_meier
 # Testing function
 rmst_diff_test(Surv(time, status) ~ trt, data = dt, cutoff = 400, contrast = c("2", "1"))
 rmst2(dt$time, dt$status, dt$trt - 1, tau = 400)
+
+# Test case in which RMST should be inestimable
+dt = dt[order(time)][time <= 600]
+dt[.N, status := 0]
+
+rmst(Surv(time, status) ~ 1, data = dt, cutoff = 600)
+rmst(Surv(time, status) ~ trt, data = dt, cutoff = 600)
+rmst(Surv(time, status) ~ trt, data = dt, cutoff = 600, inest = "warning")
+rmst(Surv(time, status) ~ trt, data = dt, cutoff = 600, inest = "ignore")
+
+rmst_diff(
+  Surv(time, status) ~ trt, data = dt, cutoff = 600, contrast = c("1", "2"),
+  inest = "warning"
+)
+rmst_diff_test(
+  Surv(time, status) ~ trt, data = dt, cutoff = 600, contrast = c("1", "2"),
+  inest = "warning"
+)
