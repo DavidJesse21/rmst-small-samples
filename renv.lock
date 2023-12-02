@@ -603,6 +603,17 @@
       ],
       "Hash": "3460beba7ccc8946249ba35327ba902a"
     },
+    "microbenchmark": {
+      "Package": "microbenchmark",
+      "Version": "1.4.10",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "graphics",
+        "stats"
+      ],
+      "Hash": "db81b552e393ed092872cf7023469bc2"
+    },
     "miniPCH": {
       "Package": "miniPCH",
       "Version": "0.2.0",
@@ -920,19 +931,6 @@
         "survival"
       ],
       "Hash": "6af75caf3bfa6dd6b0a6ef0fed599478"
-    },
-    "survRM2perm": {
-      "Package": "survRM2perm",
-      "Version": "0.1.0",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "R",
-        "methods",
-        "stats4",
-        "survival"
-      ],
-      "Hash": "28c5644a5e4484d21e896a514fa71c0b"
     },
     "survival": {
       "Package": "survival",

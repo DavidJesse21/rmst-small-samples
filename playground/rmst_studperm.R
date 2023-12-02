@@ -1,7 +1,7 @@
 options(box.path = "R")
 
 box::use(
-  rmst/km[rmst_diff_studperm]
+  rmst/km2[rmst_diff_studperm]
 )
 box::help(rmst_diff_studperm)
 

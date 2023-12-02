@@ -1,3 +1,10 @@
+box::use(
+  data.table[as.data.table],
+  survival[Surv]
+)
+
+
+
 #' Check if more than two vectors are of the same length
 #' @export
 same_length = function(...) {
@@ -70,4 +77,19 @@ inest_handler = function(dt_km, cutoff, handler = "error") {
       "error" = stop(msg, call. = FALSE)
     )
   }
+}
+
+
+#' Safely obtain survival data from a formula as a data.table
+#' @export
+get_surv_data = function(formula, data = environment(formula)) {
+  y = as.matrix(eval(formula[[2]], envir = data))
+  x = eval(formula[[3]], envir = data)
+  
+  out = cbind(
+    as.data.table(y),
+    as.data.table(x)
+  )
+  
+  out
 }
