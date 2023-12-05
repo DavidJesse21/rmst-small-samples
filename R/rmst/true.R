@@ -19,8 +19,8 @@ box::use(
 #'   The restriction time.
 #'
 #' @export
-numint = function(surv_fun, cutoff) {
-  res = integrate(surv_fun, lower = 0, upper = cutoff)
+numint = function(surv_fun, cutoff, rel.tol = sqrt(.Machine$double.eps)) {
+  res = integrate(surv_fun, lower = 0, upper = cutoff, rel.tol = rel.tol)
   return(res$value)
 }
 
