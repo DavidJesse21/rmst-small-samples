@@ -112,12 +112,12 @@ rmst_diff = function(formula, data = environment(formula),
   mat_rmst = rmst(formula, data, cutoff, var_method, inest_action, ...)
   
   # Check if specification of formula is valid
-  if (!is.matrix(mat_rmst) && (nrow(mat_rmst) != 2)) {
-    stop("`formula` must contain a group variable on the right hand side with 2 levels only.")
+  if (!is.matrix(mat_rmst)) {
+    stop("`formula` must contain a group variable on the right hand side.")
   }
   
   # `contrast` must be specified and valid
-  chk$assert_set_equal(contrast, rownames(mat_rmst))
+  chk$assert_subset(contrast, rownames(mat_rmst))
   chk$assert_character(contrast, len = 2L)
   
   # Sort and calculate/estimate RMST difference

@@ -9,6 +9,13 @@
     ]
   },
   "Packages": {
+    "BH": {
+      "Package": "BH",
+      "Version": "1.81.0-1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "68122010f01c4dcfbe58ce7112f2433d"
+    },
     "MASS": {
       "Package": "MASS",
       "Version": "7.3-60",
@@ -85,6 +92,20 @@
       ],
       "Hash": "ae6cbbe1492f4de79c45fce06f967ce8"
     },
+    "RcppArmadillo": {
+      "Package": "RcppArmadillo",
+      "Version": "0.12.6.6.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "Rcpp",
+        "methods",
+        "stats",
+        "utils"
+      ],
+      "Hash": "aabc6cb0f0953d0442d3c82d8a9d2610"
+    },
     "SparseM": {
       "Package": "SparseM",
       "Version": "1.81",
@@ -98,6 +119,16 @@
         "utils"
       ],
       "Hash": "2042cd9759cc89a453c4aefef0ce9aae"
+    },
+    "assertthat": {
+      "Package": "assertthat",
+      "Version": "0.2.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "tools"
+      ],
+      "Hash": "50c838a310445e954bc13f26f26a6ecf"
     },
     "backports": {
       "Package": "backports",
@@ -143,6 +174,36 @@
         "withr"
       ],
       "Hash": "c21ca34590a8dd80fccec5bf1b2d26d7"
+    },
+    "bbmle": {
+      "Package": "bbmle",
+      "Version": "1.0.25",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "MASS",
+        "Matrix",
+        "R",
+        "bdsmatrix",
+        "lattice",
+        "methods",
+        "mvtnorm",
+        "numDeriv",
+        "stats",
+        "stats4"
+      ],
+      "Hash": "ded471b3be03b4c65419abbc1b5e9f86"
+    },
+    "bdsmatrix": {
+      "Package": "bdsmatrix",
+      "Version": "1.3-6",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "methods"
+      ],
+      "Hash": "b55d57db210e5af3f097ae228aadaf50"
     },
     "box": {
       "Package": "box",
@@ -205,6 +266,16 @@
         "utils"
       ],
       "Hash": "89e6d8219950eac806ae0c489052048a"
+    },
+    "codetools": {
+      "Package": "codetools",
+      "Version": "0.2-19",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "c089a619a7fae175d149d89164f8c7d8"
     },
     "colorspace": {
       "Package": "colorspace",
@@ -270,6 +341,20 @@
       ],
       "Hash": "b4c06e554f33344e044ccd7fdca750a9"
     },
+    "deSolve": {
+      "Package": "deSolve",
+      "Version": "1.40",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "grDevices",
+        "graphics",
+        "methods",
+        "stats"
+      ],
+      "Hash": "0a861334beb4eb8ca0d24a27b28b6679"
+    },
     "desc": {
       "Package": "desc",
       "Version": "1.4.2",
@@ -294,6 +379,22 @@
         "utils"
       ],
       "Hash": "b18a9cf3c003977b0cc49d5e76ebe48d"
+    },
+    "doFuture": {
+      "Package": "doFuture",
+      "Version": "1.0.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "foreach",
+        "future",
+        "future.apply",
+        "globals",
+        "iterators",
+        "parallel",
+        "utils"
+      ],
+      "Hash": "63814885cac13142d0af0bbb629d6521"
     },
     "dplyr": {
       "Package": "dplyr",
@@ -385,6 +486,60 @@
       "Repository": "CRAN",
       "Hash": "8106d78941f34855c440ddb946b8f7a5"
     },
+    "fastGHQuad": {
+      "Package": "fastGHQuad",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "Rcpp"
+      ],
+      "Hash": "ddd47b736624d915662f70618ffd1c32"
+    },
+    "flexsurv": {
+      "Package": "flexsurv",
+      "Version": "2.2.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "Matrix",
+        "R",
+        "Rcpp",
+        "assertthat",
+        "deSolve",
+        "dplyr",
+        "generics",
+        "ggplot2",
+        "magrittr",
+        "mstate",
+        "muhaz",
+        "mvtnorm",
+        "numDeriv",
+        "purrr",
+        "quadprog",
+        "rlang",
+        "rstpm2",
+        "statmod",
+        "survival",
+        "tibble",
+        "tidyr",
+        "tidyselect"
+      ],
+      "Hash": "e88b6212adede1542cc63ee0baf47bf2"
+    },
+    "foreach": {
+      "Package": "foreach",
+      "Version": "1.5.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "codetools",
+        "iterators",
+        "utils"
+      ],
+      "Hash": "618609b42c9406731ead03adf5379850"
+    },
     "fs": {
       "Package": "fs",
       "Version": "1.6.3",
@@ -395,6 +550,35 @@
         "methods"
       ],
       "Hash": "47b5f30c720c23999b913a1a635cf0bb"
+    },
+    "future": {
+      "Package": "future",
+      "Version": "1.33.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "digest",
+        "globals",
+        "listenv",
+        "parallel",
+        "parallelly",
+        "utils"
+      ],
+      "Hash": "8e92c7bc53e91b9bb1faf9a6ef0e8514"
+    },
+    "future.apply": {
+      "Package": "future.apply",
+      "Version": "1.11.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "future",
+        "globals",
+        "parallel",
+        "utils"
+      ],
+      "Hash": "ba4be138fe47eac3e16a6deaa4da106e"
     },
     "geepack": {
       "Package": "geepack",
@@ -459,6 +643,17 @@
       ],
       "Hash": "93664e03010c3f4b570c890dda99ade5"
     },
+    "globals": {
+      "Package": "globals",
+      "Version": "0.16.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "codetools"
+      ],
+      "Hash": "baa9585ab4ce47a9f4618e671778cc6f"
+    },
     "glue": {
       "Package": "glue",
       "Version": "1.6.2",
@@ -521,6 +716,17 @@
       ],
       "Hash": "0080607b4a1a7b28979aecef976d8bc2"
     },
+    "iterators": {
+      "Package": "iterators",
+      "Version": "1.0.14",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "utils"
+      ],
+      "Hash": "8954069286b4b2b0d023d1b288dce978"
+    },
     "knitr": {
       "Package": "knitr",
       "Version": "1.44",
@@ -576,6 +782,16 @@
       ],
       "Hash": "001cecbeac1cff9301bdc3775ee46a86"
     },
+    "listenv": {
+      "Package": "listenv",
+      "Version": "0.9.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "4fbd3679ec8ee169ba28d4b1ea7d0e8f"
+    },
     "magrittr": {
       "Package": "magrittr",
       "Version": "2.0.3",
@@ -614,6 +830,32 @@
       ],
       "Hash": "6ee788d7fd0f7f75e01b3ecd51956cac"
     },
+    "mstate": {
+      "Package": "mstate",
+      "Version": "0.3.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "RColorBrewer",
+        "data.table",
+        "lattice",
+        "rlang",
+        "survival",
+        "viridisLite"
+      ],
+      "Hash": "53ca2f4a1ab4ac93fec33c92dc22c886"
+    },
+    "muhaz": {
+      "Package": "muhaz",
+      "Version": "1.2.6.4",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "survival"
+      ],
+      "Hash": "6e81a82b7ac7c43a6fb98765f6ffa706"
+    },
     "munsell": {
       "Package": "munsell",
       "Version": "0.5.0",
@@ -624,6 +866,17 @@
         "methods"
       ],
       "Hash": "6dfe8bf774944bd5595785e3229d8771"
+    },
+    "mvtnorm": {
+      "Package": "mvtnorm",
+      "Version": "1.2-3",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "stats"
+      ],
+      "Hash": "463b268710930f7bffef33147400966a"
     },
     "nlme": {
       "Package": "nlme",
@@ -638,6 +891,16 @@
         "utils"
       ],
       "Hash": "0984ce8da8da9ead8643c5cbbb60f83e"
+    },
+    "numDeriv": {
+      "Package": "numDeriv",
+      "Version": "2016.8-1.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "df58958f293b166e4ab885ebcad90e02"
     },
     "parallelly": {
       "Package": "parallelly",
@@ -754,6 +1017,16 @@
       ],
       "Hash": "1cba04a4e9414bdefc9dcaa99649a8dc"
     },
+    "quadprog": {
+      "Package": "quadprog",
+      "Version": "1.5-8",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "5f919ae5e7f83a6f91dcf2288943370d"
+    },
     "quantreg": {
       "Package": "quantreg",
       "Version": "5.97",
@@ -839,6 +1112,30 @@
       ],
       "Hash": "1de7ab598047a87bba48434ba35d497d"
     },
+    "rstpm2": {
+      "Package": "rstpm2",
+      "Version": "1.6.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "BH",
+        "R",
+        "Rcpp",
+        "RcppArmadillo",
+        "bbmle",
+        "deSolve",
+        "fastGHQuad",
+        "graphics",
+        "methods",
+        "mgcv",
+        "parallel",
+        "splines",
+        "stats",
+        "survival",
+        "utils"
+      ],
+      "Hash": "02411b94c532b3bb0f605279917cbbe1"
+    },
     "sandwich": {
       "Package": "sandwich",
       "Version": "3.0-2",
@@ -870,6 +1167,31 @@
       ],
       "Hash": "906cb23d2f1c5680b8ce439b44c6fa63"
     },
+    "simtrial": {
+      "Package": "simtrial",
+      "Version": "0.3.0.9",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "Merck",
+      "RemoteRepo": "simtrial",
+      "RemoteRef": "main",
+      "RemoteSha": "18932367eebca5b922add07ff22ee0b6006af577",
+      "Requirements": [
+        "R",
+        "Rcpp",
+        "data.table",
+        "doFuture",
+        "foreach",
+        "future",
+        "methods",
+        "mvtnorm",
+        "stats",
+        "survival",
+        "utils"
+      ],
+      "Hash": "f03e6d78ae43f5bce1d551349439b650"
+    },
     "snow": {
       "Package": "snow",
       "Version": "0.4-4",
@@ -880,6 +1202,18 @@
         "utils"
       ],
       "Hash": "40b74690debd20c57d93d8c246b305d4"
+    },
+    "statmod": {
+      "Package": "statmod",
+      "Version": "1.5.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "graphics",
+        "stats"
+      ],
+      "Hash": "26e158d12052c279bdd4ba858b80fb1f"
     },
     "stringi": {
       "Package": "stringi",
