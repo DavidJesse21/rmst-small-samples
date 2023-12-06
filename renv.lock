@@ -821,14 +821,15 @@
     },
     "miniPCH": {
       "Package": "miniPCH",
-      "Version": "0.2.0",
+      "Version": "0.3.1",
       "Source": "Repository",
       "Repository": "RSPM",
       "Requirements": [
         "Rcpp",
+        "RcppArmadillo",
         "checkmate"
       ],
-      "Hash": "6ee788d7fd0f7f75e01b3ecd51956cac"
+      "Hash": "f05eb857255e3f4cb18d4b883a122da2"
     },
     "mstate": {
       "Package": "mstate",

@@ -243,7 +243,7 @@ find_shape1 = function(delta, shape0 = 3, scale0 = 8, scale1 = 14, cutoff = 10) 
 #' 3. Control group has `probs[3]` and treatment group has `probs[1]`
 #'   
 #' @export
-get_params_cens = function(probs = c(0.625, 0.75, 0.875), cutoff = 10) {
+get_params_cens = function(probs = c(0.5, 0.625, 0.75), cutoff = 10) {
   stopifnot(length(probs) == 3)
   
   rates = - log(probs) / cutoff
