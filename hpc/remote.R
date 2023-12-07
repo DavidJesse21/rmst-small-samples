@@ -1,6 +1,6 @@
 # Prepare/restore setup on the remote system
 
-if (nzchar(system.file(package = "renv"))) {
+if (!nzchar(system.file(package = "renv"))) {
   install.packages("renv")
 }
 to_install = readRDS("hpc/packages.rds")
