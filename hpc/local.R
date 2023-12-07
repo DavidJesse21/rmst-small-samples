@@ -9,7 +9,8 @@ box::use(
 
 paths = list(
   funs = fs$path("R", "rmst"),
-  sim = fs$path("simulations")
+  sim1 = fs$path("R", "simfuns"),
+  sim2 = fs$path("simsetup")
 )
 
 deps = lapply(paths, \(path) {

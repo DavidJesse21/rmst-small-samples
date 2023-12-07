@@ -2,6 +2,7 @@
 
 options(box.path = "R")
 
+# batchtools and other utilities
 box::use(
   fs,
   bt = batchtools,
@@ -10,65 +11,120 @@ box::use(
 
 # Problems and algorithms
 box::use(
-  ./problems[gen_data],
-  ./algos[do_one]
+  simfuns/designs[make_prob_design],
+  simfuns/problems[gen_data_exp, gen_data_pwexp, gen_data_weibull],
+  simfuns/algos[rmst_all_methods]
 )
 
-# Some helper functions
-med2rate = \(x) (12 * log(2)) / (x * 365.25)
-months2days = \(x) 365.25 * x / 12
-minus_plus = \(x, add) c(x - add, x + add)
+des = make_prob_design()
+# Subset for testing
+des = lapply(des, \(dt) dt[(samples_k == 2) & (rmst_diff %in% c(0, 1.5))])
+des = lapply(des, function(dt) {
+  idx = vapply(dt$samples_alloc, \(x) identical(unname(x), c(15, 15)), logical(1))
+  dt[idx]
+})
+des = lapply(des, function(dt) {
+  idx = vapply(
+    dt$params_cens,
+    function(x) {
+      isTRUE(all.equal(
+        unname(x), c(0.01335314, 0.04700036), tolerance = 0.0001
+      ))
+    },
+    logical(1)
+  )
+  dt[idx]
+})
+
+
+
+des
+names(des)
+
+# `data` argument for each problem
+constants = list(
+  cutoff = 10,
+  alpha = 0.05,
+  var_method_asy = "greenwood",
+  var_method_studperm = "nelson_aalen",
+  studperm_samples = 2000L
+)
+
+
+# Registry creation ----
 
 # Create the registry
 reg = bt$makeExperimentRegistry(
-  fs$path("simulations", "registry"),
+  fs$path("simsetup", "registry"),
   seed = 42L
 )
-# reg = bt$loadRegistry(fs$path("simulations", "registry"), writeable = TRUE)
+# reg = bt$loadRegistry(fs$path("simsetup", "registry"), writeable = TRUE)
+# bt$removeRegistry()
 
-# Add the problem(s)
-bt$addProblem("ph", fun = gen_data, seed = 1L)
+# Add problems
+bt$addProblem("ph_exp", fun = gen_data_exp, data = constants, seed = 1L)
+bt$addProblem("crossing_pwexp", fun = gen_data_pwexp, data = constants, seed = 1L)
+bt$addProblem("crossing_wb", fun = gen_data_weibull, data = constants, seed = 1L)
 
 # Add the algorithms (they are all wrapped in one function here)
-bt$addAlgorithm("all", fun = do_one)
+bt$addAlgorithm("all", fun = rmst_all_methods)
 
 # Add experiments
-bt$addExperiments(
-  prob.designs = list(
-    ph = data.table(
-      num_samples = list(c(12, 18)),
-      lambda_ctrl = med2rate(12),
-      lambda_trt = med2rate(24),
-      cens_ctrl =  med2rate(36),
-      cens_trt =  med2rate(36)
-    )
-  ),
-  algo.designs = list(
-    all = data.table(
-      alpha = 0.05,
-      cutoff = months2days(36)
-    )
-  ),
-  repls = 10
-)
+bt$addExperiments(prob.designs = des, repls = 100)
 
 # Quick overview
+bt$getJobPars()[1:5] |>
+  bt$unwrap()
+
+
+
+# Test jobs ----
+
+# ph_exp
+bt$findExperiments(
+  prob.name = "ph_exp",
+  prob.pars = (samples_k == 2 & rmst_diff == 0)
+)[1]
+x = bt$testJob(id = 1)
+x = bt$testJob(id = 1, external = TRUE)
+
+bt$findExperiments(
+  prob.name = "ph_exp",
+  prob.pars = (samples_k == 2 & rmst_diff == 1.5)
+)[1]
+x = bt$testJob(id = 101)
+x = bt$testJob(id = 101, external = TRUE)
+
+
+# crossing_pwexp
+bt$findExperiments(
+  prob.name = "crossing_pwexp",
+  prob.pars = (samples_k == 2 & rmst_diff == 0)
+)[1]
+x = bt$testJob(id = 201)
+x = bt$testJob(id = 201, external = TRUE)
+
+bt$findExperiments(
+  prob.name = "crossing_pwexp",
+  prob.pars = (samples_k == 2 & rmst_diff == 1.5)
+)[1]
+x = bt$testJob(id = 301)
+x = bt$testJob(id = 301, external = TRUE)
+
+
+# crossing_wb
+bt$findExperiments(
+  prob.name = "crossing_wb",
+  prob.pars = (samples_k == 2 & rmst_diff == 0)
+)[1]
+x = bt$testJob(id = 401)
+x = bt$testJob(id = 401, external = TRUE)
+
+bt$findExperiments(
+  prob.name = "crossing_wb",
+  prob.pars = (samples_k == 2 & rmst_diff == 1.5)
+)[1]
+x = bt$testJob(id = 501)
+x = bt$testJob(id = 501, external = TRUE)
+
 bt$getJobPars()
-bt$unwrap(bt$getJobPars())
-
-# Test job
-bt$testJob(id = 1, external = TRUE)
-x = bt$testJob(id = 2, external = TRUE)
-
-# Check if working with list columns works
-dt = x$data
-dt[, .N, by = trt]
-# Yes, it does
-
-x$results
-
-x[3, error]
-
-x[1, error]
-
-months2days(36)

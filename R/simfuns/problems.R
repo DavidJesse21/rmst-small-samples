@@ -8,6 +8,7 @@ box::use(
 
 #' Generate two-sample survival data
 #' 
+#' @param data,job Internal parameters for `batchtools`.
 #' @param samples_alloc (`numeric(2)`)\cr
 #'   The base sample sizes for the control and treatment group, respectively.
 #' @param samples_k (`numeric(1)`)\cr
@@ -16,6 +17,7 @@ box::use(
 #'   A named vector of parameters for the time to event distributions.
 #' @param params_cens (`numeric(2)`)\cr
 #'   A named vector of parameters for the censoring distributions.
+#' @param ... Ignored.
 #' 
 #' @note
 #' The vector `params_cens` must always contain the values `lambda0` and `lambda1` 
@@ -43,8 +45,10 @@ NULL
 #' * `lambda1`: The rate parameter for the treatment group
 #' 
 #' @export
-gen_data_exp = function(samples_alloc, samples_k,
-                        params_surv, params_cens) {
+gen_data_exp = function(data, job, 
+                        samples_alloc, samples_k,
+                        params_surv, params_cens,
+                        ...) {
   # Sample sizes
   n0 = samples_alloc[1] * samples_k
   n1 = samples_alloc[2] * samples_k
@@ -58,9 +62,9 @@ gen_data_exp = function(samples_alloc, samples_k,
   c1 = rexp(n1, params_cens["lambda1"])
   
   # Complete data set
-  dt = combine_and_censor(n0, n1, t0, t1, c0, c1)
+  dt = combine_and_censor(t0, t1, c0, c1)
   
-  return(dt[])
+  return(dt)
 }
 
 
@@ -82,8 +86,10 @@ gen_data_exp = function(samples_alloc, samples_k,
 #' * `crosstime`: The time point at which the hazard rate of the treatment group changes
 #' 
 #' @export
-gen_data_pwexp = function(samples_alloc, samples_k,
-                          params_surv, params_cens) {
+gen_data_pwexp = function(data, job, 
+                          samples_alloc, samples_k,
+                          params_surv, params_cens,
+                          ...) {
   # Sample sizes
   n0 = samples_alloc[1] * samples_k
   n1 = samples_alloc[2] * samples_k
@@ -97,9 +103,9 @@ gen_data_pwexp = function(samples_alloc, samples_k,
   c1 = rexp(n1, params_cens["lambda1"])
   
   # Complete data set
-  dt = combine_and_censor(n0, n1, t0, t1, c0, c1)
+  dt = combine_and_censor(t0, t1, c0, c1)
   
-  return(dt[])
+  return(dt)
 }
 
 
@@ -117,8 +123,10 @@ gen_data_pwexp = function(samples_alloc, samples_k,
 #' * `shape1`, `scale1`: Shape and scale parameters for the treatment group
 #' 
 #' @export
-gen_data_weibull = function(samples_alloc, samples_k,
-                            params_surv, params_cens) {
+gen_data_weibull = function(data, job, 
+                            samples_alloc, samples_k,
+                            params_surv, params_cens,
+                            ...) {
   # Sample sizes
   n0 = samples_alloc[1] * samples_k
   n1 = samples_alloc[2] * samples_k
@@ -132,18 +140,18 @@ gen_data_weibull = function(samples_alloc, samples_k,
   c1 = rexp(n1, params_cens["lambda1"])
   
   # Complete data set
-  dt = combine_and_censor(n0, n1, t0, t1, c0, c1)
+  dt = combine_and_censor(t0, t1, c0, c1)
   
-  return(dt[])
+  return(dt)
 }
 
 
 # Internal helper
-combine_and_censor = function(n0, n1, t0, t1, c0, c1) {
+combine_and_censor = function(t0, t1, c0, c1) {
   dt = data.table(
     time = c(t0, t1),
     time_cens = c(c0, c1),
-    trt = rep(0:1, c(n0, n1))
+    trt = rep(0:1, c(length(t0), length(t1)))
   )
   
   dt[, event := fifelse(time <= time_cens, 1L, 0L)][, time_cens := NULL]

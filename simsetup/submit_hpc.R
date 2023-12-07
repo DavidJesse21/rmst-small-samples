@@ -7,7 +7,9 @@ box::use(
 )
 
 # Load registry
-reg = bt$loadRegistry(fs$path("simulations", "registry"), work.dir = getwd(), writeable = TRUE)
+reg = bt$loadRegistry(
+  fs$path("simsetup", "registry"), work.dir = getwd(), writeable = TRUE
+)
 
 # Create cluster function
 reg$cluster.functions = bt$makeClusterFunctionsSlurm(
@@ -17,9 +19,9 @@ reg$cluster.functions = bt$makeClusterFunctionsSlurm(
 # Submit jobs
 bt$submitJobs(
   resources = list(
-    mail.type = "BEGIN,END",
+    mail.type = "NONE",
     mail.user = "david.jesse@stud.uni-goettingen.de",
-    walltime = "00:05:00",
+    walltime = "00:03:00",
     ncpus = 1,
     memory = "3GB"
   ),

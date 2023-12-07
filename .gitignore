@@ -7,3 +7,4 @@ simulations/registry/
 *.rds
 *.log
 !hpc/packages.rds
+playground/zzz.R

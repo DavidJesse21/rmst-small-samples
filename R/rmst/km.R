@@ -314,7 +314,7 @@ rmst_diff_studperm = function(formula, data = environment(formula),
 fsurvfit = function(time, event) {
   n_all = length(time)
   
-  tab = table(time, event)
+  tab = table(time, factor(event, levels = 0:1))
   
   n_event = tab[, 2]
   n_cens = tab[, 1]
