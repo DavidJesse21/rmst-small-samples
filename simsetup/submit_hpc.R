@@ -21,7 +21,7 @@ bt$submitJobs(
   resources = list(
     mail.type = "NONE",
     mail.user = "david.jesse@stud.uni-goettingen.de",
-    walltime = "00:03:00",
+    walltime = "00:10:00",
     ncpus = 1,
     memory = "3GB"
   ),
