@@ -70,7 +70,7 @@ bt$addProblem("crossing_wb", fun = gen_data_weibull, data = constants, seed = 1L
 bt$addAlgorithm("all", fun = rmst_all_methods)
 
 # Add experiments
-bt$addExperiments(prob.designs = des, repls = 100)
+bt$addExperiments(prob.designs = des, repls = 1000)
 
 # Quick overview
 bt$getJobPars()[1:5] |>
