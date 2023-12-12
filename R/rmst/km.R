@@ -288,7 +288,8 @@ rmst_diff_studperm = function(formula, data = environment(formula),
       t1 = cumsum(rev(areas[-1]))^2
       t2 = x[, "n_event"] / x[, "n_risk"]^2
       sum(t1 * rev(t2))
-    }
+    },
+    "none" = NA_real_
   )
   
   # Output
