@@ -49,20 +49,27 @@ gen_data_exp = function(data, job,
                         samples_alloc, samples_k,
                         params_surv, params_cens,
                         ...) {
-  # Sample sizes
-  n0 = samples_alloc[1] * samples_k
-  n1 = samples_alloc[2] * samples_k
+  estimable = FALSE
   
-  # Survival times
-  t0 = rexp(n0, params_surv["lambda0"])
-  t1 = rexp(n1, params_surv["lambda1"])
-  
-  # Censoring times
-  c0 = rexp(n0, params_cens["lambda0"])
-  c1 = rexp(n1, params_cens["lambda1"])
-  
-  # Complete data set
-  dt = combine_and_censor(t0, t1, c0, c1)
+  while (!estimable) {
+    # Sample sizes
+    n0 = samples_alloc[1] * samples_k
+    n1 = samples_alloc[2] * samples_k
+    
+    # Survival times
+    t0 = rexp(n0, params_surv["lambda0"])
+    t1 = rexp(n1, params_surv["lambda1"])
+    
+    # Censoring times
+    c0 = rexp(n0, params_cens["lambda0"])
+    c1 = rexp(n1, params_cens["lambda1"])
+    
+    # Complete data set
+    dt = combine_and_censor(t0, t1, c0, c1)
+    
+    # Check estimability
+    estimable = is_estimable(dt, data$cutoff)
+  }
   
   return(dt)
 }
@@ -90,20 +97,27 @@ gen_data_pwexp = function(data, job,
                           samples_alloc, samples_k,
                           params_surv, params_cens,
                           ...) {
-  # Sample sizes
-  n0 = samples_alloc[1] * samples_k
-  n1 = samples_alloc[2] * samples_k
+  estimable = FALSE
   
-  # Survival times
-  t0 = rexp(n0, params_surv["lambda0"])
-  t1 = rpwexp(n1, c(0, params_surv["crosstime"]), params_surv[c("lambda11", "lambda12")])
-  
-  # Censoring times
-  c0 = rexp(n0, params_cens["lambda0"])
-  c1 = rexp(n1, params_cens["lambda1"])
-  
-  # Complete data set
-  dt = combine_and_censor(t0, t1, c0, c1)
+  while (!estimable) {
+    # Sample sizes
+    n0 = samples_alloc[1] * samples_k
+    n1 = samples_alloc[2] * samples_k
+    
+    # Survival times
+    t0 = rexp(n0, params_surv["lambda0"])
+    t1 = rpwexp(n1, c(0, params_surv["crosstime"]), params_surv[c("lambda11", "lambda12")])
+    
+    # Censoring times
+    c0 = rexp(n0, params_cens["lambda0"])
+    c1 = rexp(n1, params_cens["lambda1"])
+    
+    # Complete data set
+    dt = combine_and_censor(t0, t1, c0, c1)
+    
+    # Check estimability
+    estimable = is_estimable(dt, data$cutoff)
+  }
   
   return(dt)
 }
@@ -127,26 +141,33 @@ gen_data_weibull = function(data, job,
                             samples_alloc, samples_k,
                             params_surv, params_cens,
                             ...) {
-  # Sample sizes
-  n0 = samples_alloc[1] * samples_k
-  n1 = samples_alloc[2] * samples_k
+  estimable = FALSE
   
-  # Survival times
-  t0 = rweibull(n0, params_surv["shape0"], params_surv["scale0"])
-  t1 = rweibull(n1, params_surv["shape1"], params_surv["scale1"])
-  
-  # Censoring times
-  c0 = rexp(n0, params_cens["lambda0"])
-  c1 = rexp(n1, params_cens["lambda1"])
-  
-  # Complete data set
-  dt = combine_and_censor(t0, t1, c0, c1)
+  while (!estimable) {
+    # Sample sizes
+    n0 = samples_alloc[1] * samples_k
+    n1 = samples_alloc[2] * samples_k
+    
+    # Survival times
+    t0 = rweibull(n0, params_surv["shape0"], params_surv["scale0"])
+    t1 = rweibull(n1, params_surv["shape1"], params_surv["scale1"])
+    
+    # Censoring times
+    c0 = rexp(n0, params_cens["lambda0"])
+    c1 = rexp(n1, params_cens["lambda1"])
+    
+    # Complete data set
+    dt = combine_and_censor(t0, t1, c0, c1)
+    
+    # Check estimability
+    estimable = is_estimable(dt, data$cutoff)
+  }
   
   return(dt)
 }
 
 
-# Internal helper
+# Combine generated survival and censoring times
 combine_and_censor = function(t0, t1, c0, c1) {
   dt = data.table(
     time = c(t0, t1),
@@ -158,4 +179,12 @@ combine_and_censor = function(t0, t1, c0, c1) {
   setcolorder(dt, c("time", "event", "trt"))
   
   return(dt[])
+}
+
+
+# Check if RMST contrast is estimable
+is_estimable = function(dt, cutoff) {
+  idx = dt[, .I[which.max(time)], by = trt]$V1
+  check = !dt[idx, (time < cutoff) & (event == 0)]
+  all(check)
 }
