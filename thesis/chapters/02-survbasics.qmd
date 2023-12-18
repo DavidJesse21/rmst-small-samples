@@ -1,0 +1,3 @@
+# Survival Analysis {#sec-survbasics}
+
+Some basic concepts in survival analysis.
