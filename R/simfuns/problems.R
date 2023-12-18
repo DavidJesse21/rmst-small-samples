@@ -175,7 +175,11 @@ combine_and_censor = function(t0, t1, c0, c1) {
     trt = rep(0:1, c(length(t0), length(t1)))
   )
   
-  dt[, event := fifelse(time <= time_cens, 1L, 0L)][, time_cens := NULL]
+  dt[, event := fifelse(time <= time_cens, 1L, 0L)][
+    , `:=`(time = pmin(time, time_cens),
+           time_cens = NULL)
+  ]
+  
   setcolorder(dt, c("time", "event", "trt"))
   
   return(dt[])
