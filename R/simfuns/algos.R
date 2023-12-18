@@ -8,7 +8,7 @@ box::use(
   rmst/km[rmst_diff_test, rmst_diff_studperm],
   # Pseudo-observation approaches
   eventglm[rmeanglm],
-  rmst/pseudo[rmst_pseudo_test]
+  rmst/pseudo[rmst_pseudo_test, pseudo_stratified2, pseudo_fpm1_stratified]
 )
 
 box::use(
@@ -90,28 +90,11 @@ rmst_all_methods = function(data, job, instance,
     out
   })
   
-  # Pseudo-observations (constant variance)
-  res_pseudo_const = trycatch2({
+  # Pseudo-observations using Kaplan-Meier
+  res_pseudo = trycatch2({
     m = rmeanglm(
       Surv(time, event) ~ trt, data = instance, time = data$cutoff,
-      model.censoring = "stratified", formula.censoring = ~ trt
-    )
-    
-    x = rmst_pseudo_test(m, vcov_type = "const")[2, ]
-    
-    ci = minus_plus(x[["est"]], quant * sqrt(x[["var_est"]]))
-    
-    out = c(x[["pval"]], ci)
-    names(out) = c("pval", "ci_lower", "ci_upper")
-    
-    out
-  })
-  
-  # Pseudo-observations (HC3)
-  res_pseudo_hc3 = trycatch2({
-    m = rmeanglm(
-      Surv(time, event) ~ trt, data = instance, time = data$cutoff,
-      model.censoring = "stratified", formula.censoring = ~ trt
+      model.censoring = pseudo_stratified2, formula.censoring = ~ trt
     )
     
     x = rmst_pseudo_test(m, vcov_type = "HC3")[2, ]
@@ -124,12 +107,30 @@ rmst_all_methods = function(data, job, instance,
     out
   })
   
+  # Pseudo-observations using flexible parametric models
+  # res_pseudo_fpm = trycatch2({
+  #   m = rmeanglm(
+  #     Surv(time, event) ~ trt, data = instance, time = data$cutoff,
+  #     model.censoring = pseudo_fpm1_stratified, formula.censoring = ~ trt
+  #   )
+  #   
+  #   x = rmst_pseudo_test(m, vcov_type = "HC3")[2, ]
+  #   
+  #   ci = minus_plus(x[["est"]], quant * sqrt(x[["var_est"]]))
+  #   
+  #   out = c(x[["pval"]], ci)
+  #   names(out) = c("pval", "ci_lower", "ci_upper")
+  #   
+  #   out
+  # })
+  
   # Final output
   res = list(
     asy = res_asy,
     studperm = res_studperm,
-    pseudo_const = res_pseudo_const,
-    pseudo_hc3 = res_pseudo_hc3
+    pseudo = res_pseudo
+    # pseudo_km = res_pseudo_km,
+    # pseudo_fpm = res_pseudo_fpm
   )
   
   dt = data.table(

@@ -73,6 +73,9 @@ make_prob_design = function(rmst_diff = c(0, 1, 1.5), cutoff = 10,
   des[, problem := factor(problem, levels = c("ph_exp", "crossing_pwexp", "crossing_wb"))]
   setorder(des, problem)
   
+  # # Add column for chunking / job arrays
+  # des[, chunk := 1:.N]
+  
   # Split by problem?
   if (split) {
     des = split(des, by = "problem")

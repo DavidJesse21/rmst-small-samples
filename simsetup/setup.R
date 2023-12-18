@@ -38,9 +38,6 @@ des = lapply(des, function(dt) {
 
 
 
-des
-names(des)
-
 # `data` argument for each problem
 constants = list(
   cutoff = 10,
@@ -70,12 +67,18 @@ bt$addProblem("crossing_wb", fun = gen_data_weibull, data = constants, seed = 1L
 bt$addAlgorithm("all", fun = rmst_all_methods)
 
 # Add experiments
-bt$addExperiments(prob.designs = des, repls = 1000)
+bt$addExperiments(prob.designs = des, repls = 5000)
 
 # Quick overview
 bt$getJobPars()[1:5] |>
   bt$unwrap()
 
+# Test chunking
+x = bt$getJobPars()
+for (j in c("algorithm", "algo.pars")) set(x, j = j, value = NULL)
+x = bt$unwrap(x)
+for (j in setdiff(colnames(x), c("job.id", "chunk"))) set(x, j = j, value = NULL)
+x[, chunk := rleid(chunk)]
 
 
 # Test jobs ----
@@ -92,8 +95,8 @@ bt$findExperiments(
   prob.name = "ph_exp",
   prob.pars = (samples_k == 2 & rmst_diff == 1.5)
 )[1]
-x = bt$testJob(id = 101)
-x = bt$testJob(id = 101, external = TRUE)
+x = bt$testJob(id = 2501)
+x = bt$testJob(id = 2501, external = TRUE)
 
 
 # crossing_pwexp
@@ -101,15 +104,15 @@ bt$findExperiments(
   prob.name = "crossing_pwexp",
   prob.pars = (samples_k == 2 & rmst_diff == 0)
 )[1]
-x = bt$testJob(id = 201)
-x = bt$testJob(id = 201, external = TRUE)
+x = bt$testJob(id = 5001)
+x = bt$testJob(id = 5001, external = TRUE)
 
 bt$findExperiments(
   prob.name = "crossing_pwexp",
   prob.pars = (samples_k == 2 & rmst_diff == 1.5)
 )[1]
-x = bt$testJob(id = 301)
-x = bt$testJob(id = 301, external = TRUE)
+x = bt$testJob(id = 7501)
+x = bt$testJob(id = 7501, external = TRUE)
 
 
 # crossing_wb
@@ -117,14 +120,21 @@ bt$findExperiments(
   prob.name = "crossing_wb",
   prob.pars = (samples_k == 2 & rmst_diff == 0)
 )[1]
-x = bt$testJob(id = 401)
-x = bt$testJob(id = 401, external = TRUE)
+x = bt$testJob(id = 10001)
+x = bt$testJob(id = 10001, external = TRUE)
 
 bt$findExperiments(
   prob.name = "crossing_wb",
   prob.pars = (samples_k == 2 & rmst_diff == 1.5)
 )[1]
-x = bt$testJob(id = 501)
-x = bt$testJob(id = 501, external = TRUE)
+x = bt$testJob(id = 12501)
+x = bt$testJob(id = 12501, external = TRUE)
+
+# erros
+x = bt$testJob(id = 290)
+err = x[4, error][[1]]
+names(err)
+err$message
+err$call
 
 bt$getJobPars()
