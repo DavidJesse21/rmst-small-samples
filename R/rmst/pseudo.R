@@ -67,9 +67,9 @@ rmst_pseudo_test = function(m, vcov_type = "HC3") {
 #' @inheritParams eventglm::pseudo_independent
 #' 
 #' @export
-pseudo_independent2 = function(formula, time, cause = 1, data,
-                               type = "rmean",
-                               formula.censoring = NULL, ipcw.method = NULL) {
+pseudo_indep = function(formula, time, cause = 1, data,
+                        type = "rmean",
+                        formula.censoring = NULL, ipcw.method = NULL) {
   
   margformula = update.formula(formula, . ~ 1)
   x = get_surv_data(margformula, data = data)
@@ -100,9 +100,9 @@ pseudo_independent2 = function(formula, time, cause = 1, data,
 #' @inheritParams eventglm::pseudo_stratified
 #' 
 #' @export
-pseudo_stratified2 = function(formula, time, cause = 1, data,
-                              type = "rmean",
-                              formula.censoring = NULL, ipcw.method = NULL) {
+pseudo_strat = function(formula, time, cause = 1, data,
+                        type = "rmean",
+                        formula.censoring = NULL, ipcw.method = NULL) {
   margformula = update.formula(formula, . ~ 1)
   
   # Get all strata levels
@@ -115,7 +115,7 @@ pseudo_stratified2 = function(formula, time, cause = 1, data,
   
   # Fill output vector
   pseudo_obs = lapply(li_idx, function(stratum) {
-    pseudo_independent2(margformula, time, cause, data[stratum], type, formula.censoring, ipcw.method)
+    pseudo_indep(margformula, time, cause, data[stratum], type, formula.censoring, ipcw.method)
   })
   for (i in seq_along(pseudo_obs)) {
     out[li_idx[[i]]] = pseudo_obs[[i]]
@@ -133,9 +133,9 @@ pseudo_stratified2 = function(formula, time, cause = 1, data,
 #' "1" denotes that one internal knot is used for the flexible parametric model.
 #' 
 #' @export
-pseudo_fpm1_independent = function(formula, time, cause = 1, data,
-                                   type = "rmean",
-                                   formula.censoring = NULL, ipcw.method = NULL) {
+pseudo_fpm1_indep = function(formula, time, cause = 1, data,
+                             type = "rmean",
+                             formula.censoring = NULL, ipcw.method = NULL) {
   margformula = update.formula(formula, . ~ 1)
   
   # Estimate using all data
@@ -169,9 +169,9 @@ pseudo_fpm1_independent = function(formula, time, cause = 1, data,
 #' "1" denotes that one internal knot is used for the flexible parametric model.
 #' 
 #' @export
-pseudo_fpm1_stratified = function(formula, time, cause = 1, data,
-                                  type = "rmean",
-                                  formula.censoring = NULL, ipcw.method = NULL) {
+pseudo_fpm1_strat = function(formula, time, cause = 1, data,
+                             type = "rmean",
+                             formula.censoring = NULL, ipcw.method = NULL) {
   margformula = update.formula(formula, . ~ 1)
   
   # Get all strata levels

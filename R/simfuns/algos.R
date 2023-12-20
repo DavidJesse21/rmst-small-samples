@@ -8,11 +8,11 @@ box::use(
   rmst/km[rmst_diff_test, rmst_diff_studperm],
   # Pseudo-observation approaches
   eventglm[rmeanglm],
-  rmst/pseudo[rmst_pseudo_test, pseudo_stratified2, pseudo_fpm1_stratified]
+  rmst/pseudo[rmst_pseudo_test, pseudo_strat]
 )
 
 box::use(
-  simfuns/trycatch2[trycatch2]
+  simfuns/utils[trycatch2]
 )
 
 
@@ -54,8 +54,7 @@ box::use(
 #' 3. Upper bound of the confidence interval
 #' 
 #' @export
-rmst_all_methods = function(data, job, instance,
-                            ...) {
+rmst_funs = function(data, job, instance, ...) {
   # Standard normal quantile for testing and construction of CIs
   quant = qnorm(1 - (data$alpha / 2))
   
@@ -94,7 +93,7 @@ rmst_all_methods = function(data, job, instance,
   res_pseudo = trycatch2({
     m = rmeanglm(
       Surv(time, event) ~ trt, data = instance, time = data$cutoff,
-      model.censoring = pseudo_stratified2, formula.censoring = ~ trt
+      model.censoring = pseudo_strat, formula.censoring = ~ trt
     )
     
     x = rmst_pseudo_test(m, vcov_type = "HC3")[2, ]
@@ -107,30 +106,11 @@ rmst_all_methods = function(data, job, instance,
     out
   })
   
-  # Pseudo-observations using flexible parametric models
-  # res_pseudo_fpm = trycatch2({
-  #   m = rmeanglm(
-  #     Surv(time, event) ~ trt, data = instance, time = data$cutoff,
-  #     model.censoring = pseudo_fpm1_stratified, formula.censoring = ~ trt
-  #   )
-  #   
-  #   x = rmst_pseudo_test(m, vcov_type = "HC3")[2, ]
-  #   
-  #   ci = minus_plus(x[["est"]], quant * sqrt(x[["var_est"]]))
-  #   
-  #   out = c(x[["pval"]], ci)
-  #   names(out) = c("pval", "ci_lower", "ci_upper")
-  #   
-  #   out
-  # })
-  
   # Final output
   res = list(
     asy = res_asy,
     studperm = res_studperm,
     pseudo = res_pseudo
-    # pseudo_km = res_pseudo_km,
-    # pseudo_fpm = res_pseudo_fpm
   )
   
   dt = data.table(

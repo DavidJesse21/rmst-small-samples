@@ -6,110 +6,6 @@ box::use(
 )
 
 
-# Obtain results ----
-
-
-#' Obtain results from the simulation study
-#' 
-#' @description
-#' Wrapper around `batchtools::reduceResultsDataTable()` tailored to the output of the jobs 
-#' for my simulation study.
-#' 
-#' @param ids,reg Passed to `batchtools::reduceResultsDataTable()`.
-#' @param what (`character()`)\cr
-#'   Specify which subset of values, errors and warnings should be returned in the table.
-#' 
-#' @export
-get_results = function(ids = NULL,
-                       what = c("value", "error", "warning"),
-                       reg = bt$getDefaultRegistry()) {
-  
-  # Control if values, errors and/or warnings should be returned
-  what = unique(what)
-  chk$assert_subset(what, c("value", "error", "warning"))
-  to_drop = setdiff(c("value", "error", "warning"), what)
-  reduce = if (length(to_drop) == 0) {
-    NULL
-  } else {
-    function(res) {
-      for (j in to_drop) {
-        set(res, j = j, value = NULL)
-      }
-      return(res)
-    }
-  }
-  
-  # Obtain the results
-  dt = bt$reduceResultsDataTable(ids = ids, fun = reduce, reg = reg)
-  
-  # Expand the results (nested data.tables)
-  dt = lapply(1:nrow(dt), function(i) {
-    res = dt[i, result][[1]]
-    res[, job.id := dt[i, job.id]]
-    res
-  }) |>
-    rbindlist()
-  
-  # job.id should be first column
-  setcolorder(dt, neworder = "job.id")
-  
-  return(dt)
-}
-
-
-#' Obtain job parameters
-#' 
-#' @description
-#' Wrapper around `batchtools::getJobPars()` tailored to the job table for my simulation study.
-#' 
-#' @param drop_algo (`logical(1)`)\cr
-#'   Whether to drop columns related to "algorithms".
-#'   They should be redundant as one job executes all algorithms and the parameters (significance level, cutoff, ...) 
-#'   should all remain fixed.
-#' @param unwrap (`numeric(1)`)\cr
-#'   A number indicating up to which level `batchtools::unwrap()` should be applied to the table 
-#'   with the job parameters.
-#'   
-#' @export
-get_job_pars = function(ids = NULL,
-                        reg = bt$getDefaultRegistry(),
-                        drop_algo = TRUE,
-                        unwrap = 0) {
-  chk$assert_int(unwrap, lower = 0)
-  
-  dt = bt$getJobPars(ids = ids, reg = reg)
-  
-  if (drop_algo) {
-    for (j in c("algorithm", "algo.pars")) {
-      set(dt, j = j, value = NULL)
-    }
-  }
-  
-  if (unwrap != 0) {
-    for (i in 1:unwrap) {
-      dt = bt$unwrap(dt)
-      if (!any(vapply(dt, \(x) is.list(x), logical(1)))) break
-    }
-  }
-  
-  return(dt)
-}
-
-
-#' Merge simulation results and parameters
-#' 
-#' @param res,params (`data.table`)\cr
-#'   Corresponds to `x` and `y` in `data.table::merge()`.
-#' @param by (`character()`)\cr
-#'   Shared columns to merge on. This should usually not be altered.
-#'   
-#' @export
-merge_res_params = function(res, params, by = "job.id") {
-  merge(res, params, by = "job.id")
-}
-
-
-
 # Operating characteristics ----
 
 
@@ -149,8 +45,6 @@ summarize_rejections = function(res, by = "method", alpha = 0.05, na_stats = TRU
 }
 
 
-# TODO: true values available via problem design?
-# Then how to best write this function?
 
 #' Obtain/calculate confidence bounds, width and coverage indicator
 #' 

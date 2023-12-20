@@ -23,17 +23,20 @@ box::use(
 #' @param cens_surv (`numeric(3)`)\cr
 #'   Survival probabilities of the censoring processes at `cutoff`.
 #'   See `get_params_cens()` for more details.
+#' @param chunk (`logical(1)`)\cr
+#'   Whether to add a chunk column.
 #' @param split (`logical(1)`)\cr
 #'   Whether to split the complete design data.table by its `problem` column.
 #'   This can be useful when using `batchtools` as we need a named list of design 
 #'   parameters anyway.
 #' 
 #' @export
-make_prob_design = function(rmst_diff = c(0, 1, 1.5), cutoff = 10,
+make_prob_design = function(rmst_diff = c(0, 1.5), cutoff = 10,
                             params_exp = list(lambda0 = 0.2),
                             params_pwexp = list(lambda0 = 0.2, lambdas1 = c(0.5, 0.05)),
                             params_weibull = list(shape0 = 3, scale0 = 8, scale1 = 14),
                             cens_surv = c(0.625, 0.75, 0.875),
+                            chunk = TRUE,
                             split = TRUE) {
   # Fixed parameters
   samples_alloc = list(c(12, 18), c(15, 15), c(18, 12))
@@ -74,6 +77,9 @@ make_prob_design = function(rmst_diff = c(0, 1, 1.5), cutoff = 10,
   setorder(des, problem)
   
   # # Add column for chunking / job arrays
+  if (chunk) {
+    des[, chunk := 1:.N]
+  }
   # des[, chunk := 1:.N]
   
   # Split by problem?
