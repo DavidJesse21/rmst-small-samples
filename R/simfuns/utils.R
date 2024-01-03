@@ -126,3 +126,17 @@ trycatch2 = function(expr) {
   
   list(value = value, warning = warn, error = err)
 }
+
+
+#' Estimate and format the runtime for sequential executions
+#' @export
+estimate_sequential_runtime = function(secs_per_job = 2.1,
+                                       num_jobs = 5000L,
+                                       mult = 1) {
+  total = secs_per_job * num_jobs * mult
+  hours = floor(total / 3600)
+  minutes = floor((total %% 3600) / 60)
+  seconds = total %% 60
+  
+  sprintf("%02d:%02d:%02d", hours, minutes, seconds)
+}
