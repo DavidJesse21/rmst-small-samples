@@ -2,3 +2,4 @@
 library(curl)
 library(roxygen2)
 library(snow)
+library(microbenchmark)

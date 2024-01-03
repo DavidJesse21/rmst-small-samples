@@ -1,6 +1,7 @@
 box::use(
   data.table[as.data.table],
-  survival[Surv]
+  survival[Surv],
+  stats[update.formula, model.matrix]
 )
 
 
@@ -8,7 +9,14 @@ box::use(
 #' @export
 get_surv_data = function(formula, data = environment(formula)) {
   y = as.matrix(eval(formula[[2]], envir = data))
-  x = if (formula[[3]] == 1) NULL else eval(formula[[3]], envir = data)
+  x = if (formula[[3]] == 1) {
+    NULL
+  } else {
+    model.matrix(
+      update.formula(formula[c(1, 3)], ~ . - 1),
+      data = data
+    )
+  }
   
   out = cbind(
     as.data.table(y),
