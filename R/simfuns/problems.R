@@ -1,5 +1,5 @@
 box::use(
-  stats[rexp, rweibull],
+  stats[rexp, rweibull, runif],
   data.table[data.table, fifelse, setcolorder],
   miniPCH[rpwexp = rpch]
 )
@@ -13,19 +13,13 @@ box::use(
 #'   The base sample sizes for the control and treatment group, respectively.
 #' @param samples_k (`numeric(1)`)\cr
 #'   A positive integerish value with which the base sample sizes get multiplied.
-#' @param params_surv (`numeric()`)\cr
+#' @param surv_params (`numeric()`)\cr
 #'   A named vector of parameters for the time to event distributions.
-#' @param params_cens (`numeric(2)`)\cr
-#'   A named vector of parameters for the censoring distributions.
+#' @param cens_model (`character(1)`)\cr
+#'   The name of the censoring model used for looking up the data generating function for the 
+#'   censoring times.
+#'   Must be one of `"wb_uneq"`, `"unif_eq"` or `"wb_eq"`.
 #' @param ... Ignored.
-#' 
-#' @note
-#' The vector `params_cens` must always contain the values `lambda0` and `lambda1` 
-#' referring to the rate parameters of the exponential censoring distributions for 
-#' the control and treatment group, respectively.
-#' These distributional assumptions do not differ between the different simulation problems 
-#' (though the parameters are varied within each problem).
-#' With regards to `params_surv` consult the documentation of the respective function.
 #' 
 #' @name gen_data
 NULL
@@ -47,7 +41,8 @@ NULL
 #' @export
 gen_data_exp = function(data, job, 
                         samples_alloc, samples_k,
-                        params_surv, params_cens,
+                        surv_params,
+                        cens_model,
                         ...) {
   estimable = FALSE
   
@@ -57,15 +52,14 @@ gen_data_exp = function(data, job,
     n1 = samples_alloc[2] * samples_k
     
     # Survival times
-    t0 = rexp(n0, params_surv["lambda0"])
-    t1 = rexp(n1, params_surv["lambda1"])
+    t0 = rexp(n0, surv_params["lambda0"])
+    t1 = rexp(n1, surv_params["lambda1"])
     
     # Censoring times
-    c0 = rexp(n0, params_cens["lambda0"])
-    c1 = rexp(n1, params_cens["lambda1"])
+    cens_times = li_cens_models[[cens_model]](n0, n1)
     
     # Complete data set
-    dt = combine_and_censor(t0, t1, c0, c1)
+    dt = combine_and_censor(t0, t1, cens_times[[1]], cens_times[[2]])
     
     # Check estimability
     estimable = is_estimable(dt, data$cutoff)
@@ -95,7 +89,8 @@ gen_data_exp = function(data, job,
 #' @export
 gen_data_pwexp = function(data, job, 
                           samples_alloc, samples_k,
-                          params_surv, params_cens,
+                          surv_params,
+                          cens_model,
                           ...) {
   estimable = FALSE
   
@@ -105,15 +100,14 @@ gen_data_pwexp = function(data, job,
     n1 = samples_alloc[2] * samples_k
     
     # Survival times
-    t0 = rexp(n0, params_surv["lambda0"])
-    t1 = rpwexp(n1, c(0, params_surv["crosstime"]), params_surv[c("lambda11", "lambda12")])
+    t0 = rexp(n0, surv_params["lambda0"])
+    t1 = rpwexp(n1, c(0, surv_params["crosstime"]), surv_params[c("lambda11", "lambda12")])
     
     # Censoring times
-    c0 = rexp(n0, params_cens["lambda0"])
-    c1 = rexp(n1, params_cens["lambda1"])
+    cens_times = li_cens_models[[cens_model]](n0, n1)
     
     # Complete data set
-    dt = combine_and_censor(t0, t1, c0, c1)
+    dt = combine_and_censor(t0, t1, cens_times[[1]], cens_times[[2]])
     
     # Check estimability
     estimable = is_estimable(dt, data$cutoff)
@@ -139,7 +133,8 @@ gen_data_pwexp = function(data, job,
 #' @export
 gen_data_weibull = function(data, job, 
                             samples_alloc, samples_k,
-                            params_surv, params_cens,
+                            surv_params,
+                            cens_model,
                             ...) {
   estimable = FALSE
   
@@ -149,15 +144,14 @@ gen_data_weibull = function(data, job,
     n1 = samples_alloc[2] * samples_k
     
     # Survival times
-    t0 = rweibull(n0, params_surv["shape0"], params_surv["scale0"])
-    t1 = rweibull(n1, params_surv["shape1"], params_surv["scale1"])
+    t0 = rweibull(n0, surv_params["shape0"], surv_params["scale0"])
+    t1 = rweibull(n1, surv_params["shape1"], surv_params["scale1"])
     
     # Censoring times
-    c0 = rexp(n0, params_cens["lambda0"])
-    c1 = rexp(n1, params_cens["lambda1"])
+    cens_times = li_cens_models[[cens_model]](n0, n1)
     
     # Complete data set
-    dt = combine_and_censor(t0, t1, c0, c1)
+    dt = combine_and_censor(t0, t1, cens_times[[1]], cens_times[[2]])
     
     # Check estimability
     estimable = is_estimable(dt, data$cutoff)
@@ -166,6 +160,41 @@ gen_data_weibull = function(data, job,
   return(dt)
 }
 
+
+# Censoring functions ----
+
+# Unequal censoring with Weibull distributions
+cens_wb_uneq = function(n0, n1,
+                        shape0 = 3, scale0 = 18,
+                        shape1 = 0.5, scale1 = 40) {
+  c0 = rweibull(n0, shape0, scale0)
+  c1 = rweibull(n1, shape1, shape1)
+  
+  list(c0, c1)
+}
+
+# Equal censoring with uniform distributions
+cens_unif_eq = function(n0, n1, a = 0, b = 25) {
+  c0 = runif(n0, a, b)
+  c1 = runif(n1, a, b)
+  
+  list(c0, c1)
+}
+
+# Equal censoring with Weibull distributions
+cens_wb_eq = function(n0, n1, shape = 3, scale = 15) {
+  c0 = rweibull(n0, shape, scale)
+  c1 = rweibull(n1, shape, scale)
+  
+  list(c0, c1)
+}
+
+# List of censoring models for lookup
+li_cens_models = list(
+  wb_uneq = cens_wb_uneq,
+  unif_eq = cens_unif_eq,
+  wb_eq = cens_wb_eq
+)
 
 # Combine generated survival and censoring times
 combine_and_censor = function(t0, t1, c0, c1) {
@@ -185,6 +214,8 @@ combine_and_censor = function(t0, t1, c0, c1) {
   return(dt[])
 }
 
+
+# Miscellaneous ----
 
 # Check if RMST contrast is estimable
 is_estimable = function(dt, cutoff) {

@@ -128,15 +128,43 @@ trycatch2 = function(expr) {
 }
 
 
-#' Estimate and format the runtime for sequential executions
+#' Estimate and format the runtime of a job
+#' 
+#' @param secs_per_job (`numeric(1)`)\cr
+#'   The (assumed/estimated) runtime for a single job in seconds
+#' @param num_jobs (`numeric(1)`)\cr
+#'   The number of replications of the job.
+#' @param mult (`numeric(1)`)\cr
+#'   A number that the runtime will be multiplied with for more conservative estimates.
+#' @param parallel (`logical(1)` or `list()`)\cr
+#'   Either `FALSE` to estimate the sequential runtime or a named list with the elements:\cr
+#'   * `num_cores` (`numeric(1)`): The number of available cores
+#'   * `prop` (`numeric(1)`): The proportion of parallelizable jobs
+#' 
+#' @note
+#' For the estimation of the runtime using parallel processes Amdahl's law is used.
+#' (https://en.wikipedia.org/wiki/Amdahl%27s_law)
+#'   
 #' @export
-estimate_sequential_runtime = function(secs_per_job = 2.1,
-                                       num_jobs = 5000L,
-                                       mult = 1) {
+estimate_runtime = function(secs_per_job,
+                            num_jobs = 5000L,
+                            mult = 1,
+                            parallel = FALSE) {
   total = secs_per_job * num_jobs * mult
-  hours = floor(total / 3600)
-  minutes = floor((total %% 3600) / 60)
-  seconds = total %% 60
   
-  sprintf("%02d:%02d:%02d", hours, minutes, seconds)
+  if (!is.list(parallel)) {
+    hours = floor(total / 3600)
+    minutes = floor((total %% 3600) / 60)
+    seconds = ceiling(total %% 60)
+    fmt = sprintf("%02d:%02d:%02d", hours, minutes, seconds)
+    return(fmt)
+  } else {
+    speedup = 1 / ((1 - parallel$prop) + (parallel$prop / parallel$num_cores))
+    total = total / speedup
+    hours = floor(total / 3600)
+    minutes = floor((total %% 3600) / 60)
+    seconds = ceiling(total %% 60)
+    fmt = sprintf("%02d:%02d:%02d", hours, minutes, seconds)
+    return(fmt)
+  }
 }

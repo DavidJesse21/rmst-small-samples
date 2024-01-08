@@ -4,16 +4,123 @@ box::use(
   stats[qnorm],
   data.table[data.table],
   survival[Surv],
-  # Asymptotic and studentized permutation test
-  rmst/km[rmst_diff_test, rmst_diff_studperm],
-  # Pseudo-observation approaches
-  eventglm[rmeanglm],
-  rmst/pseudo[rmst_pseudo_test, pseudo_strat]
+  eventglm[rmeanglm]
 )
 
 box::use(
-  simfuns/utils[trycatch2]
+  # Asymptotic and studentized permutation test
+  rmst/km[rmst_diff_test, rmst_diff_studperm],
+  # Pseudo-observation approaches
+  rmst/pseudo[pseudo_strat, pseudo_infjack, rmst_pseudo_test, boot_pseudo]
 )
+
+
+#' Used for calculating confidence intervals
+minus_plus = \(x, add) c(x - add, x + add)
+
+
+#' RMST algorithms
+#' 
+#' @param data,job,instance Internal parameters for `batchtools`.
+#' @param ... Ignored.
+#' 
+#' @section `batchtools` parameters:
+#' `data` contains static/constant objects that are the same across simulations/jobs.
+#' In the present context the relevant objects are:
+#' * `cutoff`: the restriction time
+#' * `alpha`: the significance level used for testing and constructing confidence intervals
+#' * `var_method`: the variance estimation method (used for asymptotic and studentized permutation)
+#' * `num_samples`: the number of iterations for the resampling procedures
+#' 
+#' @returns (`numeric(3)`)
+#'   A named vector containing the p-value of the test (1) and 
+#'   the lower and upper bounds of the confidence intervals (2 and 3).
+#'   
+#' @name algorithms
+NULL
+
+
+#' @rdname algorithms
+#' @export
+rmst_asy = function(data, job, instance, ...) {
+  quant = qnorm(1 - (data$alpha / 2))
+  
+  x = rmst_diff_test(
+    Surv(time, event) ~ trt, data = instance, cutoff = data$cutoff,
+    contrast = c("1", "0"), var_method = data$var_method_asy,
+    inest_action = "error"
+  )
+  
+  ci = minus_plus(x[["diff"]], quant * sqrt(x[["var_diff"]]))
+  
+  out = c(x[["pval"]], ci)
+  names(out) = c("pval", "ci_lower", "ci_upper")
+  
+  return(out)
+}
+
+
+#' @rdname algorithms
+#' @export
+rmst_studperm = function(data, job, instance, ...) {
+  quant = qnorm(1 - (data$alpha / 2))
+  
+  x = rmst_diff_studperm(
+    Surv(time, event) ~ trt, data = instance, cutoff = data$cutoff,
+    contrast = c("1", "0"), var_method = data$var_method_studperm,
+    num_samples = data$num_samples_studperm, conf_level = (1 - data$alpha),
+    light = TRUE
+  )
+  
+  out = c(x$permutation$pval, x$permutation$confint)
+  names(out) = c("pval", "ci_lower", "ci_upper")
+  
+  return(out)
+}
+
+
+#' @rdname algorithms
+#' @export
+rmst_pseudo_hc3 = function(data, job, instance, ...) {
+  quant = qnorm(1 - (data$alpha / 2))
+  
+  m = rmeanglm(
+    Surv(time, event) ~ trt, data = instance, time = data$cutoff,
+    model.censoring = pseudo_strat, formula.censoring = ~ trt
+  )
+  
+  x = rmst_pseudo_test(m, vcov_type = "HC3")[2, ]
+  
+  ci = minus_plus(x[["est"]], quant * sqrt(x[["var_est"]]))
+  
+  out = c(x[["pval"]], ci)
+  names(out) = c("pval", "ci_lower", "ci_upper")
+  
+  return(out)
+}
+
+
+#' @rdname algorithms
+#' @export
+rmst_pseudo_ij_boot = function(data, job, instance, ...) {
+  quant = qnorm(1 - (data$alpha / 2))
+  
+  m = rmeanglm(
+    Surv(time, event) ~ trt, data = instance, time = data$cutoff,
+    model.censoring = pseudo_infjack, formula.censoring = ~ trt
+  )
+  m = boot_pseudo(m, num_samples = data$num_samples_boot)
+  
+  x = rmst_pseudo_test(m, vcov_type = "boot")[2, ]
+  
+  ci = minus_plus(x[["est"]], quant * sqrt(x[["var_est"]]))
+  
+  out = c(x[["pval"]], ci)
+  names(out) = c("pval", "ci_lower", "ci_upper")
+  
+  return(out)
+}
+
 
 
 #' Evaluate all RMST methods
@@ -123,6 +230,3 @@ rmst_funs = function(data, job, instance, ...) {
   return(dt)
 }
 
-
-#' Used for calculating confidence intervals
-minus_plus = \(x, add) c(x - add, x + add)
