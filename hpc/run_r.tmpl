@@ -1,0 +1,8 @@
+options(box.path = "R")
+
+box::use(
+  fs,
+  simfuns2/run_sim[run_sim]
+)
+
+run_sim(<%= job %>, readRDS("<%= file_sim_resources %>"), dir_sim = "<%= dir_sim %>")
