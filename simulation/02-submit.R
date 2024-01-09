@@ -2,9 +2,22 @@ options(box.path = "R")
 
 box::use(
   simfuns2/submit_jobs[submit_jobs],
-  simfuns2/resources[get_sim_resources, get_slurm_resources, set_slurm_resources, set_sim_resources]
+  simfuns2/resources[get_sim_resources, get_slurm_resources, set_slurm_resources, set_sim_resources],
+  simfuns2/get_funs[get_scenario_table]
 )
 
+# For initial experiments only evaluate 2 scenarios (one under H0 and one under H1)
+dt = get_scenario_table()
+dt = dt[surv_model == "crossing_pwexp" & cens_model == "uneq_wb" & n0 == 36 & n1 == 24]
+scenario.ids = c(
+  dt[rmst_diff == 0][1, scenario.id],
+  dt[rmst_diff == 1.5][1, scenario.id]
+)
+
+sim_resources = get_sim_resources()
+sim_resources$scenario.ids = scenario.ids
+
+# Constant objects used for algorithms
 constants = list(
   cutoff = 10,
   alpha = 0.05,
@@ -14,10 +27,7 @@ constants = list(
   num_samples_boot = 1000L
 )
 
-sim_resources = get_sim_resources()
-# Only for now
-sim_resources$scenario.ids = c(2L, 6L)
-
+# Slurm
 slurm_resources = get_slurm_resources()
 
 # Double check simulation resources specification

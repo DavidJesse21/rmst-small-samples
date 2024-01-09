@@ -1,10 +1,15 @@
 #' This file is intended for containing R-code to be executed on the remote server.
 
-# Setting up and submitting simulation
-source("simulation/01-setup.R")
+# Setting up simulation
+# This might also be done locally
+# source("simulation/01-setup.R")
+
+# Submitting jobs
 source("simulation/02-submit.R")
 
-# Monitoring
+
+# Monitoring ----
+
 options(box.path = "R")
 
 box::use(
