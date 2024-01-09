@@ -23,8 +23,8 @@ setup_sim = function(dir_sim = fs$path("simulation"),
   fs$dir_create(fs$path(dir_reg, "temp"))
   
   # Create resource files
-  fs$file_create(fs$path(dir_reg, "resources_slurm", ext = "R"))
-  fs$file_create(fs$path(dir_reg, "resources_sim", ext = "R"))
+  saveRDS(list(), fs$path(dir_reg, "resources_slurm", ext = "rds"))
+  saveRDS(list(), fs$path(dir_reg, "resources_sim", ext = "rds"))
   
   # Create data base
   create_db(dir_sim)
