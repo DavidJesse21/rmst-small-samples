@@ -9,14 +9,7 @@ box::use(
 
 paths = list(
   algos = fs$path("R", "rmst"),
-  sim1 = fs$path("R", "simfuns2"),
-  sim2 = fs$path("simulation")
-)
-
-paths = list(
-  funs = fs$path("R", "rmst"),
-  sim1 = fs$path("R", "simfuns"),
-  sim2 = fs$path("simsetup")
+  sim = fs$path("R", "simfuns2")
 )
 
 deps = lapply(paths, \(path) {
@@ -27,8 +20,8 @@ deps = lapply(paths, \(path) {
   rbindlist()
 setDT(deps)
 deps = deps[Source != fs$path_wd("R", "rmst", "pseudo_extra", ext = "R")]
+deps = unique(deps$Package)
 
-unique(deps$Package)
-saveRDS(unique(deps$Package), fs$path("hpc", "packages", ext = "rds"))
+saveRDS(deps, fs$path("simulation", "hpcenv", "packages", ext = "rds"))
 
 # readRDS(fs$path("hpc", "packages.rds"))

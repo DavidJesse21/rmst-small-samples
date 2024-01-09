@@ -11,15 +11,20 @@ setup_sim = function(dir_sim = fs$path("simulation"),
                      dt_scenarios) {
   # Base directory
   if (!fs$dir_exists(dir_sim)) fs$dir_create(dir_sim)
+  
+  # Registry directory
+  dir_reg = fs$path(dir_sim, "registry")
+  fs$dir_create(dir_reg)
+  
   # Other directories
-  fs$dir_create(fs$path(dir_sim, "algorithms"))
-  fs$dir_create(fs$path(dir_sim, "logs"))
-  fs$dir_create(fs$path(dir_sim, "templates"))
-  fs$dir_create(fs$path(dir_sim, "temp"))
+  fs$dir_create(fs$path(dir_reg, "algorithms"))
+  fs$dir_create(fs$path(dir_reg, "logs"))
+  # fs$dir_create(fs$path(dir_reg, "templates"))
+  fs$dir_create(fs$path(dir_reg, "temp"))
   
   # Create resource files
-  fs$file_create(fs$path(dir_sim, "resources_slurm", ext = "R"))
-  fs$file_create(fs$path(dir_sim, "resources_sim", ext = "R"))
+  fs$file_create(fs$path(dir_reg, "resources_slurm", ext = "R"))
+  fs$file_create(fs$path(dir_reg, "resources_sim", ext = "R"))
   
   # Create data base
   create_db(dir_sim)
@@ -38,16 +43,16 @@ setup_sim = function(dir_sim = fs$path("simulation"),
 
 #' @export
 create_db = function(dir_sim = fs$path("simulation")) {
-  fs$file_create(fs$path(dir_sim, "simdb", ext = "db"))
+  fs$file_create(fs$path(dir_sim, "registry", "simdb", ext = "db"))
 }
 
 
 #' @export
 create_table_scenarios = function(dt, dir_sim = fs$path("simulation")) {
-  con = dbConnect(SQLite(), fs$path(dir_sim, "simdb", ext = "db"))
-  on.exit(dbDisconnect(con))
+  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
+  on.exit(dbDisconnect(db))
   
-  dbWriteTable(con, "scenarios", dt)
+  dbWriteTable(db, "scenarios", dt)
   
   return(invisible(NULL))
 }
@@ -55,11 +60,11 @@ create_table_scenarios = function(dt, dir_sim = fs$path("simulation")) {
 
 #' @export
 create_table_algos = function(dir_sim = fs$path("simulation")) {
-  con = dbConnect(SQLite(), fs$path(dir_sim, "simdb", ext = "db"))
-  on.exit(dbDisconnect(con))
+  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
+  on.exit(dbDisconnect(db))
   
   dt = data.table(algo.id = integer(), algo = character())
-  dbWriteTable(con, "algorithms", dt)
+  dbWriteTable(db, "algorithms", dt)
   
   return(invisible(NULL))
 }
@@ -67,14 +72,14 @@ create_table_algos = function(dir_sim = fs$path("simulation")) {
 
 #' @export
 add_algorithm = function(name, fun, dir_sim = fs$path("simulation")) {
-  con = dbConnect(SQLite(), fs$path(dir_sim, "simdb", ext = "db"))
-  on.exit(dbDisconnect(con))
+  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
+  on.exit(dbDisconnect(db))
   
-  id = dbGetQuery(con, "SELECT COUNT(`algo.id`) FROM algorithms")[1, ] + 1L
+  id = dbGetQuery(db, "SELECT COUNT(`algo.id`) FROM algorithms")[1, ] + 1L
   new = data.table(algo.id = id, algo = name)
-  dbAppendTable(con, "algorithms", new)
+  dbAppendTable(db, "algorithms", new)
   
-  saveRDS(fun, fs$path(dir_sim, "algorithms", name, ext = "rds"))
+  saveRDS(fun, fs$path(dir_sim, "registry", "algorithms", name, ext = "rds"))
   
   return(invisible(NULL))
 }
@@ -82,11 +87,11 @@ add_algorithm = function(name, fun, dir_sim = fs$path("simulation")) {
 
 #' @export
 remove_algorithm = function(name, dir_sim = fs$path("simulation")) {
-  con = dbConnect(SQLite(), fs$path(dir_sim, "simdb", ext = "db"))
-  on.exit(dbDisconnect(con))
+  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
+  on.exit(dbDisconnect(db))
   
-  dbExecute(con, sprintf("DELETE FROM algorithms WHERE algo = '%s'", name))
-  fs$file_delete(fs$path(dir_sim, "algorithms", name, ext = "rds"))
+  dbExecute(db, sprintf("DELETE FROM algorithms WHERE algo = '%s'", name))
+  fs$file_delete(fs$path(dir_sim, "registry", "algorithms", name, ext = "rds"))
   
   return(invisible(NULL))
 }
@@ -94,11 +99,11 @@ remove_algorithm = function(name, dir_sim = fs$path("simulation")) {
 
 #' @export
 create_table_results = function(dir_sim = fs$path("simulation")) {
-  con = dbConnect(SQLite(), fs$path(dir_sim, "simdb", ext = "db"))
-  on.exit(dbDisconnect(con))
+  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
+  on.exit(dbDisconnect(db))
   
   dbWriteTable(
-    con, "results",
+    db, "results",
     data.table(scenario.id = integer(), algo.id = integer(), rep.id = integer(),
                pval = numeric(), ci_lower = numeric(), ci_upper = numeric())
   )

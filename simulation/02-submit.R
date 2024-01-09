@@ -17,7 +17,7 @@ constants = list(
 sim_resources = get_sim_resources()
 if (length(sim_resources) == 0) {
   sim_resources = list(
-    num_sims = 5000L,
+    num_sims = 1000L,
     algos = c("asy", "studperm", "pseudo_hc3", "pseudo_ij_boot"),
     data_subset = NULL
   )
@@ -29,13 +29,12 @@ sim_resources$scenario.ids = c(2L, 6L)
 slurm_resources = get_slurm_resources()
 if (length(slurm_resources) == 0) {
   slurm_resources = list(
-    mail.type = "NONE",
+    mail.type = "END",
     mail.user = "david.jesse@stud.uni-goettingen.de",
     walltime = "18:00:00",
     partition = "medium",
     ncpus = 4,
-    mem = "4GB",
-    mem_per_cpu = "1GB"
+    memory = "3G"
   )
 }
 

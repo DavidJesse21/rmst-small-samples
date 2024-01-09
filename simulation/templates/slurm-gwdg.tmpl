@@ -9,7 +9,7 @@
 #SBATCH --time=<%= slurm_resources$walltime %>
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=<%= slurm_resources$ncpus %>
-#SBATCH --mem=<%= slurm_resources$memory %>
+#SBATCH --mem-per-cpu=<%= slurm_resources$memory %>
 
 
 ## Initialize work environment

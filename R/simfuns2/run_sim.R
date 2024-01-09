@@ -36,16 +36,8 @@ run_sim = function(scenario.id,
                    sim_resources,
                    constants,
                    dir_sim = fs$path("simulation")) {
-  # Connect to database
-  db = dbConnect(SQLite(), fs$path(dir_sim, "simdb", ext = "db"))
-  on.exit(dbDisconnect(db))
-  
-  # Get parameters for data generating process
-  params = dbGetQuery(
-    db,
-    sprintf("SELECT * FROM scenarios WHERE `scenario.id` = %d", scenario.id)
-  )
-  params = make_params(params)
+  # Design parameters
+  params = get_params(scenario.id, dir_sim)
   
   # Generate the data
   li_data = with_seed(scenario.id, {
@@ -59,7 +51,7 @@ run_sim = function(scenario.id,
   algos = sim_resources$algos[match(sim_resources$algos, c("asy", "pseudo_hc3", "studperm", "pseudo_ij_boot"))]
   # Get the algorithms
   li_algos = lapply(algos, function(x) {
-    file_algo = fs$path(dir_sim, "algorithms", x, ext = "rds")
+    file_algo = fs$path(dir_sim, "registry", "algorithms", x, ext = "rds")
     readRDS(file_algo)
   })
   names(li_algos) = algos
@@ -67,10 +59,7 @@ run_sim = function(scenario.id,
   # Evaluate all algorithms on the generated data
   for (algo in names(li_algos)) {
     # Get algorithm id
-    algo.id = dbGetQuery(
-      db,
-      sprintf("SELECT `algo.id` FROM algorithms WHERE algo = '%s'", algo)
-    )[[1]]
+    algo.id = get_algo.id(algo, dir_sim)
     
     # Get actual function object
     .fun = li_algos[[algo]]
@@ -93,9 +82,50 @@ run_sim = function(scenario.id,
     setcolorder(out, new = c("scenario.id", "algo.id", "rep.id", "pval", "ci_lower", "ci_upper"))
     
     # Write results to database
-    dbAppendTable(db, "results", out)
+    write_results(out, dir_sim)
   }
   
   
   return(invisible(scenario.id))
+}
+
+
+
+# Database helpers ----
+
+# The idea here is that each function will close the database connection after the operation is finished.
+# Maybe this will fix the issues I have had so far.
+
+# Get parameters for simulating the data
+get_params = function(scenario.id, dir_sim = fs$path("simulation")) {
+  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
+  on.exit(dbDisconnect(db))
+  
+  params = dbGetQuery(
+    db,
+    sprintf("SELECT * FROM scenarios WHERE `scenario.id` = %d", scenario.id)
+  )
+  
+  make_params(params)
+}
+
+# Get ID of an algorithm
+get_algo.id = function(algo, dir_sim = fs$path("simulation")) {
+  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
+  on.exit(dbDisconnect(db))
+  
+  dbGetQuery(
+    db,
+    sprintf("SELECT `algo.id` FROM algorithms WHERE algo = '%s'", algo)
+  )[[1]]
+}
+
+# Write results to the database
+write_results = function(dt, dir_sim = fs$path("simulation")) {
+  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
+  on.exit(dbDisconnect(db))
+  
+  dbAppendTable(db, "results", dt)
+  
+  invisible(NULL)
 }

@@ -2,11 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata
-*.qs
 *.rds
 *.log
-!hpc/packages.rds
+*.db
 playground/zzz.R
 */registry
 thesis/thesis.pdf
-*.db
+!simulation/hpcenv/packages.rds
