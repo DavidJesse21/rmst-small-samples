@@ -67,10 +67,10 @@ submit_jobs = function(sim_resources = list(),
   
   if (progress) close(pb)
   
-  if (submit) {
-    temp_files = fs$dir_ls(fs$path(dir_sim, "registry", "temp"))
-    on.exit(fs$file_delete(temp_files)) 
-  }
+  # if (submit) {
+  #   temp_files = fs$dir_ls(fs$path(dir_sim, "registry", "temp"))
+  #   on.exit(fs$file_delete(temp_files)) 
+  # }
   
   # Return number of submitted jobs invisibly
   return(invisible(jobs))

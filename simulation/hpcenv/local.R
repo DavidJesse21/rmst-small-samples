@@ -24,4 +24,4 @@ deps = unique(deps$Package)
 
 saveRDS(deps, fs$path("simulation", "hpcenv", "packages", ext = "rds"))
 
-# readRDS(fs$path("hpc", "packages.rds"))
+# readRDS(fs$path("simulation", "hpcenv", "packages.rds"))
