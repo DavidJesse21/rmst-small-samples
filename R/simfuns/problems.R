@@ -168,7 +168,7 @@ cens_wb_uneq = function(n0, n1,
                         shape0 = 3, scale0 = 18,
                         shape1 = 0.5, scale1 = 40) {
   c0 = rweibull(n0, shape0, scale0)
-  c1 = rweibull(n1, shape1, shape1)
+  c1 = rweibull(n1, shape1, scale1)
   
   list(c0, c1)
 }
