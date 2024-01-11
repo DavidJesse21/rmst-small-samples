@@ -33,7 +33,7 @@ set_sim_resources(
 set_slurm_resources(
   mail.type = "END",
   mail.user = "david.jesse@stud.uni-goettingen.de",
-  walltime = "18:00:00",
+  walltime = "06:00:00",
   partition = "medium",
   ncpus = 4,
   memory = "3G"

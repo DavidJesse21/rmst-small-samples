@@ -210,5 +210,3 @@ find_shape1 = function(delta, shape0 = 3, scale0 = 8, scale1 = 14, cutoff = 10) 
   opt$root
 }
 
-x = get_params_weibull(rmst_diff = 0)
-x$surv_params[[1]]
