@@ -3,19 +3,13 @@ options(box.path = "R")
 box::use(
   simfuns2/submit_jobs[submit_jobs],
   simfuns2/resources[get_sim_resources, get_slurm_resources, set_slurm_resources, set_sim_resources],
-  simfuns2/get_funs[get_scenario_table]
+  simfuns2/post_submit[check_sim_finished]
 )
 
-# For initial experiments only evaluate 2 scenarios (one under H0 and one under H1)
-dt = get_scenario_table()
-dt = dt[surv_model == "crossing_pwexp" & cens_model == "uneq_wb" & n0 == 36 & n1 == 24]
-scenario.ids = c(
-  dt[rmst_diff == 0][1, scenario.id],
-  dt[rmst_diff == 1.5][1, scenario.id]
-)
 
+# Simulation resources/specifications
+set_sim_resources(scenario.ids = check_sim_finished()$not_started)
 sim_resources = get_sim_resources()
-sim_resources$scenario.ids = scenario.ids
 
 # Constant objects used for algorithms
 constants = list(
@@ -28,6 +22,7 @@ constants = list(
 )
 
 # Slurm
+set_slurm_resources(walltime = "08:00:00")
 slurm_resources = get_slurm_resources()
 
 # Double check simulation resources specification
