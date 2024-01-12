@@ -1,0 +1,170 @@
+options(box.path = "R")
+
+box::use(
+  fs,
+  DBI[...],
+  RSQLite[SQLite],
+  data.table[...]
+)
+
+box::use(
+  simfuns2/get_funs[get_results_table, get_scenario_table, get_algo_table]
+)
+
+
+#' Check if simulations are finished
+#' 
+#' @param scenario.ids (`numeric()` or `NULL`)\cr
+#'   Either a numeric vector of specified scenario/simulation IDs to check for or simply 
+#'   `NULL` (default) to check for all scenarios/simulations
+#' @param dir_sim (`character(1)`)\cr
+#'   The directory of the simulation study.
+#' 
+#' @returns (`list()`)\cr
+#'   A list with two elements. The firs element contains the IDs of the finished simulations 
+#'   and the second one the ones of those that are not finished yet.
+#'   
+#' @note
+#' This function does not provide further information about simulations that are not finished.
+#' E.g. it might be the case that these simulations have already been submitted as jobs but are 
+#' not completely finished yet or they have not been submitted at all.
+#' 
+#' @export
+check_sim_finished = function(scenario.ids = NULL, dir_sim = fs$path("simulation")) {
+  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
+  on.exit(dbDisconnect(db))
+  
+  # If not specified check all scenario.ids
+  if (is.null(scenario.ids)) {
+    scenario.ids = dbGetQuery(db, "SELECT `scenario.id` FROM scenarios")[[1]]
+  }
+  
+  # The default value is FALSE, so no need to check explicitly for FALSE entries
+  x = logical(length(scenario.ids))
+  names(x) = scenario.ids
+  
+  # Current results
+  res = get_results_table(fs$path(dir_sim, "registry"))
+
+  # Check for finished simulations
+  idx = which(scenario.ids %in% unique(res$scenario.id))
+  for (i in idx) {
+    tab = res[scenario.id == as.integer(names(x[i])),
+              table(algo.id, useNA = "ifany")]
+    check = (length(tab) == 4) && all(tab == 5000) && all(names(tab) %in% as.character(1:4))
+    x[i] = check
+  }
+  
+  # A list output probably gives a better overview
+  out = lapply(c(TRUE, FALSE), \(.x) as.integer(names(which(x == .x))))
+  names(out) = c("finished", "not_finished")
+  
+  return(out)
+}
+
+
+#' Collect the results from the simulation study
+#' 
+#' @param join (`character()`)\cr
+#'   A character vector with possible elements `"scenarios"` and `"algos"`.
+#'   If those are supplied, then the actual names/values behind `scenario.id` and `algo.id` 
+#'   will be appended (joined) to the data.
+#' @param .save (`logical(1)`)\cr
+#'   If `FALSE` the results are returned in the current R session.
+#'   If `TRUE` the results are written to a file (see details below)
+#' @param dir_sim (`character()`)\cr
+#'   The directory of the simulation study.
+#'   
+#' @returns (`data.table` or `character(1)`)\cr
+#'   If `.save = FALSE` returns the results as a `data.table`.
+#'   Otherwise it saves the results to the directory `dir_sim`/results.
+#' 
+#' @details
+#' The naming convention for saving the results to a file is as follows: `[DATE_TODAY]_results[id].rds`
+#' `[id]` will be empty if no other file has been saved on `DATE_TODAY`.
+#' Otherwise it will be incremented by 1 starting from 1.
+#' 
+#' @export
+collect_results = function(join = c("scenarios", "algos"),
+                           .save = FALSE,
+                           dir_sim = fs$path("simulation")) {
+  message("Collecting results...")
+  
+  # Track execution time
+  start = Sys.time()
+  
+  # Collect results
+  dtr = get_results_table(fs$path(dir_sim, "registry"))
+  
+  if ("scenarios" %in% join) {
+    dts = get_scenario_table(fs$path(dir_sim, "registry"))
+    dtr = merge(dtr, dts, by = "scenario.id")
+  }
+  
+  if ("algos" %in% join) {
+    dta = get_algo_table(fs$path(dir_sim, "registry"))
+    dtr = merge(dtr, dta, by = "algo.id")
+  }
+  
+  # Row order
+  setorder(dtr, scenario.id, algo.id, rep.id)
+  # Column order
+  setcolorder(dtr, c("scenario.id", "algo.id", "rep.id", "pval", "ci_lower", "ci_upper"))
+  
+  # Track execution time
+  end = Sys.time()
+  taken = round(as.numeric(end - start), 2)
+  message(sprintf("Done! (%s seconds elapsed)", taken))
+  
+  # Simply return the object
+  if (!.save) {
+    return(dtr[])
+  } else {
+    # Otherwise write it to a file
+    filename = paste0(Sys.Date(), "_results")
+    
+    # Check existing files for possible naming conflicts
+    present_files = fs$path_file(fs$dir_ls(fs$path(dir_sim, "results")))
+    idx = length(grep(paste0("^", filename, "[1-9][0-9]*|.rds$"), present_files))
+    idx = if (idx == 0) NULL else idx
+    filename = paste0(filename, idx)
+    
+    # Save results to file
+    file_out = fs$path(dir_sim, "results", filename, ext = "rds")
+    saveRDS(dtr, file_out)
+    return(file_out)
+  }
+}
+
+
+#' Remove (delete) temporary files
+#' 
+#' @description
+#' When submitting jobs via `submit_jobs()` "temporary" `.R`- and `.sh`-files are created.
+#' When the jobs have been successfully submitted these files are not required anymore and can be deleted.
+#' This function does exactly this, i.e. it deletes all files in `dir_sim`/registry/temp.
+#' 
+#' @param dir_sim (`character(1)`)\cr
+#'   Path to the directory of the simulation study.
+#' 
+#' @export
+rm_temp_files = function(dir_sim = fs$path("simulation")) {
+  dir_temp = fs$path(dir_sim, "registry", "temp")
+  files = fs$dir_ls(dir_temp)
+  
+  tab = table(fs$path_ext(files))
+  
+  message(sprintf("About to delete %d files from %s:", sum(tab), dir_temp))
+  print(tab)
+  cat("\n")
+  cont = readline("Continue? [y/n] ")
+  stopifnot(cont %in% c("y", "n"))
+  
+  if (cont == "n") {
+    stop("Stopped execution, no files deleted.", call. = FALSE)
+  } else {
+    fs$file_delete(files)
+    message("All temporary files deleted.")
+  }
+}
+
