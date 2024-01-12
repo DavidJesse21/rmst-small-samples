@@ -12,55 +12,54 @@ box::use(
 )
 
 
-#' Check if simulations are finished
+#' Check state of simulations
 #' 
-#' @param scenario.ids (`numeric()` or `NULL`)\cr
-#'   Either a numeric vector of specified scenario/simulation IDs to check for or simply 
-#'   `NULL` (default) to check for all scenarios/simulations
 #' @param dir_sim (`character(1)`)\cr
 #'   The directory of the simulation study.
 #' 
 #' @returns (`list()`)\cr
-#'   A list with two elements. The firs element contains the IDs of the finished simulations 
-#'   and the second one the ones of those that are not finished yet.
+#'   A list with 3 elements: `finished`, `not_finished`, `not_started`
+#'   Each element is a vector with the corresponding scenario / simulation IDs.
 #'   
-#' @note
-#' This function does not provide further information about simulations that are not finished.
-#' E.g. it might be the case that these simulations have already been submitted as jobs but are 
-#' not completely finished yet or they have not been submitted at all.
-#' 
 #' @export
-check_sim_finished = function(scenario.ids = NULL, dir_sim = fs$path("simulation")) {
+check_sim_finished = function(dir_sim = fs$path("simulation")) {
   db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
   on.exit(dbDisconnect(db))
   
   # If not specified check all scenario.ids
-  if (is.null(scenario.ids)) {
-    scenario.ids = dbGetQuery(db, "SELECT `scenario.id` FROM scenarios")[[1]]
-  }
+  scenario.ids = dbGetQuery(db, "SELECT `scenario.id` FROM scenarios")[[1]]
   
-  # The default value is FALSE, so no need to check explicitly for FALSE entries
-  x = logical(length(scenario.ids))
-  names(x) = scenario.ids
+  # Output object
+  out = list(finished = integer(), not_finished = integer(), not_started = integer())
   
   # Current results
   res = get_results_table(fs$path(dir_sim, "registry"))
-
-  # Check for finished simulations
-  idx = which(scenario.ids %in% unique(res$scenario.id))
-  for (i in idx) {
-    tab = res[scenario.id == as.integer(names(x[i])),
-              table(algo.id, useNA = "ifany")]
-    check = (length(tab) == 4) && all(tab == 5000) && all(names(tab) %in% as.character(1:4))
-    x[i] = check
-  }
   
-  # A list output probably gives a better overview
-  out = lapply(c(TRUE, FALSE), \(.x) as.integer(names(which(x == .x))))
-  names(out) = c("finished", "not_finished")
+  # All jobs/simulations that have at least started or are finished
+  idx1 = scenario.ids[which(scenario.ids %in% unique(res$scenario.id))]
+  # Jobs/simulations that have not started at all
+  # (using a heuristic which should however always work)
+  idx2 = setdiff(scenario.ids, idx1)
+  out$not_started = idx2
+  
+  # Check for jobs/simulations that are completely finished
+  is_finished = vapply(
+    idx1, function(i) {
+      tab = res[scenario.id == i, table(algo.id, useNA = "ifany")]
+      check = (length(tab) == 4) && all(tab == 5000) && all(names(tab) %in% as.character(1:4))
+      return(check)
+    },
+    logical(1)
+  )
+  idx3 = idx1[is_finished]
+  out$finished = idx3
+  
+  # Rest has been submitted but is not finished yet
+  out$not_finished = setdiff(idx1, idx3)
   
   return(out)
 }
+
 
 
 #' Collect the results from the simulation study
