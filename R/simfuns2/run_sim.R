@@ -30,14 +30,18 @@ box::use(
 #'   A list of constant objects passed to each algorithm.   
 #' @param dir_sim (`character(1)`)\cr
 #'   The path to the simulation directory.
-#'   
+#' @param db_timeout (`numeric(1)`)\cr
+#'   Timeout in seconds for database operations.
+#'   If an operation does not succeed within this time an error will be thrown.
+#' 
 #' @export
 run_sim = function(scenario.id,
                    sim_resources,
                    constants,
-                   dir_sim = fs$path("simulation")) {
+                   dir_sim = fs$path("simulation"),
+                   db_timeout = 60) {
   # Design parameters
-  params = get_params(scenario.id, dir_sim)
+  params = get_params(scenario.id, dir_sim, timeout = db_timeout)
   
   # Generate the data
   li_data = with_seed(scenario.id, {
@@ -59,7 +63,7 @@ run_sim = function(scenario.id,
   # Evaluate all algorithms on the generated data
   for (algo in names(li_algos)) {
     # Get algorithm id
-    algo.id = get_algo.id(algo, dir_sim)
+    algo.id = get_algo.id(algo, dir_sim, timeout = db_timeout)
     
     # Get actual function object
     .fun = li_algos[[algo]]
@@ -82,7 +86,7 @@ run_sim = function(scenario.id,
     setcolorder(out, new = c("scenario.id", "algo.id", "rep.id", "pval", "ci_lower", "ci_upper"))
     
     # Write results to database
-    write_results(out, dir_sim)
+    write_results(out, dir_sim, timeout = db_timeout)
   }
   
   
@@ -93,39 +97,79 @@ run_sim = function(scenario.id,
 
 # Database helpers ----
 
-# The idea here is that each function will close the database connection after the operation is finished.
-# Maybe this will fix the issues I have had so far.
+# Get ID of an algorithm
+get_algo.id = function(algo, dir_sim = fs$path("simulation"), timeout = 60) {
+  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
+  on.exit(dbDisconnect(db), add = TRUE)
+  
+  start_time = Sys.time()
+  algo.id = try(stop("init"), silent = TRUE)
+  
+  while (inherits(algo.id, "try-error")) {
+    # Stop if it takes too long
+    if (difftime(Sys.time(), start_time, units = "secs") > timeout) {
+      stop("Time limit elapsed.")
+    }
+    
+    # Usual behaviour: get algorithm ID
+    algo.id = try(
+      dbGetQuery(
+        db,
+        sprintf("SELECT `algo.id` FROM algorithms WHERE algo = '%s'", algo)
+      )[[1]]
+    )
+  }
+  
+  return(algo.id)
+}
+
 
 # Get parameters for simulating the data
-get_params = function(scenario.id, dir_sim = fs$path("simulation")) {
+get_params = function(scenario.id, dir_sim = fs$path("simulation"), timeout = 60) {
   db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
-  on.exit(dbDisconnect(db))
+  on.exit(dbDisconnect(db), add = TRUE)
   
-  params = dbGetQuery(
-    db,
-    sprintf("SELECT * FROM scenarios WHERE `scenario.id` = %d", scenario.id)
-  )
+  start_time = Sys.time()
+  params = try(stop("init"), silent = TRUE)
   
-  make_params(params)
+  while (inherits(params, "try-error")) {
+    # Stop if it takes too long
+    if (difftime(Sys.time(), start_time, units = "secs") > timeout) {
+      stop("Time limit elapsed.")
+    }
+    
+    # Usual behaviour: get parameters
+    params = try(
+      dbGetQuery(
+        db,
+        sprintf("SELECT * FROM scenarios WHERE `scenario.id` = %d", scenario.id)
+      ) |>
+        make_params()
+    )
+  }
+  
+  return(params)
 }
 
-# Get ID of an algorithm
-get_algo.id = function(algo, dir_sim = fs$path("simulation")) {
-  db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
-  on.exit(dbDisconnect(db))
-  
-  dbGetQuery(
-    db,
-    sprintf("SELECT `algo.id` FROM algorithms WHERE algo = '%s'", algo)
-  )[[1]]
-}
 
 # Write results to the database
-write_results = function(dt, dir_sim = fs$path("simulation")) {
+write_results = function(dt, dir_sim = fs$path("simulation"), timeout = 60) {
   db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
-  on.exit(dbDisconnect(db))
+  on.exit(dbDisconnect(db), add = TRUE)
   
-  dbAppendTable(db, "results", dt)
+  start_time = Sys.time()
+  x = try(stop("init"), silent = TRUE)
   
-  invisible(NULL)
+  while (inherits(x, "try-error")) {
+    # Stop if it takes too long
+    if (difftime(Sys.time(), start_time, units = "secs") > timeout) {
+      stop("Time limit elapsed.")
+    }
+    
+    # Usual behaviour: write results to the database
+    x = try(dbAppendTable(db, "results", dt))
+  }
+  
+  return(invisible(x))
 }
+

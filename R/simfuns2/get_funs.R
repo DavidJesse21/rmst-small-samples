@@ -12,7 +12,7 @@ box::use(
 get_results_table = function(dir_reg = fs$path("simulation", "registry")) {
   file_db = fs$path(dir_reg, "simdb", ext = "db")
   db = dbConnect(SQLite(), file_db)
-  on.exit(dbDisconnect(db))
+  on.exit(dbDisconnect(db), add = TRUE)
   
   dt = dbReadTable(db, "results")
   setDT(dt)
@@ -25,7 +25,7 @@ get_results_table = function(dir_reg = fs$path("simulation", "registry")) {
 get_scenario_table = function(dir_reg = fs$path("simulation", "registry")) {
   file_db = fs$path(dir_reg, "simdb", ext = "db")
   db = dbConnect(SQLite(), file_db)
-  on.exit(dbDisconnect(db))
+  on.exit(dbDisconnect(db), add = TRUE)
   
   dt = dbReadTable(db, "scenarios")
   setDT(dt)
@@ -38,7 +38,7 @@ get_scenario_table = function(dir_reg = fs$path("simulation", "registry")) {
 get_algo_table = function(dir_reg = fs$path("simulation", "registry")) {
   file_db = fs$path(dir_reg, "simdb", ext = "db")
   db = dbConnect(SQLite(), file_db)
-  on.exit(dbDisconnect(db))
+  on.exit(dbDisconnect(db), add = TRUE)
   
   dt = dbReadTable(db, "algorithms")
   setDT(dt)

@@ -9,5 +9,6 @@ run_sim(
   <%= job %>,
   sim_resources = readRDS("<%= file_sim_resources %>"),
   constants = readRDS("<%= file_constants %>"),
-  dir_sim = "<%= dir_sim %>"
+  dir_sim = "<%= dir_sim %>",
+  db_timeout = <%= db_timeout %>
 )

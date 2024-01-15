@@ -24,7 +24,7 @@ box::use(
 #' @export
 check_sim_finished = function(dir_sim = fs$path("simulation")) {
   db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
-  on.exit(dbDisconnect(db))
+  on.exit(dbDisconnect(db), add = TRUE)
   
   # If not specified check all scenario.ids
   scenario.ids = dbGetQuery(db, "SELECT `scenario.id` FROM scenarios")[[1]]
@@ -167,3 +167,29 @@ rm_temp_files = function(dir_sim = fs$path("simulation")) {
   }
 }
 
+
+#' Read logs of a job
+#' 
+#' @param scenario.id (`numeric(1)`)\cr
+#'   The scenario / job ID for which to read the logs.
+#' @param open (`logical(1)`)\cr
+#'   If `FALSE` the logs are printed to the R console, otherwise the log file 
+#'   gets opened in a separate program (e.g. in your text editor).
+#' @param dir_sim (`character(1)`)\cr
+#'   Path to the directory of the simulation study.
+#'   
+#' @returns (`character(1)`)\cr
+#'   Invisibly returns the path to the log file.
+#' 
+#' @export
+read_logs = function(scenario.id, open = FALSE, dir_sim = fs$path("simulation")) {
+  file = fs$path(dir_sim, "registry", "logs", paste0("job", scenario.id), ext = "log")
+  
+  if (open) {
+    fs$file_show(file)
+  } else {
+    cat(readLines(file), sep = "\n")
+  }
+  
+  return(invisible(file))
+}
