@@ -51,8 +51,12 @@ run_sim = function(scenario.id,
   })
   if (!is.null(sim_resources$data_subset)) li_data = li_data[data_subset]
   
-  #  Sort supplied algorithms (shortest to longest runtime)
-  algos = sim_resources$algos[match(sim_resources$algos, c("asy", "pseudo_hc3", "studperm", "pseudo_ij_boot"))]
+  # If all algorithms should be evaluated sort them by runtime (shortest to longest)
+  if (length(sim_resources$algos) == 4) {
+    algos = sim_resources$algos[match(sim_resources$algos, c("asy", "pseudo_hc3", "studperm", "pseudo_ij_boot"))]
+  } else {
+    algos = sim_resources$algos
+  }
   # Get the algorithms
   li_algos = lapply(algos, function(x) {
     file_algo = fs$path(dir_sim, "registry", "algorithms", x, ext = "rds")
