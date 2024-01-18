@@ -7,5 +7,5 @@
 *.db
 playground/zzz.R
 */registry
-thesis/thesis.pdf
+*.pdf
 !simulation/hpcenv/packages.rds
