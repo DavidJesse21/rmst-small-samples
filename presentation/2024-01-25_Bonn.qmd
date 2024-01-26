@@ -1,0 +1,426 @@
+---
+title: "Resampling-based Inference for restricted mean Survival Times"
+author:
+  - "David Jesse\\newline"
+  - "First supervisor: Prof. Dr. Tim Friede\\newline"
+  - "Second supervisor: Dr. Cynthia Huber"
+date: 2024-01-25
+date-format: "DD MMMM, YYYY"
+latex-min-runs: 2
+format: 
+  beamer: 
+    aspectratio: 169
+    pdf-engine: pdflatex
+    slide-level: 2
+    toc: false
+    include-in-header: 
+      - ./tex/preamble.tex
+      - ./tex/operators.tex
+execute: 
+  eval: true
+  echo: false
+  output: true
+  warning: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+box::use(
+  ggplot2[...],
+  data.table[...],
+  survival[Surv, survfit]
+)
+
+# Function for visualising Kaplan-Meier curve and restricted mean survival time
+ggrmst = function(fit, cutoff,
+                  color = "#0072B2", linewidth = 1, alpha = 0.3,
+                  ...) {
+  # Extract survival data
+  dt_surv = data.table(
+    time = c(0, fit$time),
+    surv = c(1, fit$surv)
+  )
+  
+  # Plot of the survival curve
+  p = ggplot(dt_surv, aes(time, surv)) +
+    geom_step(linewidth = linewidth, color = color)
+  
+  # Create data.table for plotting RMST
+  dt_rmst = dt_surv[time <= cutoff]
+  # Area should be drawn until the specified cutoff and not end before
+  if (dt_rmst[.N, time < cutoff]) {
+    dt_rmst = rbindlist(list(
+      dt_rmst, data.table(time = cutoff, surv = dt_rmst[.N, surv])
+    ))
+  }
+  # For geom_ribbon()
+  dt1 = copy(dt_rmst)[, id := "b"]
+  dt2 = copy(dt_rmst)[, id := "a"]
+  dt2[, surv := shift(surv)]
+  dt_rmst = rbindlist(list(dt1, dt2))
+  setorder(dt_rmst, time, id)
+
+  # Plot RMST
+  p = p +
+    geom_ribbon(
+      aes(x = time, ymin = 0, ymax = surv), data = dt_rmst,
+      fill = color, alpha = alpha
+    ) +
+    geom_vline(
+      xintercept = cutoff,
+      linetype = "dashed", color = "#333333", linewidth = 0.75 * linewidth
+    )
+  
+  return(p)
+}
+
+
+# Default ggplot2 theme
+theme_set(theme_bw(base_size = 16))
+```
+
+
+## Overview
+
+- restricted mean survival time (RMST) contrasts as alternative estimands to the hazard ratio (HR) for time-to-event endpoints
+
+- two-sample comparisons under small to moderate sample sizes
+
+- comparison of different inference methods w.r.t. controlling the type I error and CI coverage
+
+- asymptotic and resampling-based methods
+  
+
+# Problem & Motivation
+
+## Hazard Rato & its Issues
+
+- hazard rate
+$$
+h(t) = \lim_{\Delta t \to 0}
+\frac{P(t \leq T < t + \Delta t | T \geq t)}{\Delta t}
+$$
+
+- most common effect measure: hazard ratio (HR)
+$$
+HR(t) = h_1(t) / h_0(t) := \theta
+$$
+
+- proportional hazards assumption
+
+  - model-based effect measure
+
+  - strong assumption and often violated in practice (e.g. in oncology trials)
+  
+- hard to interpret clinically, event if the PH assumption holds
+
+- no causal interpretation (even not in RCTs)
+
+
+## Restricted mean Survival Time (RMST)
+
+$$
+\mu(t^*) = E[min(T, t^*)] = \int_0^{t^*} S(u) \,du
+$$
+
+- expected survival within the (pre-)specified follow-up period from time $0$ to $t^*$
+
+- circumvent the aforementioned issues with the hazard ratio
+
+```{r}
+#| label: rmst-plot
+#| layout: [[-12, 60, -20]]
+#| fig-height: 4
+
+dt = survival::veteran
+setDT(dt)
+dt = dt[time <= 800]
+
+fit = survfit(Surv(time, status) ~ 1, data = dt)
+
+ggrmst(fit, cutoff = 350) +
+  scale_x_continuous(
+    name = "Time",
+    breaks = seq(0, 800, by = 100)
+  ) +
+  scale_y_continuous(
+    name = "Survival probability",
+    breaks = seq(0, 1, by = 0.2)
+  )
+```
+
+
+
+## Inference for RMST contrasts
+
+$$
+H_0: \mu_1(t^*) - \mu_0(t^*) = 0 \quad \text{vs.} \quad H_1: \mu_1(t^*) - \mu_0(t^*) \neq 0
+$$
+
+- focus on two-sample comparisons in an RCT setting
+
+- asymptotic test based on NPMLE (Kaplan-Meier) estimator
+
+  - inflation of type I error under small to moderate sample sizes
+  
+- other approaches so far
+
+  - Horiguchi & Uno, 2020: "simple" permutation method
+  
+  - Ditzhaus et al., 2023: studentized permutation method
+  
+  - (Zhou, 2021: empirical likelihood ratio)
+
+
+## Goals of my Master's Thesis
+
+- replicate results by Ditzhaus et al., 2023
+
+  - asymptotic test and studentized permutation test
+  
+- propose further existing resampling-based approaches (in the broader sense)
+
+  - pseudo-observations + HC3 covariance matrix estimator
+  
+  - infinitesimal jackknife pseudo-observations + bootstrap covariance estimator
+  
+- PO approaches might have some advantages for further extensions
+
+  - e.g. covariate adjustment and more general designs
+  
+  - (though these aspects will not be discussed in detail)
+  
+
+# Methods
+
+
+## Asymptotic Test
+
+- NPMLE (Kaplan-Meier) estimator of RMST
+$$
+\hat{\mu}(t^*) = \int_0^{t^*} \hat{S}(u) \,du =
+\sum_{j=0}^D (t_{j+1} - t_j) \hat{S}(t_j)
+$$
+
+- variance of NPMLE estimator (Greenwood's formula)
+$$
+Var[\hat{\mu}(t^*)] = \sum_{j=1}^D 
+\left[ \sum_{i=j}^D (t_{i+1} - t_i) \hat{S}(t_i) \right]^2
+\frac{d_j}{Y_j (Y_j - d_j)}
+$$
+  - note: some modifications of this variance estimator exist
+
+---
+
+- test statistic
+$$
+Z = \frac{\hat{\mu}_1(t^*) - \hat{\mu}_0(t^*)}{\sqrt{Var[\hat{\mu}_1(t^*)] + Var[\hat{\mu}_0(t^*)]}}
+$$
+
+- asymptotic distribution
+$$
+Z \danull N(0, 1)
+$$
+
+- statistical test
+$$
+\varphi^{(asy)} = \mathbf{1} \{Z > z_{1- \alpha/2} \}
+$$
+  - $z_{1- \alpha/2}$: $(1 - \alpha/2)$-quantile of the standard normal distribution
+
+
+## Studentized Permutation Test
+
+- relax the assumptions on the null distribution
+
+- re-randomization of the original data by permuting the treatment indicators $B$ times
+
+- for each permuted data set compute the test statistic
+$$
+Z^{\pi} =
+\left| \frac{\hat{\mu}_1^{\pi}(t^*) - \hat{\mu}_0^{\pi}(t^*)}{\sqrt{Var[\hat{\mu}_1^{\pi}(t^*)] + Var[\hat{\mu}_0^{\pi}(t^*)]}} \right| 
+$$
+
+- statistical test
+$$
+\varphi^{\pi} = \mathbf{1} \{|Z| > q_{1 - \alpha}^{\pi} \}
+$$
+  - $q_{1 - \alpha}^{\pi}$: $(1 - \alpha)$-quantile of the the permutation test statistics
+
+
+## Pseudo-Observations (1)
+
+- let $V$ denote any transformation of the random time-to-event variable $(T, \delta)$
+
+  - e.g. $V = min(T, t^*)$ for restricted survival time
+
+- let $\theta = E[V]$
+
+  - e.g. $\theta = E[min(T, t^*)]$ for the restricted mean survival time
+  
+- regression model for estimating covariate effects on the estimand of interest
+$$
+E[V_i | \xvec_{i}] = g^{-1}(\xvec_{i}' \betavec)
+$$
+
+- choice of link function $g^{-1}$ depends on contrast of interest
+
+  - for differences simply the identity link
+
+---
+
+- let $P_i$ denote so-called *pseudo-observations*
+
+- idea: compute pseudo-observations in a way that
+$$
+E[P_i | \xvec_{i}] = E[V_i | \xvec_{i}] + o_p(1)
+$$
+  - motivates using the $P_i$s in the above regression model
+
+- computation
+$$
+P_i = n \hat{\theta} - (n - 1) \hat{\theta}_{-i}
+$$
+  - $\hat{\theta}$: marginal estimator
+  
+  - $\hat{\theta}_{-i}$: leave-one-out-jackknife estimator
+
+---
+
+- dependent censoring must be accounted for when computing the POs
+
+  - categorical covariates: stratification
+  
+  - continuous covariates: IPCW methods (not discussed here)
+
+- inference proceeds using quasi-likelihood methods / generalized estimating equations
+
+- usage of HC3 "sandwich" covariance estimator
+$$
+Cov[\betavec] = \sigmamat = 
+(\xmat'\xmat)^{-1} \xmat' \omegamat \xmat (\xmat'\xmat)^{-1}
+$$
+$$
+\widehat{\omegamat} = diag(w_1, \ldots, w_n)
+$$
+$$
+w_i = \frac{\residhat_{i}^{2}}{(1 - h_i)^2}
+$$
+
+
+## Pseudo-Observations (2)
+
+- infinitesimal jackknife pseudo-observations
+$$
+\begin{split}
+  P_i &= n \hat{\theta} - (n - 1) \hat{\theta}_{-i} \\
+  &= \hat{\theta} + (n - 1) (\hat{\theta} - \hat{\theta}_{-i}) \\
+  &\approx \hat{\theta} + n \frac{\partial \hat{\theta}}{\partial w_i}
+\end{split}
+$$
+  - advantage: computational speed
+  
+- same procedure like before but use the bootstrap for estimation of the covariance matrix
+
+
+# Simulation Study
+
+
+## Settings
+
+- adapted from Ditzhaus et al., 2023
+
+- survival models: PH (exponential), crossing (piece-wise exponential), crossing (Weibull, different shapes)
+
+- censoring models: unequal Weibull, equal uniform, equal Weibull
+
+- sample allocations: $(12, 18)$, $(15, 15)$, $(18, 12)$
+
+- sample sizes: $K = 1, 2, 4, 6$
+
+  - multiplication with base allocation
+  
+- RMST difference: $\Delta = 0, 1.5$ ($t^* = 10$)
+
+- 216 settings in total with 5000 simulation replications
+
+
+## Computation & Reproducibility
+
+- `R` version `4.3.0` on the GWDG HPC cluster
+
+- `{renv}` package for package and project management
+
+- `{withr}` and `{parallel}` packages and L'Ecuyer-CMRG RNG for reproducible stochastic (parallel) computations
+
+- methods mainly implemented from scratch with the following exceptions
+
+  - code basis for studentized permutation test has been supplied by Prof. Marc Ditzhaus
+  
+  - PO regression models were fitted using the `{eventglm}` package
+
+
+## Results
+
+- results are consistent with those from Ditzhaus et al., 2023
+
+- permutation test does a good job on controlling the type I error rate and achieving CI coverage close to the nominal level
+
+- PO + HC3 covariance matrix proved to be valid alternative to the permutation test
+
+  - only one setting more in which type I error was not controlled
+  
+  - slightly worse coverage in settings with very small sample sizes
+  
+- IJ PO + bootstrap did not perform well
+
+  - but still better than asymptotic test
+  
+- power: no remarkable differences between methods
+
+  - especially not for ranges that we would try to actually achieve in practice
+  
+
+
+# Summary & Outlook
+
+
+## Summary
+
+- RMST contrasts as alternative effect measures instead of hazard ratio
+
+- inflated type I error rate for the asymptotic RMST test
+
+- resampling-based approaches could be shown to be a remedy for this
+
+- PO1 is a valid alternative to studentized permutation test with some potential advantages
+
+  - computation time (maybe not so relevant for single analyses)
+  
+  - extensions to more general setting (covariate adjustment, other designs)
+  
+  
+## Outlook
+
+- PO2 did not perform well
+
+  - used a "one-sample" bootstrap
+  
+  - maybe we repeat the simulations with a grouped/stratified bootstrap
+    (though I am not sure if this will improve the performance)
+    
+- computation of POs
+
+  - IPCW approaches, parametric POs, ...
+  
+- usage of POs for RMST-based analyses in more general settings
+
+  - covariate adjustments
+  
+  - more general designs and/or testing problems (see e.g. preprint by Munko et. al., 2023)
+    
+
+# Questions?
+
