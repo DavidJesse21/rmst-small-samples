@@ -750,21 +750,6 @@
       ],
       "Hash": "2d7b3857980e0e0d0a1fd6f11928ab0f"
     },
-    "htmlwidgets": {
-      "Package": "htmlwidgets",
-      "Version": "1.6.2",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "grDevices",
-        "htmltools",
-        "jsonlite",
-        "knitr",
-        "rmarkdown",
-        "yaml"
-      ],
-      "Hash": "a865aa85bcb2697f47505bfd70422471"
-    },
     "httr": {
       "Package": "httr",
       "Version": "1.4.7",
@@ -1141,21 +1126,6 @@
         "utils"
       ],
       "Hash": "3efbd8ac1be0296a46c55387aeace0f3"
-    },
-    "profvis": {
-      "Package": "profvis",
-      "Version": "0.3.8",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "R",
-        "htmlwidgets",
-        "purrr",
-        "rlang",
-        "stringr",
-        "vctrs"
-      ],
-      "Hash": "aa5a3864397ce6ae03458f98618395a1"
     },
     "progress": {
       "Package": "progress",
