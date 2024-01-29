@@ -21,6 +21,7 @@ execute:
   echo: false
   output: true
   warning: false
+  cache: true
 ---
 
 ```{r}
@@ -89,7 +90,7 @@ theme_set(theme_bw(base_size = 16))
 
 - two-sample comparisons under small to moderate sample sizes
 
-- comparison of different inference methods w.r.t. controlling the type I error and CI coverage
+- comparison of different inference methods w.r.t. type I error control, power and CI coverage
 
 - asymptotic and resampling-based methods
 
@@ -113,7 +114,7 @@ $$
 
   - strong assumption and often violated in practice (e.g. in oncology trials)
   
-- hard to interpret clinically, event if the PH assumption holds
+- hard to interpret clinically, even if the PH assumption holds
 
 - no causal interpretation (even not in RCTs)
 
@@ -183,12 +184,14 @@ $$
   - pseudo-observations + HC3 covariance matrix estimator
   
   - infinitesimal jackknife pseudo-observations + bootstrap covariance estimator
-  
-- PO approaches might have some advantages for further extensions
 
-  - e.g. covariate adjustment and more general designs
+- pseudo-observation approaches might have some advantages for further extensions
+
+  - usage with continuous covariates
   
-  - (though these aspects will not be discussed in detail)
+  - covariate adjustment in general
+  
+  - extension to more general designs
   
 
 # Methods
@@ -196,7 +199,7 @@ $$
 
 ## Asymptotic Test
 
-- test statistic
+- studentized test statistic
 $$
 Z = \frac{\hat{\mu}_1(t^*) - \hat{\mu}_0(t^*)}{\sqrt{Var[\hat{\mu}_1(t^*)] + Var[\hat{\mu}_0(t^*)]}}
 $$
@@ -208,7 +211,7 @@ $$
 
 - statistical test
 $$
-\varphi^{(asy)} = \mathbf{1} \{Z > z_{1- \alpha/2} \}
+\varphi^{(asy)} = \mathbf{1} \{|Z| > z_{1- \alpha/2} \}
 $$
   - $z_{1- \alpha/2}$: $(1 - \alpha/2)$-quantile of the standard normal distribution
 
@@ -217,9 +220,9 @@ $$
 
 - relax the assumptions on the null distribution
 
-- re-randomization of the original data by permuting the treatment indicators $B$ times
+- permutation of the treatment indicator in the original data ($B$ times)
 
-- for each permuted data set compute the test statistic
+- for each permuted data set compute the studentized test statistic
 $$
 Z^{\pi} =
 \left| \frac{\hat{\mu}_1^{\pi}(t^*) - \hat{\mu}_0^{\pi}(t^*)}{\sqrt{Var[\hat{\mu}_1^{\pi}(t^*)] + Var[\hat{\mu}_0^{\pi}(t^*)]}} \right| 
@@ -244,12 +247,22 @@ $$
   
 - use regression models on the pseudo-observations to estimate covariate/treatment effects
 
-  - generalized estimating equations / quasi-likelihood methods
+  - generalized estimating equations (GEE) / quasi-likelihood methods
   
-- use robust HC3 covariance matrix estimator
+  - robust covariance matrix estimator for inference, e.g. HC3
+  
+- dependent censoring
 
+  - categorical covariates: stratified computation
+  
+  - continuous covariates: IPCW approaches
+  
 
 ## Pseudo-Observations (2)
+
+- use bootstrap covariance matrix estimator for inference
+
+  - problem: involved computation
 
 - infinitesimal jackknife pseudo-observations
 $$
@@ -259,10 +272,7 @@ $$
   &\approx \hat{\theta} + n \frac{\partial \hat{\theta}}{\partial w_i}
 \end{split}
 $$
-  - advantage: computational speed
   
-- same procedure like before but use the bootstrap for estimation of the covariance matrix
-
 
 # Simulation Study
 
@@ -294,11 +304,15 @@ $$
 
 - `{withr}` and `{parallel}` packages and L'Ecuyer-CMRG RNG for reproducible stochastic (parallel) computations
 
-- methods mainly implemented from scratch with the following exceptions
+- methods
 
-  - code basis for studentized permutation test has been supplied by Prof. Marc Ditzhaus
+  - asymptotic and studentized permutation test: own implementation based on code provided by Prof. Marc Ditzhaus
   
-  - PO regression models were fitted using the `{eventglm}` package
+  - pseudo-observations: `{eventglm}` package and own implementations
+  
+  - approximate pseudo-observations: `survfit()` and `pseudo()` functions from package `{survival}`
+
+- source code available on GitLab upon request
 
 
 ## Results
@@ -307,15 +321,17 @@ $$
 
 - permutation test does a good job on controlling the type I error rate and achieving CI coverage close to the nominal level
 
-- PO + HC3 covariance matrix proved to be valid alternative to the permutation test
+- pseudo-observations + HC3 covariance matrix proved to be valid alternative to the permutation test
 
   - only one setting more in which type I error was not controlled
   
   - slightly worse coverage in settings with very small sample sizes
-  
-- IJ PO + bootstrap did not perform well
+ 
+- approximate pseudo-observations + bootstrap covariance matrix estimator 
 
-  - but still better than asymptotic test
+  - inflated type I error rate for small sample sizes
+  
+  - but still better than standard asymptotic test
   
 - power: no remarkable differences between methods
 
@@ -334,32 +350,27 @@ $$
 
 - resampling-based approaches could be shown to be a remedy for this
 
-- PO1 is a valid alternative to studentized permutation test with some potential advantages
+- pseudo-observation approaches are valid alternatives to studentized permutation test with some potential advantages
 
-  - computation time (maybe not so relevant for single analyses)
+  - usage for a continuous covariate
   
-  - extensions to more general setting (covariate adjustment, other designs)
+  - (easier) extension to more general settings (covariate adjustment, other designs)
+  
+  - (computation time; maybe not so relevant for single analyses)
   
   
 ## Outlook
 
-- PO2 did not perform well
+- use bootstrap hypothesis testing instead of bootstrap covariance matrix estimation
 
-  - used a "one-sample" bootstrap
-  
-  - maybe we repeat the simulations with a grouped/stratified bootstrap
-    (though I am not sure if this will improve the performance)
-    
-- computation of POs
+- other approaches for computing pseudo-observations
 
-  - IPCW approaches, parametric POs, ...
+  - IPCW methods, parametric pseudo-observations, ...
   
-- usage of POs for RMST-based analyses in more general settings
+- examination of pseudo-observation approaches in aforementioned settings
 
-  - covariate adjustments
+  - e.g. more general designs and/or testing problems (Munko et. al., 2023)
   
-  - more general designs and/or testing problems (see e.g. preprint by Munko et. al., 2023)
-    
 
 # Questions?
 
