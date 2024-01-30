@@ -41,3 +41,34 @@ rmst_studperm(dt, constants)
 # IJ pseudo-observations + bootstrap hypothesis testing
 set.seed(42)
 rmst_pseudo_ij_boot(dt, constants)
+
+
+
+# Estimate runtimes ----
+
+box::use(
+  simfuns/utils[estimate_runtime],
+  microbenchmark[microbenchmark]
+)
+
+set.seed(42)
+bench = microbenchmark(
+  asy = rmst_asy(dt, constants),
+  studperm = rmst_studperm(dt, constants),
+  po1 = rmst_pseudo(dt, constants),
+  po2 = rmst_pseudo_ij(dt, constants),
+  po_boot = rmst_pseudo_ij_boot(dt, constants),
+  times = 3
+)
+
+t_milisec = summary(bench)$mean
+names(t_milisec) = c("asy", "studperm", "po1", "po2", "po_boot")
+t_sec = 0.001 * t_milisec
+
+# Sequential runtime
+estimate_runtime(sum(t_sec))
+
+# Parallel runtime
+estimate_runtime(sum(t_sec), parallel = list(num_cores = 4, prop = 0.9))
+estimate_runtime(sum(t_sec), parallel = list(num_cores = 4, prop = 0.9), mult = 2)
+# With 20:00:00 we should be on the safe side
