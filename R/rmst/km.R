@@ -191,7 +191,7 @@ rmst_diff_studperm = function(formula, data = environment(formula),
   # The treatment column must be numeric then
   # The function might need to be refined later
   x = as.matrix(get_surv_data(formula, data = data))
-  x = x[order(x[, 1]), ]
+  x = x[order(x[, 1]), , drop = FALSE]
 
   
   # Permutation samples
@@ -199,8 +199,6 @@ rmst_diff_studperm = function(formula, data = environment(formula),
   # The treatment column must not be a factor
   # The code can be refined later.
   group_shuffled = vapply(seq_len(num_samples), \(i) sample(x[, 3]), numeric(nrow(x)))
-  
-  # return(group_shuffled)
   
   # Permutation results
   perm = t(apply(
@@ -210,7 +208,7 @@ rmst_diff_studperm = function(formula, data = environment(formula),
       x[, 3] = shuffled
       
       mat_rmst = lapply(contrast, function(group) {
-        xi = x[x[, 3] == as.numeric(group), ]
+        xi = x[x[, 3] == as.numeric(group), , drop = FALSE]
         km = fsurvfit(xi[, 1], xi[, 2])
         .rmst(km, cutoff, var_method, ...)
       })
@@ -226,9 +224,9 @@ rmst_diff_studperm = function(formula, data = environment(formula),
   ))
   
   # Analyse data based on permutations
-  perm_suared_tstat = perm[, 1]^2 / perm[, 2]
-  pval = mean(res_asy["tstat"]^2 <= perm_suared_tstat, na.rm = TRUE)
-  null_quant = quantile(sqrt(perm_suared_tstat), probs = conf_level)
+  perm_squared_tstat = perm[, 1]^2 / perm[, 2]
+  pval = mean(res_asy["tstat"]^2 <= perm_squared_tstat, na.rm = TRUE)
+  null_quant = quantile(sqrt(perm_squared_tstat), probs = conf_level)
   
   res_perm = list(
     pval = pval,
@@ -257,7 +255,7 @@ rmst_diff_studperm = function(formula, data = environment(formula),
 #' @export
 .rmst = function(x, cutoff, var_method, ...) {
   # Subset Kaplan-Meier table to relevant time horizon
-  x = x[x[, "time"] <= cutoff, ]
+  x = x[x[, "time"] <= cutoff, , drop = FALSE]
   
   # Point estimation
   time_diffs = diff(c(0, x[, "time"], cutoff))
