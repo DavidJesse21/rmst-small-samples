@@ -22,12 +22,16 @@ box::use(
 #'   Each element is a vector with the corresponding scenario / simulation IDs.
 #'   
 #' @export
-check_sim_finished = function(dir_sim = fs$path("simulation")) {
+check_sim_finished = function(dir_sim = fs$path("simulation"), num_sims = 5000L) {
+  
   db = dbConnect(SQLite(), fs$path(dir_sim, "registry", "simdb", ext = "db"))
   on.exit(dbDisconnect(db), add = TRUE)
   
   # If not specified check all scenario.ids
   scenario.ids = dbGetQuery(db, "SELECT `scenario.id` FROM scenarios")[[1]]
+  
+  # Also get algorithm IDs for checks
+  algo.ids = dbGetQuery(db, "SELECT `algo.id` FROM algorithms")[[1]]
   
   # Output object
   out = list(finished = integer(), not_finished = integer(), not_started = integer())
@@ -46,7 +50,7 @@ check_sim_finished = function(dir_sim = fs$path("simulation")) {
   is_finished = vapply(
     idx1, function(i) {
       tab = res[scenario.id == i, table(algo.id, useNA = "ifany")]
-      check = (length(tab) == 4) && all(tab == 5000) && all(names(tab) %in% as.character(1:4))
+      check = (length(tab) == length(algo.ids)) && all(tab == num_sims) && all(names(tab) %in% as.character(algo.ids))
       return(check)
     },
     logical(1)
@@ -84,7 +88,7 @@ check_sim_finished = function(dir_sim = fs$path("simulation")) {
 #' Otherwise it will be incremented by 1 starting from 1.
 #' 
 #' @export
-collect_results = function(join = c("scenarios", "algos"),
+collect_results = function(join = character(),
                            .save = FALSE,
                            dir_sim = fs$path("simulation")) {
   message("Collecting results...")

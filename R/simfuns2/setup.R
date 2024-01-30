@@ -11,7 +11,7 @@ setup_sim = function(dir_sim = fs$path("simulation"),
                      dt_scenarios) {
   # Base directory
   if (!fs$dir_exists(dir_sim)) fs$dir_create(dir_sim)
-  
+
   # Registry directory
   dir_reg = fs$path(dir_sim, "registry")
   fs$dir_create(dir_reg)
@@ -19,8 +19,8 @@ setup_sim = function(dir_sim = fs$path("simulation"),
   # Other directories
   fs$dir_create(fs$path(dir_reg, "algorithms"))
   fs$dir_create(fs$path(dir_reg, "logs"))
-  # fs$dir_create(fs$path(dir_reg, "templates"))
   fs$dir_create(fs$path(dir_reg, "temp"))
+  fs$dir_create(fs$path(dir_reg, "backup"))
   
   # Create resource files
   saveRDS(list(), fs$path(dir_reg, "resources_slurm", ext = "rds"))

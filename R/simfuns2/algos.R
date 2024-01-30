@@ -11,7 +11,7 @@ box::use(
   # Asymptotic and studentized permutation test
   rmst/km[rmst_diff_test, rmst_diff_studperm],
   # Pseudo-observation approaches
-  rmst/pseudo[pseudo_strat, pseudo_infjack, rmst_pseudo_test, boot_pseudo]
+  rmst/pseudo[pseudo_strat, pseudo_infjack, rmst_pseudo_test, boot_pseudo, rmst_pseudo_boot_test]
 )
 
 
@@ -81,7 +81,7 @@ rmst_studperm = function(.data, constants, ...) {
 
 #' @rdname algorithms
 #' @export
-rmst_pseudo_hc3 = function(.data, constants, ...) {
+rmst_pseudo = function(.data, constants, ...) {
   quant = qnorm(1 - (constants$alpha / 2))
   
   m = rmeanglm(
@@ -102,16 +102,15 @@ rmst_pseudo_hc3 = function(.data, constants, ...) {
 
 #' @rdname algorithms
 #' @export
-rmst_pseudo_ij_boot = function(.data, constants, ...) {
+rmst_pseudo_ij = function(.data, constants, ...) {
   quant = qnorm(1 - (constants$alpha / 2))
   
   m = rmeanglm(
     Surv(time, event) ~ trt, data = .data, time = constants$cutoff,
     model.censoring = pseudo_infjack, formula.censoring = ~ trt
   )
-  m = boot_pseudo(m, num_samples = constants$num_samples_boot)
   
-  x = rmst_pseudo_test(m, vcov_type = "boot")[2, ]
+  x = rmst_pseudo_test(m, vcov_type = "HC3")[2, ]
   
   ci = minus_plus(x[["est"]], quant * sqrt(x[["var_est"]]))
   
@@ -120,3 +119,24 @@ rmst_pseudo_ij_boot = function(.data, constants, ...) {
   
   return(out)
 }
+
+
+#' @rdname algorithms
+#' @export
+rmst_pseudo_ij_boot = function(.data, constants, ...) {
+  m = rmeanglm(
+    Surv(time, event) ~ trt, data = .data, time = constants$cutoff,
+    model.censoring = pseudo_infjack, formula.censoring = ~ trt
+  )
+  
+  x = rmst_pseudo_boot_test(
+    m, num_samples = constants$num_samples_boot, vcov_type = "HC3",
+    conf_level = (1 - constants$alpha), light = TRUE
+  )
+  
+  out = x[2, c("pval_boot", "ci_lower", "ci_upper")]
+  names(out)[1] = "pval"
+  
+  return(out)
+}
+

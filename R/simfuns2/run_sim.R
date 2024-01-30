@@ -44,7 +44,7 @@ run_sim = function(scenario.id,
   params = get_params(scenario.id, dir_sim, timeout = db_timeout)
   
   # Generate the data
-  li_data = with_seed(scenario.id, {
+  li_data = with_seed(scenario.id, .rng_kind = "Mersenne-Twister", {
     lapply(seq_len(sim_resources$num_sims), function(i) {
       do.call(gen_surv_data, params)
     })
@@ -90,7 +90,16 @@ run_sim = function(scenario.id,
     setcolorder(out, new = c("scenario.id", "algo.id", "rep.id", "pval", "ci_lower", "ci_upper"))
     
     # Write results to database
-    write_results(out, dir_sim, timeout = db_timeout)
+    tryCatch(
+      write_results(out, dir_sim, timeout = db_timeout),
+      # In case of error write to rds file
+      error = function(e) {
+        saveRDS(
+          out,
+          fs$path(dir_sim, "registry", "backup", paste0(scenario.id, algo), ext = "rds")
+        )
+      }
+    )
   }
   
   
@@ -108,6 +117,7 @@ get_algo.id = function(algo, dir_sim = fs$path("simulation"), timeout = 60) {
   
   start_time = Sys.time()
   algo.id = try(stop("init"), silent = TRUE)
+  iter = 0
   
   while (inherits(algo.id, "try-error")) {
     # Stop if it takes too long
@@ -122,6 +132,10 @@ get_algo.id = function(algo, dir_sim = fs$path("simulation"), timeout = 60) {
         sprintf("SELECT `algo.id` FROM algorithms WHERE algo = '%s'", algo)
       )[[1]]
     )
+    
+    # Wait 1 second until next try except for first attempt
+    if (iter > 0L) Sys.sleep(1)
+    iter = iter + 1
   }
   
   return(algo.id)
@@ -135,6 +149,7 @@ get_params = function(scenario.id, dir_sim = fs$path("simulation"), timeout = 60
   
   start_time = Sys.time()
   params = try(stop("init"), silent = TRUE)
+  iter = 0
   
   while (inherits(params, "try-error")) {
     # Stop if it takes too long
@@ -150,6 +165,10 @@ get_params = function(scenario.id, dir_sim = fs$path("simulation"), timeout = 60
       ) |>
         make_params()
     )
+    
+    # Wait 1 second until next try except for first attempt
+    if (iter > 0L) Sys.sleep(1)
+    iter = iter + 1
   }
   
   return(params)
@@ -163,6 +182,7 @@ write_results = function(dt, dir_sim = fs$path("simulation"), timeout = 60) {
   
   start_time = Sys.time()
   x = try(stop("init"), silent = TRUE)
+  iter = 0
   
   while (inherits(x, "try-error")) {
     # Stop if it takes too long
@@ -172,6 +192,10 @@ write_results = function(dt, dir_sim = fs$path("simulation"), timeout = 60) {
     
     # Usual behaviour: write results to the database
     x = try(dbAppendTable(db, "results", dt))
+    
+    # Wait 1 second until next try except for first attempt
+    if (iter > 0L) Sys.sleep(1)
+    iter = iter + 1
   }
   
   return(invisible(x))
