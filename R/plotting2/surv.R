@@ -5,15 +5,10 @@ box::use(
 )
 
 box::use(
+  simfuns2/scenarios[get_params_exp, get_params_pwexp, get_params_weibull],
   ./utils[pal_oi, fun_surv_exp, fun_surv_pwexp, fun_surv_wb]
 )
 
-box::use(
-  simfuns2/scenarios[get_params_exp, get_params_pwexp, get_params_weibull]
-)
-
-
-box::help(get_params_exp)
 
 
 #' Plot survival functions
@@ -41,20 +36,38 @@ plot_survs_generic = function(surv0, surv1_h0, surv1_h1,
                               xlab = "\nTime", ylab = "Survival probability\n",
                               xlim = c(0, 10.5), ylim = c(0, 1),
                               ...) {
+  # Expression vector for legends (needed later)
+  .labels = c(
+    "Control",
+    expression(Treatment ~ (Delta == 0)),
+    expression(Treatment ~ (Delta == 1.5))
+  )
+  
+  
   ggplot() +
     # Survival functions
-    geom_function(fun = surv0, aes(color = "Control"), ...) +
-    geom_function(fun = surv1_h0, aes(color = "Treatment"), linetype = "dotdash", ...) +
-    geom_function(fun = surv1_h1, aes(color = "Treatment"), ...) +
+    geom_function(fun = surv0, aes(color = "c", linetype = "c"), ...) +
+    geom_function(fun = surv1_h0, aes(color = "t0", linetype = "t0"), ...) +
+    geom_function(fun = surv1_h1, aes(color = "t1.5", linetype = "t1.5"), ...) +
     # RMST cutoff
     geom_vline(
       xintercept = cutoff,
-      linewidth = cutoff_linewidth, linetype = "dashed", color = "black"
+      linewidth = cutoff_linewidth, linetype = "dashed", color = "#222222"
     ) +
     # Theme
     theme_bw() +
     # Legend
-    scale_color_manual(name = "Arm", values = pal_oi(c("orange", "blue"))) +
+    scale_color_manual(
+      name = "Group",
+      values = pal_oi(c("orange", "blue", "blue")),
+      labels = .labels
+    ) +
+    scale_linetype_manual(
+      name = "Group",
+      values = c("solid", "dotdash", "solid"),
+      labels = .labels
+    ) +
+    theme(legend.text.align = 0) +
     # Axes and labels
     labs(x = xlab, y = ylab) +
     scale_x_continuous(
@@ -66,6 +79,7 @@ plot_survs_generic = function(surv0, surv1_h0, surv1_h1,
       limits = ylim
     )
 }
+
 
 
 #' S1: proportional hazards / exponential distributions
@@ -175,30 +189,4 @@ plot_survs_weibull = function(rmst_diff = c(0, 1.5), shape0 = 3, scale0 = 8, sca
     ...
   )
 }
-
-plot_survs_weibull(linewidth = 1.1)
-
-# Obtain parameters
-x = get_params_weibull()
-x[1, surv_params][[1]]
-x[2, surv_params][[1]]
-
-params_h0
-
-box::help(get_params_weibull)
-
-x[1, surv_params]
-
-params_h0 = x[rmst_diff == 0, surv_params][[1]]
-surv0 = fun_surv_exp(params_h0["lambda0"])
-surv1_h0 = fun_surv_exp(params_h0["lambda1"])
-
-params_h1 = x[rmst_diff == 1.5, surv_params][[1]]
-surv1_h1 = fun_surv_exp(params_h1["lambda1"])
-
-box::help(get_params_exp)
-
-get_params_exp(rmst_diff = c(0, 1.5))
-get_params_weibull()
-get_params_pwexp()
 
