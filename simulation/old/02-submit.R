@@ -6,30 +6,9 @@ box::use(
   simfuns2/post_submit[check_sim_finished]
 )
 
-box::use(
-  simfuns2/get_funs[get_scenario_table],
-  data.table[...]
-)
 
-
-# 01.02.2024 - Test two scenarios only for first ---- 
-
-dts = get_scenario_table()
-
-id1 = dts[surv_model == "crossing_pwexp" &
-            cens_model == "uneq_wb" &
-            n0 == 36 & n1 == 24 &
-            rmst_diff == 0]
-
-id2 = dts[surv_model == "crossing_wb" &
-            cens_model == "eq_unif" &
-            n0 == 12 & n1 == 18 &
-            rmst_diff == 0]
-
-ids = c(id1$scenario.id, id2$scenario.id)
-
-# Simulation resources
-set_sim_resources(scenario.ids = ids)
+# Simulation resources/specifications
+set_sim_resources(scenario.ids = check_sim_finished()$not_started)
 sim_resources = get_sim_resources()
 
 # Constant objects used for algorithms
@@ -39,16 +18,14 @@ constants = list(
   var_method_asy = "greenwood",
   var_method_studperm = "nelson_aalen",
   num_samples_studperm = 2000L,
-  num_samples_boot = 2000L
+  num_samples_boot = 1000L
 )
 
-# Slurm resources
+# Slurm
+set_slurm_resources(walltime = "08:00:00")
 slurm_resources = get_slurm_resources()
 
-
-# Double-check and submit ----
-
-# Simulation resources
+# Double check simulation resources specification
 cat("The following simulation resources are set:\n\n")
 for (r in names(sim_resources)) {
   cat(r, ":\n", "  ", paste0(sim_resources[[r]], collapse = ", "), "\n", sep = "")
@@ -58,7 +35,7 @@ cont = readline("Continue? [y/n] ")
 stopifnot(cont %in% c("y", "n"))
 if (cont == "n") stop("Execution halted.", .call = FALSE)
 
-# Slurm resources
+# Double check slurm resources specifications
 cat("The following slurm resources are set:\n\n")
 for (r in names(slurm_resources)) {
   cat(r, ":\n", "  ", paste0(slurm_resources[[r]], collapse = ", "), "\n", sep = "")
