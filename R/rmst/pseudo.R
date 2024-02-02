@@ -336,9 +336,9 @@ rmst_pseudo_boot_test = function(m,
   
   # For non-obvious or very edge case scenarios some bootstrap iterations might fail.
   # E.g. for one resampled data set there might be 0 variance for a covariate.
-  # This leads to (try-catched) errors but it does not make everything else useless.
+  # This leads to (try-catched) errors or NaNs but it does not make everything else useless.
   # Therefore, discard "errors" and give a warning.
-  boot = Filter(Negate(is.null), boot)
+  boot = Filter(\(x) !(is.null(x) | anyNA(x)), boot)
   if (length(boot) < num_samples) {
     warning(sprintf(
       "Using less bootstrap samples than specified (%d out of %d missing).",

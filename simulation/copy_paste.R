@@ -34,12 +34,6 @@ source("simulation/01-setup.R")
 # and re-upload it to the remote server.
 source("simulation/02-submit.R")
 
-# Double-check
-cat(readLines("simulation/02-submit.R"), sep = "\n")
-cat(readLines("R/simfuns2/submit_jobs.R"), sep = "\n")
-# Submitting jobs
-source("simulation/02-submit.R")
-
 
 # 03 Monitor/control submitted jobs ----
 
@@ -70,6 +64,15 @@ cancel_jobs()
 # Something went wrong?
 # Read the log file (scenario.id needs to be supplied)
 read_logs()
+
+# Preliminary analysis
+get_algo_table()
+dtr = get_results_table()
+dtr[, anyNA(pval)]
+dtr[, sum(is.na(pval)), by = algo.id]
+dtr[, mean(pval <= 0.05, na.rm = TRUE), by = .(scenario.id, algo.id)][order(scenario.id, algo.id)]
+dtr[, sum(is.na(pval)), by = .(algo.id, scenario.id)]
+dtr[is.na(pval)]
 
 
 # 04 After simulation ----
