@@ -6,30 +6,17 @@ box::use(
   simfuns2/post_submit[check_sim_finished]
 )
 
-box::use(
-  simfuns2/get_funs[get_scenario_table],
-  data.table[...]
-)
 
+# 03.02.2024 - Submit all jobs except for 25 and 162 ----
 
-# 01.02.2024 - Test two scenarios only for first ---- 
+ids = setdiff(1:216, c(25, 162))
 
-dts = get_scenario_table()
-
-id1 = dts[surv_model == "crossing_pwexp" &
-            cens_model == "uneq_wb" &
-            n0 == 36 & n1 == 24 &
-            rmst_diff == 0]
-
-id2 = dts[surv_model == "crossing_wb" &
-            cens_model == "eq_unif" &
-            n0 == 12 & n1 == 18 &
-            rmst_diff == 0]
-
-ids = c(id1$scenario.id, id2$scenario.id)
 
 # Simulation resources
-set_sim_resources(scenario.ids = ids)
+set_sim_resources(
+  scenario.ids = ids,
+  algos = c("asy", "studperm", "pseudo", "pseudo_ij", "pseudo_ij_boot")
+)
 sim_resources = get_sim_resources()
 
 # Constant objects used for algorithms
@@ -44,7 +31,6 @@ constants = list(
 
 # Slurm resources
 slurm_resources = get_slurm_resources()
-
 
 # Double-check and submit ----
 
