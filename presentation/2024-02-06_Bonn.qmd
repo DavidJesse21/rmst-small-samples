@@ -4,7 +4,7 @@ author:
   - "David Jesse\\newline"
   - "First supervisor: Prof. Dr. Tim Friede\\newline"
   - "Second supervisor: Dr. Cynthia Huber"
-date: 2024-01-25
+date: 2024-02-06
 date-format: "DD MMMM, YYYY"
 latex-min-runs: 2
 format: 
@@ -16,12 +16,12 @@ format:
     include-in-header: 
       - ./tex/preamble.tex
       - ./tex/operators.tex
+    keep-tex: false
 execute: 
   eval: true
   echo: false
   output: true
   warning: false
-  cache: true
 ---
 
 ```{r}
@@ -31,8 +31,25 @@ execute:
 box::use(
   ggplot2[...],
   data.table[...],
-  survival[Surv, survfit]
+  survival[Surv, survfit],
+  here[here],
+  fs
 )
+
+setwd(here())
+options(box.path = "R")
+
+box::use(
+  simfuns2/analyze[calc_rejection_rates, calc_ci_metrics, setj_samples_alloc, setj_percent],
+  simfuns2/get_funs[get_scenario_table]
+)
+
+
+# Simulation results
+dtr = readRDS(fs$path("simulation", "results", "2024-02-04_results", ext = "rds"))
+setDT(dtr)
+dts = get_scenario_table()
+
 
 # Function for visualising Kaplan-Meier curve and restricted mean survival time
 ggrmst = function(fit, cutoff,
@@ -178,20 +195,18 @@ $$
 - replicate results by Ditzhaus et al., 2023
 
   - asymptotic test and studentized permutation test
-  
-- propose further existing resampling-based approaches (in the broader sense)
 
-  - pseudo-observations + HC3 covariance matrix estimator
+- propose further existing resampling-based approaches
   
-  - infinitesimal jackknife pseudo-observations + bootstrap covariance estimator
-
+  - pseudo-observations
+  
+  - pseudo-observations + bootstrap hypothesis testing
+  
 - pseudo-observation approaches might have some advantages for further extensions
 
-  - usage with continuous covariates
+  - usage with and adjustment for (continuous) covariates
   
-  - covariate adjustment in general
-  
-  - extension to more general designs
+  - (easier) extension to more general designs
   
 
 # Methods
@@ -201,7 +216,7 @@ $$
 
 - studentized test statistic
 $$
-Z = \frac{\hat{\mu}_1(t^*) - \hat{\mu}_0(t^*)}{\sqrt{Var[\hat{\mu}_1(t^*)] + Var[\hat{\mu}_0(t^*)]}}
+Z = \frac{\hat{\mu}_1(t^*) - \hat{\mu}_0(t^*)}{\sqrt{\widehat{Var}[\hat{\mu}_1(t^*)] + \widehat{Var}[\hat{\mu}_0(t^*)]}}
 $$
 
 - asymptotic distribution
@@ -225,7 +240,7 @@ $$
 - for each permuted data set compute the studentized test statistic
 $$
 Z^{\pi} =
-\left| \frac{\hat{\mu}_1^{\pi}(t^*) - \hat{\mu}_0^{\pi}(t^*)}{\sqrt{Var[\hat{\mu}_1^{\pi}(t^*)] + Var[\hat{\mu}_0^{\pi}(t^*)]}} \right| 
+\left| \frac{\hat{\mu}_1^{\pi}(t^*) - \hat{\mu}_0^{\pi}(t^*)}{\sqrt{\widehat{Var}[\hat{\mu}_1^{\pi}(t^*)] + \widehat{Var}[\hat{\mu}_0^{\pi}(t^*)]}} \right| 
 $$
 
 - statistical test
@@ -250,6 +265,18 @@ $$
   - generalized estimating equations (GEE) / quasi-likelihood methods
   
   - robust covariance matrix estimator for inference, e.g. HC3
+
+---
+
+- test statistic
+$$
+Z = \frac{\betahat}{\widehat{\text{se}}(\betahat)}
+$$
+
+- statistical test
+$$
+\varphi^{\text{(PO)}} = \mathbf{1} \{|Z| > z_{1- \alpha/2} \}
+$$
   
 - dependent censoring
 
@@ -260,9 +287,30 @@ $$
 
 ## Pseudo-Observations (2)
 
-- use bootstrap covariance matrix estimator for inference
+- idea: refine PO approach by using bootstrap hypothesis testing
 
-  - problem: involved computation
+  - relaxation of assumption on null distribution
+
+- nonparametric bootstrap / case resampling
+
+- for each bootstrap resample compute the test statistic
+$$
+Z^b = 
+\left| \frac{\betahat^b - \betahat}{\widehat{se}(\betahat^b)}
+\right|
+$$
+
+- statistical test
+$$
+\varphi^b = \mathbf{1} \{|Z| > q_{1 - \alpha}^b \}
+$$
+  - $q_{1 - \alpha}^b$: $(1 - \alpha)$-quantile of the the bootstrap test statistics
+
+---
+
+- problem: involved computation
+
+  - nested resampling: bootstrap resampling (1), pseudo-observations (2)
 
 - infinitesimal jackknife pseudo-observations
 $$
@@ -306,37 +354,120 @@ $$
 
 - methods
 
-  - asymptotic and studentized permutation test: own implementation based on code provided by Prof. Marc Ditzhaus
+  - majority of functions/methods implemented by myself with some help/code provided by Prof. Marc Ditzhaus
   
-  - pseudo-observations: `{eventglm}` package and own implementations
+  - `{eventglm}` for fitting PO regression models
   
   - approximate pseudo-observations: `survfit()` and `pseudo()` functions from package `{survival}`
 
 - source code available on GitLab upon request
 
 
-## Results
+## Results - Type I Error
 
-- results are consistent with those from Ditzhaus et al., 2023
+```{r}
+#| label: plot-type1error
+#| fig-height: 4.5
 
-- permutation test does a good job on controlling the type I error rate and achieving CI coverage close to the nominal level
+dt1 = calc_rejection_rates(
+  dtr[scenario.id %in% dts[rmst_diff == 0, scenario.id]],
+  stats_NA = FALSE
+)
+dt1 = merge(
+  dt1, dts[rmst_diff == 0, .(scenario.id, num_samples = n0 + n1)],
+  by = "scenario.id"
+)
+setj_percent(dt1, "reject")
 
-- pseudo-observations + HC3 covariance matrix proved to be valid alternative to the permutation test
+ggplot(dt1, aes(factor(algo.id), reject)) +
+  geom_boxplot() +
+  theme_bw() +
+  # Binomial confidence interval
+  geom_hline(yintercept = 4.4, linetype = "dashed") +
+  geom_hline(yintercept = 5.6, linetype = "dashed") +
+  # Labels etc.
+  scale_y_continuous(
+    name = "Type I error in %\n"
+  ) +
+  scale_x_discrete(
+    name = "\nMethods",
+    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+  ) +
+  # Differentiate between total sample sizes
+  facet_wrap(
+    ~ num_samples,
+    labeller = labeller(num_samples = \(x) paste0("N = ", x))
+  )
+```
 
-  - only one setting more in which type I error was not controlled
-  
-  - slightly worse coverage in settings with very small sample sizes
- 
-- approximate pseudo-observations + bootstrap covariance matrix estimator 
 
-  - inflated type I error rate for small sample sizes
-  
-  - but still better than standard asymptotic test
-  
-- power: no remarkable differences between methods
+## Results - Power
 
-  - especially not for ranges that we would try to actually achieve in practice
-  
+```{r}
+#| label: plot-power
+#| fig-height: 4.5
+
+dt2 = calc_rejection_rates(
+  dtr[scenario.id %in% dts[rmst_diff == 1.5, scenario.id]],
+  stats_NA = FALSE
+)
+dt2 = merge(
+  dt2, dts[rmst_diff == 1.5, .(scenario.id, num_samples = n0 + n1)],
+  by = "scenario.id"
+)
+setj_percent(dt2, "reject")
+
+ggplot(dt2, aes(factor(algo.id), reject)) +
+  geom_boxplot() +
+  theme_bw() +
+  scale_y_continuous(
+    name = "Power in %\n"
+  ) +
+  scale_x_discrete(
+    name = "\nMethods",
+    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+  ) +
+  facet_wrap(
+    ~ num_samples,
+    labeller = labeller(num_samples = \(x) paste0("N = ", x))
+  )
+```
+
+
+## Results - CI Coverage
+
+```{r}
+#| label: plot-coverage
+#| fig-height: 4.5
+
+dt3 = calc_ci_metrics(
+  merge(dtr, dts[, .(scenario.id, rmst_diff)], by = "scenario.id"),
+  stats_NA = FALSE
+)
+dt3 = merge(
+  dt3, dts[, .(scenario.id, num_samples = n0 + n1)],
+  by = "scenario.id"
+)
+setj_percent(dt3, "coverage")
+
+ggplot(dt3, aes(factor(algo.id), coverage)) +
+  geom_boxplot() +
+  theme_bw() +
+  scale_y_continuous(
+    name = "Coverage in %\n"
+  ) +
+  scale_x_discrete(
+    name = "\nMethods",
+    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+  ) +
+  facet_wrap(
+    ~ num_samples,
+    labeller = labeller(num_samples = \(x) paste0("N = ", x))
+  ) +
+  # Binomial confidence interval
+  geom_hline(yintercept = 94.4, linetype = "dashed") +
+  geom_hline(yintercept = 95.6, linetype = "dashed")
+```
 
 
 # Summary & Outlook
@@ -346,7 +477,7 @@ $$
 
 - RMST contrasts as alternative effect measures instead of hazard ratio
 
-- inflated type I error rate for the asymptotic RMST test
+- inflated type I error rate for standard asymptotic RMST test
 
 - resampling-based approaches could be shown to be a remedy for this
 
@@ -361,15 +492,13 @@ $$
   
 ## Outlook
 
-- use bootstrap hypothesis testing instead of bootstrap covariance matrix estimation
+- comparison of methods with covariate adjustment
+
+- usage of PO methods for more general designs and/or testing problems (preprint by Munko et. al., 2023)
 
 - other approaches for computing pseudo-observations
 
   - IPCW methods, parametric pseudo-observations, ...
-  
-- examination of pseudo-observation approaches in aforementioned settings
-
-  - e.g. more general designs and/or testing problems (Munko et. al., 2023)
   
 
 # Questions?
