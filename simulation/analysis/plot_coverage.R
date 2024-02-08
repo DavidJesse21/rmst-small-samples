@@ -40,3 +40,28 @@ ggplot(dt_ci, aes(factor(algo.id), coverage)) +
     name = "\nMethods",
     labels = c("Asy", "Perm", "Pseudo 1", "Pseudo 2")
   )
+
+
+
+
+ggplot(dt_ci, aes(factor(algo.id), coverage, color = surv_model, shape = cens_model)) +
+  geom_jitter(width = 0.2) +
+  facet_grid(
+    rows = vars(samples_k), cols = vars(samples_alloc),
+    labeller = labeller(samples_k = \(x) sprintf("K = %s", x))
+  ) +
+  theme_bw() +
+  # Binomial confidence interval
+  geom_hline(yintercept = 94.4, linetype = "dashed") +
+  geom_hline(yintercept = 95.6, linetype = "dashed") +
+  # y-axis
+  scale_y_continuous(
+    name = "Coverage in %\n"
+  ) +
+  # x-axis
+  scale_x_discrete(
+    name = "\nMethods",
+    labels = c("Asy", "Perm", "Pseudo 1", "Pseudo 2")
+  ) +
+  theme(legend.position = "top")
+
