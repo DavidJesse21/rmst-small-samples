@@ -34,6 +34,8 @@ source("simulation/01-setup.R")
 # and re-upload it to the remote server.
 source("simulation/02-submit.R")
 
+cat(readLines("simulation/03-temp-submit.R"), sep = "\n")
+source("simulation/03-temp-submit.R")
 
 # 03 Monitor/control submitted jobs ----
 
@@ -67,12 +69,31 @@ read_logs()
 
 # Preliminary analysis
 get_algo_table()
+
 dtr = get_results_table()
 dtr[, anyNA(pval)]
+dtr[, table(algo.id)]
+
+dts = get_scenario_table()
+ids = dts[rmst_diff == 0, scenario.id]
+
+dt1 = dtr[scenario.id %in% ids, 
+    mean(pval <= 0.05, na.rm = TRUE),
+    by = .(scenario.id, algo.id)][
+      order(scenario.id, algo.id)
+    ]
+
+dt1[scenario.id == 1]
+
 dtr[, sum(is.na(pval)), by = algo.id]
 dtr[, mean(pval <= 0.05, na.rm = TRUE), by = .(scenario.id, algo.id)][order(scenario.id, algo.id)]
 dtr[, sum(is.na(pval)), by = .(algo.id, scenario.id)]
 dtr[is.na(pval)]
+
+dt1[, control := between(V1, 0.044, 0.056)]
+dt1[, mean(control), by = algo.id]
+
+list.files("simulation/registry/backup")
 
 
 # 04 After simulation ----
