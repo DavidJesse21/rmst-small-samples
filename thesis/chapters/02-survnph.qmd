@@ -1,0 +1,138 @@
+---
+bibliography: ["../bib/references.bib", "../bib/packages.bib"]
+---
+
+# Survival Analysis under non-proportional Hazards {#sec-survnph}
+
+This section aims at introducing basic concepts and relations employed in survival analysis as well as the notation used throughout this thesis.
+These are mainly adopted from chapter 1 in @collett2015 and from @bardo2023.
+Additionally, we highlight the role of the proportional hazards assumption in survival analysis.
+We then present the restricted mean survival time as a model-free population-level summary measure, which does not rely on such an assumption.
+
+
+## Notation and basic Concepts {#sec-basics}
+
+Let $T \in \real^{+}$ denote a random variable for the time to event and $C \in \real^{+}$ a second random variable for the censoring time.
+In real-world applications $T$ and $C$ are never observed simultaneously.
+Instead, for an individual $i$ we only observe $t_i = \min(T_i, C_i)$.
+Furthermore, we record if the event has been observed for an individual or is censored using the event indicator $\delta_i = \mathbf{1} \{T_i \leq C_i\}$.
+Thus, ignoring potential covariates, a single observation consists of the tuple $(t_i,\, \delta_i)$.
+This thesis focusses on two-sample settings in clinical trials.
+For this reason, we introduce the treatment indicator variable $Z \in \{0, 1\}$ where $Z = 1$ denotes the experimental and $Z = 0$ the control treatment group.
+Alternatively, the group associations may be indicated with the subscript $j$ using the same elements and meanings as for $Z$.
+
+The random variable $T$ can be characterized by its *distribution function*
+$$
+F(t) = \prob(T \leq t) = \int_0^t f(u) \, du \, ,
+$$ {#eq-distr}
+with $f$ being the *density function* of that random variable.
+The distribution function has the interpretation as the probability of the random survival time $T$ being less than or equal to some value $t$ and is therefore also  referred to as the *cumulative inicidence function* in the context of survival analysis.
+Often, however, the interpretation of the *survival function* appears to be more intuitive, which is just one minus the distribution function, i.e.
+$$
+S(t) = \prob(T > t) = 1 - F(t) \, .
+$$ {#eq-surv}
+Hence, it describes the probability of surviving beyond some time point $t$.
+Another important function used in survival analysis is the *hazard function*.
+Its formal definition is
+$$
+h(t) = \lim_{\Delta t \to 0}
+\frac{\prob(t \leq T < t + \Delta t | T \geq t)}{\Delta t}
+\, ,
+$$ {#eq-hazard}
+where $\Delta t$ denotes an increment of time.
+It can be interpreted as the instantaneous failure rate at some time point $t$ and is therefore also called the *hazard rate*.
+Moreover, we can derive the *cumulative hazard function* from it:
+$$
+H(t) = \int_0^t h(u) \, du
+$$ {#eq-cumhaz}
+The cumulative hazard function can be interpreted as the "cumulative risk of an event by time $t$" [@collett2015, p. 13].
+Among practicioners the interpretation of the latter two quantities is often unclear or leads to confusion.
+However, their usefulness lies in their interrelation with $f(t)$, $F(t)$ and $S(t)$, respectively.
+Using standard results from probability theory, the following results can be obtained, among others:
+$$
+\begin{split}
+  &h(t) = \frac{f(t)}{S(t)} \\
+  &S(t) = \exp(- H(t))
+\end{split}
+$$
+Accordingly, if one of the aforementioned functions is given all of the remaining ones can be derived from it.
+A lot of the methods employed in survival analysis are actually built upon the hazard function.
+Its relevance shall be further underlined in the following subsection.
+
+
+## Non-proportional Hazards {#sec-nph}
+
+We consider a setting with two independent populations, e.g. one coming from a control ($j = 0$) and the other coming from an experimental ($j = 1$) treatment group in a clinical trial:
+$$
+T_{j} \sim S_j \quad (j = 0, 1)
+$$
+As pointed out in the previous subsection, the distributional assumptions could also be expressed in terms of the hazard functions.
+Given these we can define the relative hazard between the experimental and the control group, more commonly known as the *hazard ratio*:
+$$
+HR(t) = \frac{h_1(t)}{h_0(t)}
+$$ {#eq-hr}
+Using this general definition it is clear that the hazard ratio is a function of time.
+However, many of the standard statistical methods used in survival analysis are based on the assumption that the hazards are proportional over and therefore independent of time:
+$$
+HR(t) = \frac{h_1(t)}{h_0(t)} := \theta
+$$ {#eq-phr}
+Here, $\theta \in (0, \infty)$ is just some constant highlighting what is known as the *proportional hazards* assumption.
+Perhaps the most well-known statistical model in survival analysis employing this assumption is the *Cox proportional hazards model* [@cox1972]:
+$$
+h(t) = \exp(\beta Z) h_0(t)
+$$ {#eq-coxph}
+The Cox model is a regression model for covariate effects on the hazard scale.
+Here, we employ our previous notation, $h_0(t)$ being the hazard function of the control group and $Z$ being the treatment indicator with $Z = 1$ if the experimental treatment has been received.
+In this context, $\exp(\beta)$ can then be interpreted as the hazard ratio just as it has been defined in (@eq-phr).
+Nonetheless, the Cox model (@eq-coxph) can be extended to the more general case of multiple covariates $\xvec$ of different types (categorical, continuous) and corresponding regression coefficients $\betavec$.
+The interpretation of $h_0(t)$ would then also change to a more generic baseline hazard not solely attributed to the control treatment group.
+The main reason for the popularity of the Cox model is its semiparametric nature:
+While an estimate of the hazard ratio ($\exp(\beta)$) is obtained, the baseline hazard $h_0(t)$ does not need to be specified or even estimated at all.
+This sets it apart from many parametric models, such as accelerated failure time models, which need to make a strict assumption about the conditional distribution of $T$.
+Due to this the Cox proportional hazards model and the hazard ratio have become the default choice for effect estimation in time-to-event settings.
+
+Another routine method used in survival analysis is the log-rank test [@peto1972].
+It is a nonparametric test for the testing problem
+$$
+H_0: S_1(t) = S_0(t) \; \text{for all } t \quad \text{vs.} \quad
+H_1: S_1(t) \neq S_0(t) \; \text{for at least one } t
+\, .
+$$ {#eq-lrtest-problem}
+While the log-rank test for the testing problem (@eq-lrtest-problem) is valid under both, proportional and non-proportional hazards, it loses power in the case of NPH [@rufibach2019].
+However, the bigger issue can be considered the fact that the underlying estimand of the log-rank test is the hazard ratio of the Cox model [@rufibach2019].
+Thus, while the application of the log-rank test remains valid the interpretation of the associated estimand is ambiguous.
+
+Hereafter, we want to further illustrate situations of proportional and non-proportional hazards using known parametric models on the one hand and two real-world data sets on the other hand.
+
+TODO
+
+
+# Restricted mean Survival Time {#sec-rmst}
+
+Next, we address the restricted mean survival time (RMST) as an alternative estimand for the hazard ratio as it is defined in (@eq-phr).
+Mathematically, the RMST is the expectation of the transformation $\tilde{T} = \min(T, t^*)$ of the random variable $T$ where $t^*$ is a restriction time that needs to be selected by the researcher.
+The RMST can be interpreted as the expected survival time from the time origin $0$ up to the restriction time $t^*$ [@royston2011].
+@royston2011 give a hypothetical example of a clinical interpretation: "[Y]our life expectancy with X treatment and Z disease over the next 18 months is 9 months".
+Moreover, if we considered a two-sample comparison, e.g. based on the difference of the RMSTs, another possible interpretation could be: "[T]reatment A increases your life expectancy during the next 18 months by 2 months, compared with treatment B" [@royston2011].
+The RMST can be calculated by integrating the survival function from $0$ to $t^*$ [@royston2011], i.e.
+$$
+\mu(t^*) = E[\min(T, t^*)] = \int_0^{t^*} S(u) \,du
+\, .
+$$ {#eq-rmst}
+The reason for considering a restricted version of the mean is right-censoring of the survival data.
+For the nonparametric Kaplan-Meier estimator of the survival function to reach $0$ and therefore being able to estimate an unrestricted mean, the largest event time needs to be uncensored, which is seldom the case.
+On the other hand, employing parametric models in survival analysis is often a difficult task.
+Even if we had a model with a decent in-sample fit, we cannot be sure whether the extrapolation of that model to the tail of the survival distribution is adequate [@royston2011].
+
+- give visual examples
+
+  - one sample
+
+  - two samples (difference)
+
+- point out advantages
+
+  - model free
+
+  - intuitive interpretation (though arguable)
+

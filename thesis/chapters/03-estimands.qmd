@@ -1,4 +1,0 @@
-# Estimands in Survival Analysis {#sec-estimands}
-
-Explain hazard ratio and restricted mean survival time.
-Highglight why RMST is useful.

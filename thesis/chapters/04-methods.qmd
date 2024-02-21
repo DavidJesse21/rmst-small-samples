@@ -1,7 +1,0 @@
-# Methods {#sec-methods}
-
-Explain different methods for testing/estimating RMST
-
-- asymptotic
-- studentized permutation
-- pseudo-observations

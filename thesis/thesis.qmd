@@ -1,9 +1,11 @@
 ---
 format:
   pdf:
+    template-partials:
+      - tex/biblio.tex
     pdf-engine: pdflatex
     toc: false
-    toc-depth: 2
+    toc-depth: 3
     number-sections: true
     toccolor: black
     citecolor: blue
@@ -18,27 +20,30 @@ format:
       - top=2.5cm
       - bottom=2cm
       - bindingoffset=5mm
-    # cite-method: biblatex
-    # biblatexoptions:
-    #   - backend=biber
-    #   - maxbibnames=999
-    #   - maxcitenames=2
-    #   - uniquename=false
-    #   - uniquelist=false
-    #   - dashed=false
-    #   - isbn=false
-    #   - doi=false
-    #   - eprint=false
-    # biblio-style: authoryear-icomp
-    include-in-header: "tex/preamble.tex"
+    cite-method: biblatex
+    biblatexoptions:
+      - backend=biber
+      - maxbibnames=999
+      - maxcitenames=2
+      - uniquename=false
+      - uniquelist=false
+      - dashed=false
+      - isbn=false
+      - doi=false
+      - eprint=false
+      - url=false
+      - date=year
+    biblio-style: authoryear-icomp
+    include-in-header: ["tex/preamble.tex", "tex/operators.tex"]
     include-before-body: "tex/before_body.tex"
-#bibliography: ["bib/references.bib", "bib/packages.bib"]
+bibliography: ["bib/references.bib", "bib/packages.bib"]
 execute: 
   echo: false
   warning: false
   output: true
-# crossref: 
-#   eq-prefix: ""
+crossref: 
+  eq-prefix: "Eq."
+suppress-bibliography: true
 ---
 
 ```{r setup}
@@ -62,19 +67,34 @@ chapter = function(name) {
 
 ```
 
-```{r child=chapter("02-survbasics")}
+```{r child=chapter("02-survnph")}
 
 ```
 
-```{r child=chapter("03-estimands")}
+```{r child=chapter("03-inference")}
 
 ```
 
-```{r child=chapter("04-methods")}
+```{r child=chapter("04-simulation")}
 
 ```
 
-```{r child=chapter("05-simulation")}
+```{r child=chapter("05-examples")}
 
 ```
 
+```{r child=chapter("06-conclusion")}
+
+```
+
+\newpage
+
+# References {-}
+
+\begingroup
+<!-- Increase space between bibliography entries -->
+\setlength\bibitemsep{0.5\baselineskip}
+<!-- Bibliography -->
+\printbibliography[heading=none]
+\endgroup
+\def\printbibliography{}

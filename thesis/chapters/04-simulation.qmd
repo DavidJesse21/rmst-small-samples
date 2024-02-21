@@ -1,3 +1,7 @@
+---
+bibliography: ["../bib/references.bib", "../bib/packages.bib"]
+---
+
 # Simulation Study {#sec-simulation}
 
 Present design and results of simulation study.
