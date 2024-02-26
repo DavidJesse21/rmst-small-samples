@@ -147,7 +147,7 @@ plot_surv_models = function(rmst_diff = c(0, 1.5), cutoff = 10, cutoff_linewidth
   ggplot(dt, aes(time, surv, color = group, linetype = group)) +
     geom_line(...) +
     facet_wrap(~ model, nrow = if (align == "v") 3L else 1L) +
-    theme_bw() +
+    #theme_bw() +
     # Indicator line for RMST cutoff
     geom_vline(
       xintercept = cutoff, linewidth = cutoff_linewidth,

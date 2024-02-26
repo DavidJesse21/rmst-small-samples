@@ -289,9 +289,9 @@ Due to the computation of the pseudo-observations even the asymptotic test (TODO
 Applying a bootstrap on top of that implies a nested resampling procedure, which gets computationally more expensive (a) the larger the original sample is and (b) the more bootstrap samples we want to draw, i.e. the more accurate we want our statistical test to be.
 Such a problem becomes apparent quickly.
 E.g. if we had a sample of size $n = 50$ and wanted to draw $B = 1000$ bootstrap samples, then we would need to carry out $n \times B = 50000$ computations in total.
-One way to tackle this problem could be to optimize the computational implementation of corresponding functions or to embrace parallel computing capabilities.
-However, a more subtle approach may be to try to eliminate one of the two resampling levels.
-This is indeed possible as the pseudo-observations can also be calculated using an approximation technique:
+One way to tackle this problem could be to emprace parallel computing capabilities.
+However, a more subtle approach may be to try to eliminate one of the two resampling levels entirely.
+This is indeed possible as we can obtain an approximate version of the pseudo-observations:
 $$
 \begin{split}
   P_i &= n \hat{\theta} - (n - 1) \hat{\theta}_{-i} \\
@@ -299,5 +299,8 @@ $$
   &\approx \hat{\theta} + n \frac{\partial \hat{\theta}}{\partial w_i}
 \end{split}
 $$ {#eq-pseudo-approx}
-This approximation requires that the estimator $\hat{\theta}$ can be written as a function of weights $w_i$ attached to each individual $i = 1, \ldots, n$ in the data.
+This is known as the *infinitesimal jackknife* (IJ) pseudo-observations and requires that the estimator $\hat{\theta}$ can be written as a function of weights $w_i$ attached to each individual $i = 1, \ldots, n$ in the data.
+As pointed out, the advanage over ordinary pseudo-observations obtained by using the jackknife samples is the computational speed.
+Despite this, the loss in numerical accuracy is negligible even for moderate sample sizes, making the IJ pseudo-observations an attractive alternative to ordinary pseudo-observations.
 
+TODO: references and understanding

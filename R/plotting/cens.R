@@ -85,7 +85,7 @@ plot_cens_models = function(cutoff = 10, cutoff_linewidth = 0.9,
   ggplot(dt, aes(time, surv, linetype = group)) +
     geom_line(...) +
     facet_wrap(~ model, nrow = if (align == "v") 3L else 1L) +
-    theme_bw() +
+    #theme_bw() +
     # Indicator line for RMST cutoff
     geom_vline(
       xintercept = cutoff, linewidth = cutoff_linewidth,

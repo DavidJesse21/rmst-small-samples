@@ -1,4 +1,5 @@
 ---
+#keep-tex: true
 format:
   pdf:
     template-partials:
@@ -51,12 +52,36 @@ box::use(
   here[here]
 )
 
+setwd(here())
 options(box.path = here("R"))
 
 # Include child documents
 chapter = function(name) {
   here("thesis", "chapters", paste0(name, ".qmd"))
 }
+
+# Load modules and functions
+box::use(
+  data.table[...],
+  ggplot2[...],
+  patchwork[wrap_plots, plot_layout],
+  kableExtra[...]
+)
+
+box::use(
+  plotting/surv[plot_surv_models],
+  plotting/cens[plot_cens_models],
+  simfuns2/analyze[calc_rejection_rates, calc_ci_metrics, setj_samples_alloc, setj_percent],
+  simfuns2/get_funs[get_scenario_table]
+)
+
+# Set (default) ggplot2 theme for entire document
+theme_set(theme_bw(base_size = 14))
+
+# Load simulation results
+dtr = readRDS(here("simulation", "results", "2024-02-08_results1.rds"))
+setDT(dtr)
+dts = get_scenario_table()
 ```
 
 
@@ -71,19 +96,23 @@ chapter = function(name) {
 
 ```
 
-```{r child=chapter("03-inference")}
+```{r child=chapter("03-rmst")}
 
 ```
 
-```{r child=chapter("04-simulation")}
+```{r child=chapter("04-inference")}
 
 ```
 
-```{r child=chapter("05-examples")}
+```{r child=chapter("05-simulation")}
 
 ```
 
-```{r child=chapter("06-conclusion")}
+```{r child=chapter("06-examples")}
+
+```
+
+```{r child=chapter("07-conclusion")}
 
 ```
 

@@ -4,11 +4,10 @@ bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 
 # Survival Analysis under non-proportional Hazards {#sec-survnph}
 
-This section aims at introducing basic concepts and relations employed in survival analysis as well as the notation used throughout this thesis.
-These are mainly adopted from chapter 1 in @collett2015 and from @bardo2023.
-Additionally, we highlight the role of the proportional hazards assumption in survival analysis.
-We then present the restricted mean survival time as a model-free population-level summary measure, which does not rely on such an assumption.
-
+In this section we present fundamental concepts and quantities used in survival analysis and in doing so introduce the basic notation used throughout this thesis, for which we orientate ourselve towards @collett2015[Chapter 1] and @bardo2023.
+A special emphasis will be placed on the prevalence of the proportional hazards assumption in survival analysis.
+We showcase situations in which this assumption holds and in which it does not.
+We illustrate situations in which this assumption 
 
 ## Notation and basic Concepts {#sec-basics}
 
@@ -19,7 +18,7 @@ Furthermore, we record if the event has been observed for an individual or is ce
 Thus, ignoring potential covariates, a single observation consists of the tuple $(t_i,\, \delta_i)$.
 This thesis focusses on two-sample settings in clinical trials.
 For this reason, we introduce the treatment indicator variable $Z \in \{0, 1\}$ where $Z = 1$ denotes the experimental and $Z = 0$ the control treatment group.
-Alternatively, the group associations may be indicated with the subscript $j$ using the same elements and meanings as for $Z$.
+Alternatively, the group associations may also be indicated using the subscript $j$.
 
 The random variable $T$ can be characterized by its *distribution function*
 $$
@@ -40,14 +39,14 @@ h(t) = \lim_{\Delta t \to 0}
 \, ,
 $$ {#eq-hazard}
 where $\Delta t$ denotes an increment of time.
-It can be interpreted as the instantaneous failure rate at some time point $t$ and is therefore also called the *hazard rate*.
-Moreover, we can derive the *cumulative hazard function* from it:
+Since we are considering the limit $\lim_{\Delta t \to 0}$ it can be interpreted as the instantaneous failure rate at some time point $t$ and is therefore also called the *hazard rate*.
+From the hazard rate, the *cumulative hazard function* can be derived:
 $$
 H(t) = \int_0^t h(u) \, du
 $$ {#eq-cumhaz}
-The cumulative hazard function can be interpreted as the "cumulative risk of an event by time $t$" [@collett2015, p. 13].
-Among practicioners the interpretation of the latter two quantities is often unclear or leads to confusion.
-However, their usefulness lies in their interrelation with $f(t)$, $F(t)$ and $S(t)$, respectively.
+The cumulative hazard function can be interpreted as the "cumulative risk of an event by time $t$" [@collett2015, Chapter 1].
+Among practicioners the interpretation of the latter two quantities is often unclear and leads to confusion.
+Their usefulness, however, lies in their interrelation with $f(t)$, $F(t)$ and $S(t)$, respectively.
 Using standard results from probability theory, the following results can be obtained, among others:
 $$
 \begin{split}
@@ -76,20 +75,205 @@ However, many of the standard statistical methods used in survival analysis are 
 $$
 HR(t) = \frac{h_1(t)}{h_0(t)} := \theta
 $$ {#eq-phr}
-Here, $\theta \in (0, \infty)$ is just some constant highlighting what is known as the *proportional hazards* assumption.
-Perhaps the most well-known statistical model in survival analysis employing this assumption is the *Cox proportional hazards model* [@cox1972]:
+Here, $\theta \in (0, \infty)$ is some constant highlighting this assumption, which is known as the *proportional hazards* assumption.
+
+An example of a parametric distribution that features both, proportional and nonproportional hazards, is the Weibull distribution.
+The hazard function of the Weibull distribution is [@kalbfleisch2002, Chapter 2.2.]
+$$
+h(t) = \lambda \alpha (\lambda t)^{\alpha - 1}
+\, ,
+$$ {#eq-wb-hazard}
+with *shape* parameter $\alpha$ and *scale* parameter $\lambda$.
+For the hazard ratio we then have
+$$
+\begin{split}
+  \frac{h_1(t)}{h_0(t)} &=
+  \frac{\lambda_1 \alpha_1 (\lambda_1 t)^{\alpha_1 - 1}}{\lambda_0 \alpha_0 (\lambda_0 t)^{\alpha_0 - 1}} \\
+  &= \frac{\lambda_1^{\alpha_1} \alpha_1}{\lambda_0^{\alpha_0} \alpha_0} \cdot
+  \frac{t^{\alpha_1 - 1}}{t^{\alpha_0 - 1}}
+\end{split}
+$$
+Here, we can see that the Weibull distribution exhibits proportional hazards when the shape parameter $\alpha$ is the same for both populations.
+In this case, the hazard ratio is given by $(\lambda_1 / \lambda_0)^\alpha$.
+If this is not the case, however, then the hazards are nonproportional.
+@fig-nph illustrates those two situations, depicting the survival and hazard functions as well as the hazard ratio of the two groups.
+
+```{r}
+#| label: fig-nph
+#| fig-cap: "Survival models with proportional (left) and nonproportional (right) hazards"
+#| fig-width: 10
+#| fig-height: 9
+
+# Weibull survival functions (R parametrization)
+wb_haz = function(x, shape, scale) {
+  scale * shape * (scale * x)^(shape - 1)
+}
+
+wb_surv = function(x, shape, scale) {
+  exp(- (scale * x)^shape)
+}
+
+wb_hr = function(x, shape1, scale1, shape0, scale0) {
+  wb_haz(x, shape1, scale1) / wb_haz(x, shape0, scale0)
+}
+
+
+# Proportional hazards ----
+
+shape0_1 = 3
+scale0_1 = 8
+
+shape1_1 = 3
+scale1_1 = 9
+
+# Constant ggplot objects
+spec_xaxis = scale_x_continuous(
+  breaks = seq(0, 10, by = 2.5),
+  limits = c(0, 10.5),
+  expand = expansion(mult = c(0, 0), add = c(0.25, 0.25))
+)
+
+spec_xtitle = xlab("\nTime")
+
+spec_legend = scale_color_manual(
+  name = NULL,
+  values = c("T0" = "#E69F00", "T1" = "#56B4E9"),
+  labels = c(
+    expression(paste(T[0], " ~ Weib(3, 1/8)")),
+    expression(paste(T[1], " ~ Weib(3, 1/9)"))
+  )
+)
+
+# Plots
+p1_surv = ggplot() +
+  geom_function(
+    aes(color = "T1"), fun = \(x) wb_surv(x, shape1_1, 1/scale1_1),
+    linewidth = 1.1
+  ) +
+  geom_function(
+    aes(color = "T0"), fun = \(x) wb_surv(x, shape0_1, 1/scale0_1),
+    linewidth = 1.1
+  ) +
+  spec_legend +
+  spec_xaxis +
+  spec_xtitle +
+  ylab("Survival Probability\n") +
+  scale_y_continuous(limits = 0:1) +
+  theme(legend.position = "top")
+
+p1_haz = ggplot() +
+  geom_function(
+    aes(color = "T1"), fun = \(x) wb_haz(x, shape1_1, 1/scale1_1),
+    linewidth = 1.1
+  ) +
+  geom_function(
+    aes(color = "T0"), fun = \(x) wb_haz(x, shape0_1, 1/scale0_1),
+    linewidth = 1.1
+  ) +
+  spec_legend +
+  spec_xaxis +
+  spec_xtitle +
+  ylab("Hazard Rate\n") +
+  theme(legend.position = "none")
+
+p1_hr = ggplot() +
+  geom_function(
+    fun = \(x) wb_hr(x, shape1_1, 1/scale1_1, shape0_1, 1/scale0_1),
+    linewidth = 1.1, color = "#000000"
+  ) +
+  spec_xaxis +
+  spec_xtitle +
+  ylab(expression(paste("Hazard Ratio ", h[1](t)/h[0](t), "\n"))) +
+  theme(legend.position = "none") +
+  scale_y_continuous(
+    breaks = seq(0.6, 0.8, by = 0.05),
+    limits = c(0.6, 0.8)
+  )
+
+
+# Nonproportional hazards ----
+
+shape0_2 = 3
+scale0_2 = 8
+
+shape1_2 = 2
+scale1_2 = 9
+
+spec_legend = scale_color_manual(
+  name = NULL,
+  values = c("T0" = "#E69F00", "T1" = "#56B4E9"),
+  labels = c(
+    expression(paste(T[0], " ~ Weib(3, 1/8)")),
+    expression(paste(T[1], " ~ Weib(2, 1/9)"))
+  )
+)
+
+# Plots
+p2_surv = ggplot() +
+  geom_function(
+    aes(color = "T1"), fun = \(x) wb_surv(x, shape1_2, 1/scale1_2),
+    linewidth = 1.1
+  ) +
+  geom_function(
+    aes(color = "T0"), fun = \(x) wb_surv(x, shape0_2, 1/scale0_2),
+    linewidth = 1.1
+  ) +
+  spec_legend +
+  spec_xaxis +
+  spec_xtitle +
+  scale_y_continuous(limits = 0:1, name = NULL) +
+  theme(legend.position = "top")
+
+p2_haz = ggplot() +
+  geom_function(
+    aes(color = "T1"), fun = \(x) wb_haz(x, shape1_2, 1/scale1_2),
+    linewidth = 1.1
+  ) +
+  geom_function(
+    aes(color = "T0"), fun = \(x) wb_haz(x, shape0_2, 1/scale0_2),
+    linewidth = 1.1
+  ) +
+  spec_legend +
+  spec_xaxis +
+  spec_xtitle +
+  scale_y_continuous(name = NULL) +
+  theme(legend.position = "none")
+
+p2_hr = ggplot() +
+  geom_function(
+    fun = \(x) wb_hr(x, shape1_2, 1/scale1_2, shape0_2, 1/scale0_2),
+    linewidth = 1.1, color = "#000000"
+  ) +
+  spec_xaxis +
+  spec_xtitle +
+  scale_y_continuous(name = NULL) +
+  theme(legend.position = "none")
+
+
+# Combine plots ----
+
+wrap_plots(
+  # Proportional hazards
+  p1_surv, p1_haz, p1_hr,
+  # Nonproportional hazards
+  p2_surv, p2_haz, p2_hr
+) +
+  plot_layout(ncol = 2, byrow = FALSE, axes = "collect_x")
+```
+
+Among the statistical models that employ the proportional hazards assumption perhaps the best-known and most widely used one is the *Cox proportional hazards model* [@cox1972]:
 $$
 h(t) = \exp(\beta Z) h_0(t)
 $$ {#eq-coxph}
 The Cox model is a regression model for covariate effects on the hazard scale.
-Here, we employ our previous notation, $h_0(t)$ being the hazard function of the control group and $Z$ being the treatment indicator with $Z = 1$ if the experimental treatment has been received.
-In this context, $\exp(\beta)$ can then be interpreted as the hazard ratio just as it has been defined in (@eq-phr).
+Here, we employ our previous notation, $h_0(t)$ being the hazard function of the control group and $Z$ being the treatment indicator with $Z = 1$ indicating an allocation to the experimental treatment group.
+In this context, $\exp(\beta)$ can then be interpreted as the hazard ratio as it has been defined in (@eq-phr).
 Nonetheless, the Cox model (@eq-coxph) can be extended to the more general case of multiple covariates $\xvec$ of different types (categorical, continuous) and corresponding regression coefficients $\betavec$.
 The interpretation of $h_0(t)$ would then also change to a more generic baseline hazard not solely attributed to the control treatment group.
 The main reason for the popularity of the Cox model is its semiparametric nature:
 While an estimate of the hazard ratio ($\exp(\beta)$) is obtained, the baseline hazard $h_0(t)$ does not need to be specified or even estimated at all.
-This sets it apart from many parametric models, such as accelerated failure time models, which need to make a strict assumption about the conditional distribution of $T$.
-Due to this the Cox proportional hazards model and the hazard ratio have become the default choice for effect estimation in time-to-event settings.
+This sets it apart from many parametric alternatives, such as accelerated failure time models, for which a strict assumption about the conditional distribution of $T$ needs to be made.
+Since deciding for a plausible parametric distribution for time-to-event data is a difficult task in many practical applications, especially when this decision needs to be made a priori, the Cox model and the hazard ratio have become the default choice for effect estimation in these settings.
 
 Another routine method used in survival analysis is the log-rank test [@peto1972].
 It is a nonparametric test for the testing problem
@@ -100,39 +284,4 @@ H_1: S_1(t) \neq S_0(t) \; \text{for at least one } t
 $$ {#eq-lrtest-problem}
 While the log-rank test for the testing problem (@eq-lrtest-problem) is valid under both, proportional and non-proportional hazards, it loses power in the case of NPH [@rufibach2019].
 However, the bigger issue can be considered the fact that the underlying estimand of the log-rank test is the hazard ratio of the Cox model [@rufibach2019].
-Thus, while the application of the log-rank test remains valid the interpretation of the associated estimand is ambiguous.
-
-Hereafter, we want to further illustrate situations of proportional and non-proportional hazards using known parametric models on the one hand and two real-world data sets on the other hand.
-
-TODO
-
-
-# Restricted mean Survival Time {#sec-rmst}
-
-Next, we address the restricted mean survival time (RMST) as an alternative estimand for the hazard ratio as it is defined in (@eq-phr).
-Mathematically, the RMST is the expectation of the transformation $\tilde{T} = \min(T, t^*)$ of the random variable $T$ where $t^*$ is a restriction time that needs to be selected by the researcher.
-The RMST can be interpreted as the expected survival time from the time origin $0$ up to the restriction time $t^*$ [@royston2011].
-@royston2011 give a hypothetical example of a clinical interpretation: "[Y]our life expectancy with X treatment and Z disease over the next 18 months is 9 months".
-Moreover, if we considered a two-sample comparison, e.g. based on the difference of the RMSTs, another possible interpretation could be: "[T]reatment A increases your life expectancy during the next 18 months by 2 months, compared with treatment B" [@royston2011].
-The RMST can be calculated by integrating the survival function from $0$ to $t^*$ [@royston2011], i.e.
-$$
-\mu(t^*) = E[\min(T, t^*)] = \int_0^{t^*} S(u) \,du
-\, .
-$$ {#eq-rmst}
-The reason for considering a restricted version of the mean is right-censoring of the survival data.
-For the nonparametric Kaplan-Meier estimator of the survival function to reach $0$ and therefore being able to estimate an unrestricted mean, the largest event time needs to be uncensored, which is seldom the case.
-On the other hand, employing parametric models in survival analysis is often a difficult task.
-Even if we had a model with a decent in-sample fit, we cannot be sure whether the extrapolation of that model to the tail of the survival distribution is adequate [@royston2011].
-
-- give visual examples
-
-  - one sample
-
-  - two samples (difference)
-
-- point out advantages
-
-  - model free
-
-  - intuitive interpretation (though arguable)
-
+Thus, while the log-rank test may still be applied, the interpretation of the associated effect becomes ambiguous.

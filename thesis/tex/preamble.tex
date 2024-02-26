@@ -1,3 +1,17 @@
 % Spacing
 \usepackage[onehalfspacing]{setspace}
 \onehalfspacing
+
+% Captions for figures, tables, and listings
+\usepackage[
+    labelfont=bf,
+    % labelsep=newline,
+    format=plain,
+    justification=justified,
+    labelsep=quad,
+    textformat=period,
+    font=footnotesize,
+    % indention=0pt
+    ]{caption}
+\captionsetup{singlelinecheck=false}
+\captionsetup[listing]{skip=0pt}
