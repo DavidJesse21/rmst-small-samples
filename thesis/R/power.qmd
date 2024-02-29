@@ -51,62 +51,60 @@ dts = get_scenario_table()
 ```
 
 ```{r}
-# Calculate rejection rates
-# For sake of illustration:
-# - ignore pseudo_ij (no bootstrap)
-dt_err = calc_rejection_rates(
-  dtr[scenario.id %in% dts[rmst_diff == 0 & samples_k != 6, scenario.id] &
-        algo.id != 4],
+# Calculate rejection rates (power)
+dt_pow = calc_rejection_rates(
+  dtr[scenario.id %in% dts[rmst_diff == 1.5, scenario.id] & algo.id != 4],
   stats_NA = FALSE
 )
-dt_err = merge(dt_err, dts[rmst_diff == 0 & samples_k != 6], by = "scenario.id")
+dt_pow = merge(dt_pow, dts[rmst_diff == 1.5], by = "scenario.id")
+
 
 # For latex, directly starting off with a table in wide format might be easier
-dt_err = dcast(dt_err, scenario.id ~ algo.id, value.var = "reject")
-setnames(dt_err, old = as.character(c(1:3, 5)), new = paste0("algo", c(1:3, 5)))
+dt_pow = dcast(dt_pow, scenario.id ~ algo.id, value.var = "reject")
+setnames(dt_pow, old = as.character(c(1:3, 5)), new = paste0("algo", c(1:3, 5)))
 
 # Append scenario information...
-dt_err = merge(dt_err, dts, by = "scenario.id")
-setj_percent(dt_err, paste0("algo", c(1:3, 5)))
+dt_pow = merge(dt_pow, dts, by = "scenario.id")
+setj_percent(dt_pow, paste0("algo", c(1:3, 5)))
 for (j in paste0("algo", c(1:3, 5))) {
-  set(dt_err, j = j, value = round(dt_err[[j]], 1))
+  set(dt_pow, j = j, value = round(dt_pow[[j]], 1))
 }
-dt_err[, samples_alloc := factor(
+dt_pow[, samples_alloc := factor(
   sprintf("n_%d_%d", n0 / samples_k, n1 / samples_k),
   levels = sprintf("n_%d_%d", c(12, 15, 18), c(18, 15, 12))
 )]
 # ... but some columns are or have become redundant
 for (j in c("scenario.id", "rmst_diff", "n0", "n1")) {
-  set(dt_err, j = j, value = NULL)
+  set(dt_pow, j = j, value = NULL)
 }
 
-dt_err = dcast(
-  dt_err,
+dt_pow = dcast(
+  dt_pow,
   surv_model + cens_model + samples_k ~ samples_alloc, value.var = paste0("algo", c(1:3, 5))
 )
 
 # Order columns and rows
 setcolorder(
-  dt_err, neworder = c(
+  dt_pow, neworder = c(
     "surv_model", "cens_model", "samples_k",
     sprintf("algo%d_n_12_18", c(1:3, 5)),
     sprintf("algo%d_n_15_15", c(1:3, 5)),
     sprintf("algo%d_n_18_12", c(1:3, 5))
   )
 )
-dt_err[, `:=`(
+dt_pow[, `:=`(
   surv_model = factor(surv_model, levels = c("ph_exp", "crossing_pwexp", "crossing_wb")),
   cens_model = factor(cens_model, levels = c("uneq_wb", "eq_unif", "eq_wb"))
 )]
-setorder(dt_err, surv_model, cens_model, samples_k)
+setorder(dt_pow, surv_model, cens_model, samples_k)
 
 # Make some cells of column `cens_model` empty
-na_idx = setdiff(1:nrow(dt_err), seq(1, nrow(dt_err), by = 3))
-dt_err[na_idx, cens_model := NA]
+na_idx = setdiff(1:nrow(dt_pow), seq(1, nrow(dt_pow), by = 4))
+dt_pow[na_idx, cens_model := NA]
 
 # Also need to relabel this
-dt_err[, cens_model := as.character(cens_model)]
-dt_err[, cens_model := fcase(
+dt_pow[, cens_model := as.character(cens_model)]
+dt_pow[, cens_model := fcase(
   cens_model == "uneq_wb", "un. W.",
   cens_model == "eq_unif", "eq. U.",
   cens_model == "eq_wb", "eq. W."
@@ -116,18 +114,9 @@ dt_err[, cens_model := fcase(
 # NAs as empty cells
 options(knitr.kable.NA = '')
 
-# Conditional formatting
-for (j in colnames(dt_err)[-(1:3)]) {
-  set(
-    dt_err, j = j, value = cell_spec(
-      format(dt_err[[j]], digits = 1, nsmall = 1), bold = between(dt_err[[j]], 4.4, 5.6)
-    )
-  )
-}
-
 # latex table
 kbl(
-  copy(dt_err)[, surv_model := NULL],
+  copy(dt_pow)[, surv_model := NULL],
   format = "latex",
   digits = 1,
   booktabs = TRUE,
@@ -135,7 +124,7 @@ kbl(
   escape = FALSE,
   align = c("l", rep("c", 13)),
   col.names = c("Censoring", "K", rep(c("Asy", "Perm", "PO1", "PO2"), 3)),
-  linesep = c(rep("", 8), "\\hline")
+  linesep = c(rep("", 11), "\\hline")
 ) |>
   # Group the columns by their sample allocation
   add_header_above(
@@ -151,30 +140,26 @@ kbl(
   column_spec(10, border_right = TRUE) |>
   # Group table (rows) by survival distributions
   pack_rows(
-    "S1: Exponential distributions", 1, 9,
+    "S1: Exponential distributions", 1, 12,
     bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE
   ) |>
   pack_rows(
-    "S7: Exponential and piecewise exponential distributions with crossing curves", 10, 18,
+    "S7: Exponential and piecewise exponential distributions with crossing curves", 13, 24,
     bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE
   ) |>
     pack_rows(
-      "S8: Weibull distributions with crossing curves and shape alternatives", 19, 27,
+      "S8: Weibull distributions with crossing curves and shape alternatives", 25, 36,
       bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE
     ) |>
   # Make it more accessible using stripes option
   kable_styling(
     latex_options = c("striped", "scale_down"),
-    stripe_index = c(4:6, 13:15, 22:24),
+    stripe_index = c(5:8, 17:20, 29:32),
     stripe_color = "#e9ecef"
   ) |>
   # Explain binomial confidence interval and abbreviations
   footnote(
     general = c(
-      paste0(
-        r"(\\textit{Note:} )",
-        "The values inside the binomial confidence interval [4.4\\\\%, 5.6\\\\%] are printed bold."
-      ),
       paste0(
         r"(\\textit{Abbreviations:} )",
         "Asy, asymptotic test; ", "Perm, studentized permutation test; ",

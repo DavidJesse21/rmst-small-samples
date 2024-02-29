@@ -96,23 +96,19 @@ dts = get_scenario_table()
 
 ```
 
-```{r child=chapter("03-rmst")}
+```{r child=chapter("03-inference")}
 
 ```
 
-```{r child=chapter("04-inference")}
+```{r child=chapter("04-simulation")}
 
 ```
 
-```{r child=chapter("05-simulation")}
+```{r child=chapter("05-examples")}
 
 ```
 
-```{r child=chapter("06-examples")}
-
-```
-
-```{r child=chapter("07-conclusion")}
+```{r child=chapter("06-conclusion")}
 
 ```
 

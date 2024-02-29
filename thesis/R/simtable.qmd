@@ -1,0 +1,137 @@
+---
+format:
+  pdf:
+    pdf-engine: pdflatex
+    toc: false
+    toc-depth: 2
+    number-sections: true
+    toccolor: black
+    citecolor: blue
+    linkcolor: black
+    fig-pos: "htbp"
+    documentclass: scrartcl
+    classoption: [headings=normal, numbers=noenddot]
+    fontsize: 12pt
+    geometry:
+      - left=2.5cm
+      - right=2.5cm
+      - top=2.5cm
+      - bottom=2cm
+      - bindingoffset=5mm
+execute: 
+  echo: false
+  warning: false
+  output: true
+crossref: 
+  eq-prefix: ""
+---
+
+```{r}
+#| include: false
+
+box::use(
+  data.table[...],
+  kableExtra[...]
+)
+```
+
+```{r}
+#| output: asis
+
+dt = data.table(
+  Factor = c(
+    rep("Survival models", 3),
+    rep("Censoring models", 3),
+    r"(RMST difference ($\mu_1(t^*) - \mu_0(t^*)$))",
+    "Sample allocations",
+    r"(Sample multipliers ($K$))"
+  ),
+  Levels = c(
+    "S1: Exponential distributions",
+    "S7: Exponential and piecewise exponential distributions with crossing curves",
+    "S8: Weibull distributions with crossing curves and shape alternatives",
+    "C1: unequal Weibull",
+    "C2: equal uniform",
+    "C3: equal Weibull",
+    "0; 1.5",
+    "(12, 18); (15, 15); (18, 12)",
+    "1; 2; 4; 6"
+  )
+)
+
+kbl_onehalfspacing = function(tbl) {
+  tbl = unlist(strsplit(tbl, r"(\n)"))
+
+  tbl = append(
+    tbl,
+    r"(\begin{onehalfspacing})",
+    after = grep(r"(\\begin\{tabular\})", tbl) - 1
+  )
+  tbl = append(
+    tbl,
+    r"(\end{onehalfspacing})",
+    after = grep(r"(\\end\{tabular\})", tbl)
+  )
+
+  class(tbl) = "Latex"
+
+  return(tbl)
+}
+
+
+kbl(
+  dt,
+  format = "latex",
+  booktabs = TRUE,
+  centering = TRUE,
+  escape = FALSE,
+  linesep = "\\addlinespace"
+) |>
+  collapse_rows(
+    columns = 1,
+    latex_hline = "major"
+  ) |>
+  column_spec(1, width = "4.5cm") |>
+  kable_styling(
+    latex_options = c("scale_down")
+  )
+  # kable_styling(
+  #   latex_options = c("striped", "scale_down"),
+  #   stripe_index = c(4:6, 8),
+  #   stripe_color = "#e9ecef"
+  # )
+```
+
+
+```{r}
+# dt = data.table(
+#   Factor = c("Survival models", "Censoring models", r"(RMST difference ($\mu_1(t^*) - \mu_0(t^*)$))",
+#              "Sample allocations", r"(Sample multipliers ($K$))"),
+#   Levels = c(
+#     paste(
+#       "S1:Exponential distributions",
+#       "S7: Exponential and piecewise exponential distributions with crossing curves",
+#       "S8: Weibull distributions with crossing curves and shape alternatives",
+#       sep = r"(\\)"
+#     ),
+#     paste(
+#       "C1: unequal Weibull",
+#       "C2: equal uniform",
+#       "C3: equal Weibull",
+#       sep = r"(\\)"
+#     ),
+#     "0; 1.5",
+#     "(12, 18); (15, 15); (18, 12)",
+#     "1; 2; 4; 6"
+#   )
+# )
+# 
+# kbl(
+#   dt,
+#   format = "latex",
+#   booktabs = TRUE,
+#   centering = TRUE,
+#   escape = FALSE
+# )
+```
+
