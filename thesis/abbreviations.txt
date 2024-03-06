@@ -1,0 +1,13 @@
+RMST & Restricted Mean Survival Time
+PH & Proportional Hazards
+NPH & Non-proportional Hazards
+HR & Hazard Ratio
+GLM & Generalized Linear Model
+IPCW & Inverse Probability of Censoring Weighting
+GEE & Generalized Estimating Equations
+HC & Heteroscedasticity-consistent
+IJ & Infinitesimal Jackknife
+GWDG & Gesellschaft für wissenschaftliche Datenverarbeitung Goettingen
+RNG & Random Number Generator
+PD-L1 & Programmed Death Ligand 1
+ECOG & Eastern Cooperative Oncology Group
