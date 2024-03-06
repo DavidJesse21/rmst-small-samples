@@ -332,7 +332,6 @@ setj_percent(dt1, "reject")
 
 ggplot(dt1, aes(factor(algo.id), reject)) +
   geom_boxplot() +
-  theme_bw() +
   # Binomial confidence interval
   geom_hline(yintercept = 4.4, linetype = "dashed") +
   geom_hline(yintercept = 5.6, linetype = "dashed") +
@@ -342,7 +341,7 @@ ggplot(dt1, aes(factor(algo.id), reject)) +
   ) +
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ\nBoot")
   ) +
   # Differentiate between total sample sizes
   facet_wrap(
@@ -505,13 +504,12 @@ setj_percent(dt2, "reject")
 
 ggplot(dt2, aes(factor(algo.id), reject)) +
   geom_boxplot() +
-  theme_bw() +
   scale_y_continuous(
     name = "Power in %\n"
   ) +
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ\nBoot")
   ) +
   facet_wrap(
     ~ num_samples,
@@ -528,7 +526,7 @@ Yet, @fig-coverage nicely highlights that, independent of the chosen method, a s
 #| label: fig-coverage
 #| fig-cap: "Coverage in % (nominal level $\\alpha = 5\\%$)"
 #| fig-width: 10
-#| fig-height: 9
+#| fig-height: 10
 
 dt4 = calc_ci_metrics(
   merge(dtr, dts[, .(scenario.id, rmst_diff)], by = "scenario.id"),
@@ -544,7 +542,6 @@ ggplot(dt4, aes(factor(algo.id), coverage)) +
     rows = vars(samples_k), cols = vars(samples_alloc),
     labeller = labeller(samples_k = \(x) sprintf("K = %s", x))
   ) +
-  theme_bw() +
   # Binomial confidence interval
   geom_hline(yintercept = 94.4, linetype = "dashed") +
   geom_hline(yintercept = 95.6, linetype = "dashed") +
@@ -555,7 +552,7 @@ ggplot(dt4, aes(factor(algo.id), coverage)) +
   # x-axis
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+    labels = c("Asy", "Stud.\nPerm.", "PO", "PO IJ", "PO IJ\nBoot")
   )
 ```
 

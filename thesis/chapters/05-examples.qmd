@@ -53,9 +53,10 @@ ggsurvfit(
   ) +
   labs(x = "\nTime (Months)", y = "Survival probability\n") +
   scale_y_continuous(limit = c(0, 1)) +
+  theme_bw(base_size = 16) +
   theme(legend.position = "top") +
   annotate(
-    "text", x = 20, y = 0.95,
+    "text", x = 17.5, y = 0.95, size = 5,
     label = sprintf("Grambsch-Therneau test (p-value): %.2f%%", pval_gt * 100)
   )
 ```
@@ -107,7 +108,6 @@ ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
   geom_point(size = 3) +
   geom_errorbar(linewidth = 1.1, width = 0.2) +
   geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.9, color = "#222222") +
-  theme_bw() +
   facet_wrap(~ cutoff, labeller = label_parsed, scales = "free_x") +
   labs(
     x = "Method\n", y = "\nEstimate"
@@ -147,10 +147,11 @@ ggsurvfit(
     labels = c("Cyclophosphamide", "Cyclophosphamide + Adriamycin")
   ) +
   labs(x = "\nTime (Days)", y = "Survival probability\n") +
+  theme_bw(base_size = 16) +
   theme(legend.position = "top") +
   scale_y_continuous(limit = c(0, 1)) +
   annotate(
-    "text", x = 1000, y = 0.95,
+    "text", x = 875, y = 0.95, size = 5,
     label = sprintf("Grambsch-Therneau test (p-value): %.2f%%", pval_gt * 100)
   )
 ```
@@ -185,7 +186,7 @@ dt_res = readRDS(here("thesis", "objects", "res_ovarian.rds"))
 dtp = dt_res[variable == "group"]
 dtp[, method := factor(
   method, levels = c("asy", "studperm", "po_asy", "po_boot", "po_asy_adj", "po_boot_adj"),
-  labels = c("Asy", "Stud Perm", "PO", "PO Boot", "PO Adj", "PO Boot Adj")
+  labels = c("Asy", "Stud Perm", "PO", "PO Boot", "PO (Adj)", "PO Boot\n(Adj)")
 )]
 dtp[, cutoff := factor(
   cutoff, levels = c(500, 750, 1000),
@@ -196,7 +197,6 @@ ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
   geom_point(size = 3) +
   geom_errorbar(linewidth = 1.1, width = 0.2) +
   geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.9, color = "#222222") +
-  theme_bw() +
   facet_wrap(~ cutoff, labeller = label_parsed, scales = "free_x") +
   labs(
     x = "Method\n", y = "\nEstimate"
