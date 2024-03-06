@@ -36,7 +36,7 @@ format:
       - date=year
     biblio-style: authoryear-icomp
     include-in-header: ["tex/preamble.tex", "tex/operators.tex"]
-    include-before-body: "tex/before_body.tex"
+    include-before-body: ["tex/before_body.tex", "tex/abbreviations.tex"]
 bibliography: ["bib/references.bib", "bib/packages.bib"]
 execute: 
   echo: false
@@ -63,20 +63,34 @@ chapter = function(name) {
 # Load modules and functions
 box::use(
   data.table[...],
+  # plotting
   ggplot2[...],
   patchwork[wrap_plots, plot_layout],
-  kableExtra[...]
+  ggsurvfit[survfit2, ggsurvfit, add_censor_mark],
+  # tables
+  kableExtra[...],
+  # survival
+  survival[Surv, survfit, survdiff, coxph, cox_zph = cox.zph],
+  eventglm[rmeanglm],
+  # misc
+  withr[with_seed],
+  fs
 )
 
 box::use(
+  # plotting
   plotting/surv[plot_surv_models],
   plotting/cens[plot_cens_models],
+  # simulation results
   simfuns2/analyze[calc_rejection_rates, calc_ci_metrics, setj_samples_alloc, setj_percent],
-  simfuns2/get_funs[get_scenario_table]
+  simfuns2/get_funs[get_scenario_table],
+  # RMST methods
+  rmst/km[rmst_diff_test, rmst_diff_studperm],
+  rmst/pseudo[pseudo_strat, pseudo_infjack, rmst_pseudo_test, rmst_pseudo_boot_test]
 )
 
 # Set (default) ggplot2 theme for entire document
-theme_set(theme_bw(base_size = 14))
+theme_set(theme_bw(base_size = 16))
 
 # Load simulation results
 dtr = readRDS(here("simulation", "results", "2024-02-08_results1.rds"))

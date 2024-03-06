@@ -8,4 +8,5 @@
 playground/zzz.R
 */registry
 *.pdf
+*.png
 !simulation/hpcenv/packages.rds

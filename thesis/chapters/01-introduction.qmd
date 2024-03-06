@@ -2,7 +2,7 @@
 bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 ---
 
-# Intoduction {#sec-intro}
+# Introduction {#sec-intro}
 
 In clinical trials, often the outcome of interest is the time from some well-defined onset until a certain type of event occurs, e.g. the time from randomization to a treatment group until death.
 Such type of data is called *time-to-event* or *survival* data and has the special property that typically the event times of some subjects are only incompletely observed.

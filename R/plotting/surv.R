@@ -70,7 +70,7 @@ plot_surv_models = function(rmst_diff = c(0, 1.5), cutoff = 10, cutoff_linewidth
   )
   
   dt_s1 = rbindlist(list(dt0, dt10, dt11))
-  dt_s1[, model := "S1: Exponential (proportional hazards)"]
+  dt_s1[, model := "S1: Exp. (proportional hazards)"]
   
   
   # S7: Exponential vs. piecewise exponential

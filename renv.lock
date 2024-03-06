@@ -672,6 +672,26 @@
       ],
       "Hash": "85846544c596e71f8f46483ab165da33"
     },
+    "ggsurvfit": {
+      "Package": "ggsurvfit",
+      "Version": "1.0.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "broom",
+        "cli",
+        "dplyr",
+        "ggplot2",
+        "glue",
+        "gtable",
+        "patchwork",
+        "rlang",
+        "survival",
+        "tidyr"
+      ],
+      "Hash": "42d3b3206360e4fb840a7c9311b975cc"
+    },
     "glue": {
       "Package": "glue",
       "Version": "1.6.2",

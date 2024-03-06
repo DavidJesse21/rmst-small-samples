@@ -4,4 +4,218 @@ bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 
 # Empirical Examples {#sec-examples}
 
-illustrate 
+It is considered good practice to complement statistical simulation studies with applications to real-world data sets, e.g. to illustrate if or to what extent the choice of method matters in practical applications [@friedrich2024].
+Here, this is one goal we want to achieve, thus highlighting similarities and differences between the methods when applied to the same real-world problem.
+Moreover, we want to look into an aspect of the methods based on pseudo-observations that we have not covered in the simulation study, that is the possibility to directly adjust for covariates.
+The latter may be particularly interesting as it is known from other contexts that the incorporation of prognostic covariates into the analysis can increase the precision of treatment effect estimates and consequently increase the power of associated tests [@kahan2014].
+This is also true for analyses with time-to-event endpoints using the hazard ratio as effect measure [@kahan2014] but there also exists some similar evidence for RMST differences, though not based on pseudo-observations methods [@karrison2018].
+Investigating this idea further might be particularly interesting in view of the finding that the pseudo-observations bootstrap method could be too conservative in null scenarios and vice versa often had less power than its comparators in alternative scenarios.
+Of course, a systematic assessment of these thoughts would require an additional simulation study.
+Nonetheless, we might be able to obtain an initial impression for this using exemplary data sets.
+In the following, we compare the different methods for estimating and testing RMST differences examined in this thesis using three different data sets.
+Similar as for the simulation study, we set the nominal significance level $\alpha$ to $5\%$ and consider a two-sided testing problem.
+For both, the studentized permutation and the pseudo-observations bootstrap test, we use $N_{\text{res}} = 5000$ resampling iterations.
+Moreover, for each example, we consider three different cutoff time points $t^*$ in order to highlight the dependence of the conclusions of this choice.
+As @ditzhaus2023 have noted in their illustration, we also want to emphasize that no adjustments for multiple testing are made.
+Thus, each combination of the chosen cutoff time point and the chosen method must be viewed as if it was prespecified although this is obviously not the case.
+
+
+## @hellmann2018 {#sec-ex-hellmann}
+
+```{r}
+#| label: fig-hellmann
+#| fig-width: 10
+#| fig-height: 6
+#| fig-cap: "Kaplan-Meier curves of the reconstructed data from @hellmann2018"
+
+# Read Hellmann data
+load(here(fs$path("data", "Hellmann", ext = "Rdata")))
+dt = data
+rm(data)
+setDT(dt)
+
+# Grambsch-Therneau test
+x = cox_zph(coxph(Surv(time, event) ~ group, data = dt, x = TRUE))
+pval_gt = x$table[1, "p"]
+
+# Kaplan-Meier plots
+ggsurvfit(
+  survfit2(Surv(time, event) ~ group, data = dt),
+  linewidth = 1.1
+) +
+  scale_color_manual(
+    name = "Treatment",
+    values = c("#E69F00", "#56B4E9"),
+    labels = c(
+      "Chemotherapy",
+      "Nivolumab + Ipilimumab"
+    )
+  ) +
+  labs(x = "\nTime (Months)", y = "Survival probability\n") +
+  scale_y_continuous(limit = c(0, 1)) +
+  theme(legend.position = "top") +
+  annotate(
+    "text", x = 20, y = 0.95,
+    label = sprintf("Grambsch-Therneau test (p-value): %.2f%%", pval_gt * 100)
+  )
+```
+
+The first example data set is the same as the one presented by @ditzhaus2023, which the authors have reconstructed from a Kaplan-Meier plot in @hellmann2018 using the algorithm by @guyot2012.
+In the study by @hellmann2018 the authors investigate the effect of nivolumab plus ipilimumab compared to chemotherapy for the treatment of non-small-cell lung cancer on progression-free survival.
+The original population in the study included 299 patients with a high tumor mutational burden.
+Besides the main study the authors also conducted some subgroup analyses.
+For one of these analyses they stratified the study population based on the tumor PD-L1 (programmed death ligand 1) expression being less than or greater or equal than $1\%$.
+The subpopulation of patients with an PD-L1 expression of $< 1\%$ then consisted of 86 patients only, of which 48 were assigned to chemotherapy and 38 to nivolumab plus ipilimumab.
+@fig-hellmann displays the Kaplan-Meier curves that have been estimated from the reconstructed data.
+As it is often the case in oncology trials assessing immunotherapies in comparison with a chemotherapy, here we can also observe a delayed effect of the nivolumab plus ipilimumab treatment, resulting in crossing survival curves, making the proportional hazards assumption questionable.
+In fact, the proportional hazards assumption can even be formally rejected using the test for proportional hazards by @grambsch1994, resulting in a p-value of $0.01\%$, displayed in the top-right corner of the plot.
+
+Just as @ditzhaus2023 did, we now consider RMST-based analyses for the treatment effect of nivolumab plus ipilimumab against chemotherapy using the methods presented in this thesis.
+Likewise, we consider the cutoff values $t^* = 12,\, 15,\, 18$ months, for which the results are shown in @fig-res-hellmann.
+The figure displays the point estimate for each method as well as its 95%-confidence interval.
+In addition to that TODO conveys the corresponding p-values for a more detailed comparison of the different methods.
+As already noted in @sec-sim-design the point estimates of the different methods are either exactly the same, as it is the case for the standard asymptotic and the studentized permutation method, or nearly identical, since in the end, all methods are based on the Kaplan-Meier estimator of the survival function.
+Hence, of greater interest are the confidence intervals and test decisions of the different methods.
+For $t^* = 12$ months all methods just retain the null hypothesis of no treatment effect difference for the given significance level $\alpha = 5\%$.
+With regard to the standard asymptotic test, the different conclusion drawn here as opposed to @ditzhaus2023 is due to the fact that we have used Greenwood's variance estimator (@eq-varest1) instead of the Nelson-Aalen plug-in estimator (@eq-varest2).
+
+For $t^* = 15,\, 18$, however, all methods reject the null hypothesis in favour of the alternative that, on average, the nivolumab plus ipilimumab therapy prolongs progression-free survival when comparing it to chemotherapy.
+Thus, in terms of a binary test decision, all methods lead to the same implications.
+Nonetheless, we can see that the confidence intervals of the studentized permutation method and those of the pseudo-observations methods are quite similar, whereas those of the standard asymptotic approach are a bit narrower.
+Therefore, concerning the quantification of uncertainty, the choice of the method does have an impact.
+
+```{r}
+#| label: fig-res-hellmann
+#| fig-width: 10
+#| fig-height: 6
+#| fig-cap: "Point estimates and 95%-confidence intervals for reconstructed data from @hellmann2018"
+
+dt_res = readRDS(here("thesis", "objects", "res_hellmann.rds"))
+
+dtp = dt_res[variable == "group"]
+dtp[, method := factor(
+  method, levels = c("asy", "studperm", "po_asy", "po_boot"),
+  labels = c("Asy", "Stud Perm", "PO", "PO Boot")
+)]
+dtp[, cutoff := factor(
+  cutoff, levels = c(12, 15, 18),
+  labels = sprintf("t^`*` == %d", c(12, 15, 18))
+)]
+
+
+ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
+  geom_point(size = 3) +
+  geom_errorbar(linewidth = 1.1, width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.9, color = "#222222") +
+  theme_bw() +
+  facet_wrap(~ cutoff, labeller = label_parsed, scales = "free_x") +
+  labs(
+    x = "Method\n", y = "\nEstimate"
+  ) +
+  scale_x_discrete(limits = rev(levels(dtp$method))) +
+  coord_flip()
+```
+
+
+## @edmonson1979 {#sec-ex-ovarian}
+
+```{r}
+#| label: fig-ovarian
+#| fig-width: 10
+#| fig-height: 6
+#| fig-cap: "Kaplan-Meier curves of the data from @edmonson1979"
+
+# Load the data
+dt = survival::ovarian
+setDT(dt)
+setnames(dt, old = c("futime", "fustat", "rx"), new = c("time", "event", "group"))
+dt[, group := group - 1L]
+dt[, ecog.ps := factor(ecog.ps, levels = as.character(2:1))]
+
+# Grambsch-Therneau test
+x = cox_zph(coxph(Surv(time, event) ~ group, data = dt, x = TRUE))
+pval_gt = x$table[1, "p"]
+
+# Kaplan-Meier plot
+ggsurvfit(
+  survfit2(Surv(time, event) ~ group, data = dt),
+  linewidth = 1.1
+) +
+  scale_color_manual(
+    name = "Treatment",
+    values = c("#E69F00", "#56B4E9"),
+    labels = c("Cyclophosphamide", "Cyclophosphamide + Adriamycin")
+  ) +
+  labs(x = "\nTime (Days)", y = "Survival probability\n") +
+  theme(legend.position = "top") +
+  scale_y_continuous(limit = c(0, 1)) +
+  annotate(
+    "text", x = 1000, y = 0.95,
+    label = sprintf("Grambsch-Therneau test (p-value): %.2f%%", pval_gt * 100)
+  )
+```
+
+The second example data set is taken from a study by @edmonson1979, in which patients suffering from ovarian cancer were randomized to either one of two treatments.
+The first treatment regimen consisted of cyclophosphamide only, whereas the other group received adriamycin in addition to cyclophosphamide.
+The data set is publicly available in the R `{survival}` package [@R-survival] as the "ovarian" data set.
+Like before, we plot and present the Kaplan-Meier curves in @fig-ovarian.
+Visually, we might expect a positive treatment effect in favour of the combination regimen.
+However, towards the end of the study, the differences in survival probability become smaller, making this deduction less clear.
+In addition, we have to consider that this study is extremely small with only 13 patients assigned to each treatment group, respectively.
+Regarding the proportional hazards assumption, here it is more vague, whether it holds or is violated.
+The Grambsch-Therneau test outputs a p-value of about $10\%$, thus retaining the null hypothesis that the proportional hazards assumption does hold.
+Nonetheless, we keep considering RMST-based analyses, again choosing three different cutoff time points, here $t^* = 500,\, 750,\, 1000$ days.
+Furthermore, what makes this data set interesting is the fact that, in addition to the endpoint variables and the treatment assignment, it also consists of additional covariates.
+For instance, it contains the age of the patients as well as their ECOG (Eastern Cooperative Oncology Group) performance scores measured at baseline.
+The latter is an ordinal score describing the physical condition of the patient, ranging from 0 (no restrictions) to 5 (dead) [@oken1982].
+In the given example, however, only patients with a score of 1 or 2 were observed.
+Therefore, we can reduce this variable to a binary covariate, using the score 2 as reference category.
+Ultimately, this means that for the given example we can compare not only 4 but 6 different methods for estimating the RMST difference between the treatment regimens.
+The two added methods result from an adjusted version of the pseudo-observations approaches using the aforementioned covariates.
+Corresponding results are presented in @fig-res-ovarian.
+
+```{r}
+#| label: fig-res-ovarian
+#| fig-width: 10
+#| fig-height: 6
+#| fig-cap: "Point estimates and 95%-confidence intervals for the data from @edmonson1979"
+
+dt_res = readRDS(here("thesis", "objects", "res_ovarian.rds"))
+
+dtp = dt_res[variable == "group"]
+dtp[, method := factor(
+  method, levels = c("asy", "studperm", "po_asy", "po_boot", "po_asy_adj", "po_boot_adj"),
+  labels = c("Asy", "Stud Perm", "PO", "PO Boot", "PO Adj", "PO Boot Adj")
+)]
+dtp[, cutoff := factor(
+  cutoff, levels = c(500, 750, 1000),
+  labels = sprintf("t^`*` == %d", c(500, 750, 1000))
+)]
+
+ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
+  geom_point(size = 3) +
+  geom_errorbar(linewidth = 1.1, width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.9, color = "#222222") +
+  theme_bw() +
+  facet_wrap(~ cutoff, labeller = label_parsed, scales = "free_x") +
+  labs(
+    x = "Method\n", y = "\nEstimate"
+  ) +
+  scale_x_discrete(limits = rev(levels(dtp$method))) +
+  coord_flip()
+```
+
+As previously, the point estimates of the unadjusted approaches are (nearly) identical.
+Other than that, the findings obtained using different methods are more diverse than for the Hellmann example.
+Particularly, for $t^* = 500$ days we have that the usage of the asymptotic method leads to a rejection of the null hypothesis of no RMST differene whereas all other undadjusted methods retain that null hypothesis for the given significance level.
+On the other hand, for $t^* = 750$ and $t^* = 1000$ days all undadjusted approaches, including the asymptotic test, retain the null hypothesis, i.e. implying similar conclusions.
+Despite this, the relevance of the choice of the concrete method becomes apparent.
+For example, for all time points the confidence interval of the bootstrap method is the widest and the p-value the largest.
+Using pseudo-observations together with the standard normal approximation results in somewhat narrower confidence intervals and smaller p-values.
+Comparable to the results of the simulation study, the outcomes obtained with the studentized permutation method are in between those of the two pseudo-observations approaches.
+
+Of greater interest, however, are the results that we obtain with the pseudo-observations methods for which we adjust for additional covariates.
+As mentioned before, the adjusted methods include the age of the patients and their ECOG performance score as further covariates.
+For all time points, we can see that this results in both, a treatment effect estimate that is greater in magnitude and narrower confidence intervals associated with it.
+In the case of $t^* = 500$ this goes so far that the treatment effect estimate is deemed statistically significant, even when considering the bootstrap method that has been shown to exhibit a conservative behaviour in scenarios with very small sample sizes.
+Conversely, for $t^* = 750,\, 1000$ the effect estimates are again considered insignificant, but the properties of a larger effect estimate and narrower confidence intervals remain.
