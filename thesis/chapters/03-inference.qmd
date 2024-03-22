@@ -2,10 +2,10 @@
 bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 ---
 
-# Statistical Inference for restricted mean Survival Times {#sec-inference}
+# Statistical Inference for Restricted Mean Survival Times {#sec-inference}
 
 In this section we present the different statistical methods under investigation for the following testing problem:
-Like indicated in the previous section, we are in the setting of a randomized controlled trial with a time-to-event endpoint and want to compare an experimental treatment ($j = 1$) to a reference or placebo treatment ($j = 0$).
+As indicated in the previous section, we are in the setting of a randomized controlled trial with a time-to-event endpoint and want to compare an experimental treatment ($j = 1$) to a reference or placebo treatment ($j = 0$).
 Within the treatment groups the survival and censoring times are assumed to be independent and identically distributed, formally
 $$
 T_{ji} \sim S_j, \quad C_{ji} \sim G_j \quad (j = 0, 1; \, i = 1, \ldots, n_j).
@@ -15,7 +15,7 @@ Furthermore, it is to note that $T_{ji}$ and $C_{ji}$ are assumed to be mutually
 As each subject has been randomized to either one of the groups, we do not need to worry about potential confounding variables.
 
 Since we are not willing to assume that the proportional hazards assumptions holds and want to have an interpretable estimand available, we construct the statistical analysis based on the difference in restricted mean survival times.
-This leads to the specification of the following pair of hypotheses:
+For a given $t^*$, this leads to the specification of the following pair of hypotheses:
 $$
 H_0: \mu_1(t^*) - \mu_0(t^*) = 0 \quad \text{vs.} \quad H_1: \mu_1(t^*) - \mu_0(t^*) \neq 0
 $$ {#eq-test-problem}
@@ -84,9 +84,9 @@ Following @ditzhaus2023 and based on the results by @horiguchi2020a we use the "
 The idea of using *pseudo-observations* was first introduced by @andersen2003 for applications to multi-state models and has later been contextualized to more general settings with time-to-event data [@andersen2010].
 The motivation is to move away from hazard-based regression models for time-to-event data when we are actually interested in obtaining effect estimates for other quantities, e.g. for survival probabilities or restricted mean survival times.
 In this regard, hazard-based regression models may impede estimation, interpretation and statistical inference for such effects.
-E.g. if we were interested in the RMST difference between two treatment groups, a hazard-based regression model would need to be converted to the survival function first and then be (numerically) integrated to obtain an estimate of the RMST.
-After that, the estimation and uncertainty quantification of the (adjusted) RMST difference we are interested in would require further post-estimation steps [@sachs2022].
-Moreover, these models might underlie assumptions we would actually like to avoid such as the  proportional hazards assumption.
+For instance, if we were interested in the RMST difference between two treatment groups, a hazard-based regression model would need to be converted to the survival function first and then be (numerically) integrated to obtain an estimate of the RMST.
+Next, the estimation and uncertainty quantification of the (adjusted) RMST difference we are interested in would require further post-estimation steps [@sachs2022].
+Moreover, these models might have underlying assumptions we would actually like to avoid such as the  proportional hazards assumption.
 Using pseudo-observations we aim to circumvent such a procedure by estimating a generalized linear model of the form
 $$
 \expect[V_i | \xvec_i] = g^{-1}(\xvec_i' \betavec)
@@ -197,11 +197,11 @@ Because of these reasons the usage of a sandwich type estimator of the covarianc
 Although the concept of a sandwich type covariance matrix estimator can be formulated more generally [@zeileis2006], we keep using the notation by @fahrmeir2013[Chapter 5.5] for the application to quasi-likelihood models:
 $$
 \Covhat(\hat{\betavec}) = 
-\hat{\fmat}^{-1} \hat{\vmat} \hat{\fmat}^{-1}
+\hat{\fmat}^{-1} \hat{\mmat} \hat{\fmat}^{-1}
 $$ {#eq-sandwich}
 Here, we adopt the short-hand notation $\hat{\fmat} = \fmat(\hat{\betavec})$.
-$\hat{\vmat}$, on the other hand, is an empirical version of the "meat" matrix.
-@fahrmeir2013[Chapter 5.5] give a unique definition of $\hat{\vmat}$, but we shall let it unspecified at the moment, allowing for different types of sandwich estimators.
+$\hat{\mmat}$, on the other hand, is an empirical version of the "meat" matrix.
+@fahrmeir2013[Chapter 5.5] give a unique definition of $\hat{\mmat}$, but we shall let it unspecified at the moment, allowing for different types of sandwich estimators.
 One class of such sandwich estimators are *heteroscedasticity consistent* (HC) estimators [@zeileis2006] where the meat matrix is of the form $\xmat' \widehat{\omegamat} \xmat$, $\xmat$ 
 being the design matrix of the regression model and $\widehat{\omegamat} = \diag(w_1, \ldots, w_n)$ is a diagonal matrix of weights depending on the working residuals $r(y_i, \eta_i)$ 
 [@zeileis2006].
@@ -224,19 +224,21 @@ where $\residhat_i = r(y_i, \eta_i)$ is the working residuals and $h_i$ the leve
 Using the diagonal elements of (@eq-covhc) for obtaining standard error estimates we can now compute the test statistic (@eq-tstat-po) for conducting the statistical test (@eq-test-po) and for constructing the corresponding confidence interval (@eq-ci-po).
 
 
-### Bootstrap Hypothesis Test {#sec-po-boot}
+### Bootstrap Test {#sec-po-boot}
 
 In comparison to the standard asymptotic method described in @sec-asy the approach using pseudo-observations might have the advantage of obtaining more accurate estimates of standard errors in finite sample settings.
-When comparing it to the studentized permutation method presented in @sec-studperm it may however be considered inferior apart from its flexibility to adapt it to situations beyond the testing problem (@eq-test-problem) because inference is still based on the assumption of the test statistic (@eq-tstat-po) to be standard normally distributed under the null hypothesis whereas the studentized permutation test does not make this assumption.
-Therefore, we now intend to incorporate a similar feature into the approach using pseudo-observations.
+When comparing it to the studentized permutation method presented in @sec-studperm it may, however, be considered inferior apart from its flexibility to adapt it to situations beyond the testing problem (@eq-test-problem).
+This is because inference is still based on the assumption of the test statistic (@eq-tstat-po) to be standard normally distributed under the null hypothesis whereas the studentized permutation test does not make this assumption.
+Therefore, we now intend to incorporate a similar feature into the pseudo-observations approach using pseudo-observations.
+
 In principle, we could just focus on $\beta_1$ from the model (@eq-rmstglm) and apply a studentized permutation approach similar to the one applied by @ditzhaus2023.
 However, as we argue that the main advantage of an approach based on pseudo-observations is its possibility to be extended to more general settings, e.g. one where we want to test the effect of a continuous covariate, we want any adaption to this method to retain that flexibility.
-Nonetheless, the basic idead is still similar to that of the studentized permutation test:
+Nonetheless, the basic idea is still similar to that of the studentized permutation test:
 Instead of making a fixed assumption about the approximate distribution of the test statistic under the null hypothesis, in this case (@eq-tstat-po) following a standard normal distribution, and using this assumption even in small sample scenarios, we strive to estimate this distribution from the observed data directly.
 This means that we need to obtain parameters estimates and associated test statistics such as (@eq-tstat-po) as if the null hypothesis was true.
 For the studentized permutation test this has been done by calculating the test statistic (@eq-tstat-perm) using a permuted version $(\tvec, \deltavec)^{\pi}$ of the original data $(\tvec, \deltavec)$.
-Here, we slightly modify this notation by introducing the matrix $\xmat \in \real^{n \times p}$ containing covariates associated with $(\tvec, \deltavec)$, therefore omitting the group index $j$.
-I.e. the original data is now given by $(\tvec, \deltavec, \xmat) \equiv \{(t_i, \delta_i, \xvec_i'): \, i = 1, \ldots, n \})$.
+Here, we slightly modify this notation, omitting the treatment group index $j$, but therefore including the matrix of covariates $\xmat$.
+Then, we denote the original data by $(\tvec, \deltavec, \xmat) \equiv \{(t_i, \delta_i, \xvec_i'): \, i = 1, \ldots, n \})$.
 In the simplest setting, $\xmat$ could also be a $n \times 1$ vector, e.g. representing the treatment assignment for each individual.
 Furthermore, let $(\tvec, \deltavec, \xmat)^b \equiv \{(t_i, \delta_i, \xvec_i')^b: \, i = 1, \ldots, n \})$ denote a similar data set that has been obtained by case resampling with replacement, which we call a *bootstrap sample*.
 We then generate such bootstrap samples $B$ times as it would be done for the permutation data sets $(\tvec, \deltavec)^{\pi}$ (@sec-studperm).
@@ -249,7 +251,7 @@ $$ {#eq-tstat-boot}
 Whereas $\betahat$ denotes the estimate of $\beta$ that has been obtained using the original data, all other components of (@eq-tstat-boot) with $b$ in the superscript are estimated based on the $b$-th bootstrap sample.
 The rationale of this formula is that "the estimate of $\beta$ from the bootstrap samples should, on average, be equal to $\betahat$, at least asymptotically" [@mackinnon2009] and therefore $Z^b$ should take values that lead to a retention of the null hypothesis.
 Using these bootstrap samples, we can now conduct statistical inference similar as it has been done with the studentized permutation test.
-I.e. a two-sided test for a given significance level $\alpha \in (0, 1)$ is given by
+Therefore, a two-sided test for a given significance level $\alpha \in (0, 1)$ is given by
 $$
 \varphi^{b} = \mathbf{1} \{|Z^{\text{PO}}| > q_{1 - \alpha}^b\}
 $$ {#eq-test-boot}

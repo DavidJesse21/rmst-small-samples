@@ -11,18 +11,18 @@ box::use(
   simfuns2/get_funs[get_scenario_table]
 )
 
-dtr = readRDS(fs$path("simulation", "results", "2024-02-04_results", ext = "rds"))
+dtr = readRDS(fs$path("simulation", "results", "2024-02-08_results1", ext = "rds"))
 setDT(dtr)
 dts = get_scenario_table()
 
 
 # Initial investigations ----
 
-dt[, anyNA(pval)]
-dt[, table(algo.id)]
+dtr[, anyNA(pval)]
+dtr[, table(algo.id)]
 
 for (i in 1:5) {
-  finished = dt[algo.id == i, sort(unique(scenario.id))]
+  finished = dtr[algo.id == i, sort(unique(scenario.id))]
   missing = setdiff(1:216, finished)
   
   cat("Algorithm ", i, "\n")
@@ -62,6 +62,10 @@ ggplot(dt1, aes(factor(algo.id), reject)) +
     ~ num_samples,
     labeller = labeller(num_samples = \(x) paste0("N = ", x))
   )
+
+
+dt1[, sum(between(reject, 4.4, 5.6)), by = algo.id]
+dt1[, mean(between(reject, 4.4, 5.6)), by = algo.id]
 
 
 # Power ----
@@ -121,3 +125,7 @@ ggplot(dt3, aes(factor(algo.id), coverage)) +
   # Binomial confidence interval
   geom_hline(yintercept = 94.4, linetype = "dashed") +
   geom_hline(yintercept = 95.6, linetype = "dashed")
+
+
+dt3[, sum(between(coverage, 94.4, 95.6)), by = algo.id]
+dt3[, mean(between(coverage, 94.4, 95.6)), by = algo.id]

@@ -156,7 +156,7 @@ ggsurvfit(
   )
 ```
 
-The second example data set is taken from a study by @edmonson1979, in which patients suffering from ovarian cancer were randomized to either one of two treatments.
+The next example is from a study by @edmonson1979, in which patients suffering from ovarian cancer were randomized to either one of two treatments.
 The first treatment regimen consisted of cyclophosphamide only, whereas the other group received adriamycin in addition to cyclophosphamide.
 The data set is publicly available in the R `{survival}` package [@R-survival] as the "ovarian" data set.
 Like before, we plot and present the Kaplan-Meier curves in @fig-ovarian.
@@ -219,3 +219,91 @@ As mentioned before, the adjusted methods include the age of the patients and th
 For all time points, we can see that this results in both, a treatment effect estimate that is greater in magnitude and narrower confidence intervals associated with it.
 In the case of $t^* = 500$ this goes so far that the treatment effect estimate is deemed statistically significant, even when considering the bootstrap method that has been shown to exhibit a conservative behaviour in scenarios with very small sample sizes.
 Conversely, for $t^* = 750,\, 1000$ the effect estimates are again considered insignificant, but the properties of a larger effect estimate and narrower confidence intervals remain.
+
+
+## @grana2002 {#sec-ex-glioma}
+
+```{r}
+#| label: fig-glioma
+#| fig-width: 10
+#| fig-height: 6
+#| fig-cap: "Kaplan-Meier curves of the data from @grana2002"
+
+# Load the data
+dt = fread(here("data", "glioma.csv"))
+dt[, pid := NULL]
+setnames(dt, new = \(x) sub(".*?_", "", x))
+dt[, group := fifelse(group == "Control", 0L, 1L)]
+
+# Grambsch-Therneau test
+x = cox_zph(coxph(Surv(time, event) ~ group, data = dt, x = TRUE))
+pval_gt = x$table[1, "p"]
+
+# Kaplan-Meier plot
+ggsurvfit(
+  survfit2(Surv(time, event) ~ group, data = dt),
+  linewidth = 1.1
+) +
+  scale_color_manual(
+    name = "Treatment",
+    values = c("#E69F00", "#56B4E9"),
+    labels = c("Control", "Adjuvant")
+  ) +
+  labs(x = "\nTime (Months)", y = "Survival probability\n") +
+  theme_bw(base_size = 16) +
+  theme(legend.position = "top") +
+  scale_y_continuous(limit = c(0, 1)) +
+  annotate(
+    "text", x = 55, y = 0.95,
+    label = sprintf("Grambsch-Therneau test (p-value): %.2f%%", pval_gt * 100)
+  )
+```
+
+Latly, we consider another study from the field of oncology by @grana2002.
+The authors conducted a controlled trial among 37 patients with high grade glioma, which is a class of tumors concerning the central nervous system.
+All of the patients had received surgery and radiotherapy before the trial.
+The authors of the study were then interested in the effect of adjuvant intralesional radioimmunotherapy on two endpoints, disease-free survival and overall survival.
+Here, we consider the overall survival endpoint only.
+The data were made publicly available by the authors in form of tables in their paper.
+Besides the time-to-event endpoints and the treatment assignment they also recorded further characteristics, including the age of the patients as well as the glioma type (grade III or glioblastoma).
+Furthermore, it is worth noticing that treatment assignment was not randomized.
+In their publication the authors analyzed the data separately for the two different glioma types using the log-rank test as their primary analysis tool.
+Here, for simplicity, we consider the whole data set and conduct RMST-based analyses.
+Again, the marginal Kaplan-Meier estimates of the survival curves for the two treatment regimens are depicted in @fig-glioma.
+Moreover, we again compare the results obtained using the different methods based on undadjusted analyses on the one hand and include adjusted pseudo-observations regression models using the age and histology (glioma type) as control variables on the other hand.
+The corresponding results are shown in @fig-res-glioma.
+
+```{r}
+#| label: fig-res-glioma
+#| fig-width: 10
+#| fig-height: 6
+#| fig-cap: "Point estimates and 95%-confidence intervals for the data from @grana2002"
+
+dt_res = readRDS(here("thesis", "objects", "res_glioma.rds"))
+
+dtp = dt_res[variable == "group"]
+dtp[, method := factor(
+  method, levels = c("asy", "studperm", "po_asy", "po_boot", "po_asy_adj", "po_boot_adj"),
+  labels = c("Asy", "Stud Perm", "PO", "PO Boot", "PO (Adj)", "PO Boot\n(Adj)")
+)]
+dtp[, cutoff := factor(
+  cutoff, levels = c(20, 30, 40),
+  labels = sprintf("t^`*` == %d", c(20, 30, 40))
+)]
+
+
+ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
+  geom_point(size = 3) +
+  geom_errorbar(linewidth = 1.1, width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.9, color = "#222222") +
+  facet_wrap(~ cutoff, labeller = label_parsed, scales = "free_x") +
+  labs(
+    x = "Method\n", y = "\nEstimate"
+  ) +
+  scale_x_discrete(limits = rev(levels(dtp$method))) +
+  coord_flip()
+```
+
+First and foremost, we can conclude that in this example, for all of the selected cutoff time points ($t^* = 20,\, 30,\, 40$ months), the test decision is the same for all methods, determining a positive treatment effect of the adjuvant therapy.
+Among the unadjusted methods the observed differences regarding the width of the confidence intervals are the same as for the previous examples.
+For the adjusted methods we can see that the inclusion of the covariates leads to smaller but also more precise (narrower confidence intervals) effect estimates.

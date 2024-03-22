@@ -321,7 +321,7 @@ kbl(
 #| fig-height: 6
 
 dt1 = calc_rejection_rates(
-  dtr[scenario.id %in% dts[rmst_diff == 0, scenario.id]],
+  dtr[scenario.id %in% dts[rmst_diff == 0, scenario.id] & algo.id != 4],
   stats_NA = FALSE
 )
 dt1 = merge(
@@ -341,7 +341,7 @@ ggplot(dt1, aes(factor(algo.id), reject)) +
   ) +
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ\nBoot")
+    labels = c("Asy", "St Perm", "PO Asy", "PO Boot")
   ) +
   # Differentiate between total sample sizes
   facet_wrap(
@@ -493,7 +493,7 @@ kbl(
 #| fig-height: 6
 
 dt2 = calc_rejection_rates(
-  dtr[scenario.id %in% dts[rmst_diff == 1.5, scenario.id]],
+  dtr[scenario.id %in% dts[rmst_diff == 1.5, scenario.id] & algo.id != 4],
   stats_NA = FALSE
 )
 dt2 = merge(
@@ -509,7 +509,7 @@ ggplot(dt2, aes(factor(algo.id), reject)) +
   ) +
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ\nBoot")
+    labels = c("Asy", "St Perm", "PO Asy", "PO Boot")
   ) +
   facet_wrap(
     ~ num_samples,
@@ -529,7 +529,7 @@ Yet, @fig-coverage nicely highlights that, independent of the chosen method, a s
 #| fig-height: 10
 
 dt4 = calc_ci_metrics(
-  merge(dtr, dts[, .(scenario.id, rmst_diff)], by = "scenario.id"),
+  merge(dtr[algo.id != 4], dts[, .(scenario.id, rmst_diff)], by = "scenario.id"),
   stats_NA = FALSE
 )
 dt4 = merge(dt4, dts[, .(scenario.id, samples_k, n0, n1)], by = "scenario.id")
@@ -552,8 +552,9 @@ ggplot(dt4, aes(factor(algo.id), coverage)) +
   # x-axis
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud.\nPerm.", "PO", "PO IJ", "PO IJ\nBoot")
-  )
+    labels = c("Asy", "St Perm", "PO Asy", "PO Boot")
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 [^1]: In comparison to the parametrization of the Weibull distribution in @eq-wb-hazard, @ditzhaus2023 use a different parametrization where the scale parameter is $\sigma = \lambda^{-1}$.

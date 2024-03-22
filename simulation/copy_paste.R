@@ -99,7 +99,7 @@ list.files("simulation/registry/backup")
 # 04 After simulation ----
 
 box::use(
-  simfuns2/post_submit[collect_results, rm_temp_files, ]
+  simfuns2/post_submit[collect_results, rm_temp_files, check_sim_finished]
 )
 
 # Remove temporary files created for job submission

@@ -2,23 +2,26 @@
 bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 ---
 
-# Survival Analysis under non-proportional Hazards {#sec-survnph}
+# Survival Analysis under Non-proportional Hazards {#sec-survnph}
 
 In this section we present some fundamental concepts and quantities used in survival analysis and in doing so introduce the basic notation used throughout this thesis, for which we orientate ourselve towards @collett2015[Chapter 1] and @bardo2023.
 Moreover, a special emphasis is placed on the prevalence of the proportional hazards assumption in survival analysis.
 Eventually, we introduce the restricted mean survival time as an estimand that can be used for analyzing survival data under non-proportional hazards.
 
 
-## Notation and basic Concepts {#sec-basics}
+## Notation and Basic Concepts {#sec-basics}
 
 Let $T \in \real^{+}$ denote a random variable for the time to event and $C \in \real^{+}$ a second random variable for the censoring time.
 In real-world applications $T$ and $C$ are never observed simultaneously.
 Instead, for an individual $i$ we only observe $t_i = \min(T_i, C_i)$.
 Furthermore, we record if the event has been observed for an individual or is censored using the event indicator $\delta_i = \mathbf{1} \{T_i \leq C_i\}$.
-Thus, ignoring potential covariates, a single observation consists of the tuple $(t_i,\, \delta_i)$.
+Thus, ignoring potential covariates, the time-to-event outcome of a single observation consists of the tuple $(t_i,\, \delta_i)$.
 This thesis focusses on two-sample settings in clinical trials.
 For this reason, we introduce the treatment indicator variable $Z \in \{0, 1\}$ where $Z = 1$ denotes the experimental and $Z = 0$ the control treatment group.
 Alternatively, the group associations may also be indicated using the subscript $j$ with the same attributions as for $Z$.
+Lastly, $\xvec_i \in \real^{p}$ is used for denoting a vector of $p$ covariates associated with an individual $i$.
+Besides the treatment assignment this vector might record other characteristics of interest such as the age of a patient.
+Correspondingly, $\xmat \in \real^{n \times (p+1)}$ denotes the design matrix for a whole data set.[^1]
 
 The random variable $T$ can be characterized by its *distribution function*
 $$
@@ -69,15 +72,15 @@ $$
 As pointed out in the previous subsection, the distributional assumptions could also be expressed in terms of the hazard functions.
 Given these we can define the relative hazard between the experimental and the control group, more commonly known as the *hazard ratio*:
 $$
-HR(t) = \frac{h_1(t)}{h_0(t)}
+HR(t) = \frac{h_1(t)}{h_0(t)} \quad \text{for } h_0(t) > 0
 $$ {#eq-hr}
 Using this general definition it is clear that the hazard ratio is a function of time.
 However, many of the standard statistical methods used in survival analysis are based on the assumption that the hazards are proportional over and therefore independent of time:
 $$
-HR(t) = \frac{h_1(t)}{h_0(t)} := \theta
+HR(t) = \frac{h_1(t)}{h_0(t)} = \theta \quad \forall \, t
 $$ {#eq-phr}
 Here, $\theta \in (0, \infty)$ is some constant highlighting this assumption, which is known as the *proportional hazards* assumption.
-An example of a parametric distribution that features both, proportional and non-proportional hazards, is the Weibull distribution.
+This assumption may or may not hold, which can be illustrated using the Weibull distribution as a theoretical example.
 The hazard function of the Weibull distribution is [@kalbfleisch2002, Chapter 2.2.]
 $$
 h(t) = \lambda \alpha (\lambda t)^{\alpha - 1}
@@ -261,7 +264,7 @@ wrap_plots(
   plot_layout(ncol = 2, byrow = FALSE, axes = "collect_x")
 ```
 
-Among the statistical models that employ the proportional hazards assumption perhaps the best-known and most widely used one is the *Cox proportional hazards model* [@cox1972]:
+Among the statistical models that employ the proportional hazards assumption perhaps the best-known and most widely used one is the semiparametric *Cox proportional hazards model* [@cox1972]:
 $$
 h(t) = \exp(\beta Z) h_0(t)
 $$ {#eq-coxph}
@@ -288,9 +291,9 @@ However, the bigger issue can be considered the fact that the underlying estiman
 Thus, while the log-rank test may still be applied, the interpretation of the associated effect becomes ambiguous.
 
 
-## Restricted mean Survival Time {#sec-rmst}
+## Restricted Mean Survival Time {#sec-rmst}
 
-We now address the restricted mean survival time (RMST) as an alternative estimand for the hazard ratio as it is defined in (@eq-phr).
+We now address the restricted mean survival time (RMST) and its contrasts as alternative effect measures for the hazard ratio as it is defined in (@eq-phr).
 Mathematically, the RMST is the expectation of the transformation $f(T; t^*) = \min(T, t^*)$ of the random variable $T$ where $t^*$ is the restriction time that needs to be specified by the researcher.
 The RMST can be interpreted as the expected survival time from the time origin $0$ up to the restriction time $t^*$ [@royston2011].
 Using exemplary numbers @royston2011 provide a clinical interpretation of the RMST:
@@ -303,7 +306,7 @@ $$
 \, .
 $$ {#eq-rmst}
 The reason for considering a restricted version of the mean is right-censoring of the survival data.
-For the nonparametric Kaplan-Meier estimator of the survival function to reach $0$ and therefore being able to estimate an unrestricted mean, the largest event time needs to be uncensored, which is seldom the case.
+For the nonparametric Kaplan-Meier estimator of the survival function to reach $0$ and therefore being able to estimate an unrestricted mean, the largest event time needs to be uncensored, which is rarely the case.
 On the other hand, employing parametric models in survival analysis is often a difficult task.
 Even if we had a model with a decent in-sample fit, we cannot be sure whether the extrapolation of that model to the tail of the survival distribution is adequate [@royston2011].
 
@@ -402,17 +405,25 @@ Broadly, a point estimator for $\mu(t^*)$ can be obtained by integrating an esti
 $$
 \muhat(t^*) = \int_0^{t^*} \hat{S}(u) \, du
 $$
-In principle, any estimator $\hat{S}$ can be applied but most commonly the non-parametric Kaplan-Meier estimator [@kaplan1958] is used.
-The reasons for this are twofold.
+In principle, any estimator $\hat{S}$ can be applied but most commonly the non-parametric Kaplan-Meier estimator [@kaplan1958] is used:
+$$
+\hat{S}(t) = 
+\begin{cases}
+  1 & \text{for } t < t_1 \\
+  \prod_{t_j \leq t} \left(1 - \frac{d_j}{Y_j}\right) & \text{for } t \geq t_1
+\end{cases}
+$$
+Here, $t_j$ ($j = 1, 2, \ldots, m$) denote the ordered and ditinct event times observed in the survival data.
+Moreover, $Y_j$ denotes the number of individuals at risk just prior to $t_j$ and $d_j$ the number of observed events at $t_j$. 
+The reasons for the usage of the Kaplan-Meier estimator for estimating the RMST are twofold.
 On the one hand, using a non-parametric estimator avoids making any possibly false assumptions about the shape of the survival curve.
 On the other hand, using this estimator closed-form solutions for both, the point and the variance estimator, are available and there is no need to rely on computational methods like numerical integration or resampling.
-Concretely, the point estimator utilizing the Kaplan-Meier estimator of the survival function can be written as [@hasegawa2020]
+Specifically, the point estimator utilizing the Kaplan-Meier estimator of the survival function can be written as [@hasegawa2020]
 $$
 \muhat(t^*) = \sum_{j=0}^D (t_{j+1} - t_j) \hat{S}(t_j) \, ,
 $$ {#eq-pointest}
-where $t_1 < t_2 < \ldots < t_D$ denote the ordered and distinct event times observed in the survival data and $t_{D+1} = t^*$.
-Moreover, let $Y_j$ denote the number of individuals at risk just prior to $t_j$ and $d_j$ the number of events at $t_j$.
-An estimator for the variance of (@eq-pointest) based on Greenwood's formula is then given by [@hasegawa2020]
+where as before $t_1 < t_2 < \ldots < t_D$ denote the ordered and distinct event times observed in the survival data and $t_{D+1} = t^*$.
+An estimator for the variance of (@eq-pointest) based on Greenwood's formula is given by [@hasegawa2020]
 $$
 \Varhat[\muhat(t^*)] = \sum_{j=1}^D 
 \left[ \sum_{i=j}^D (t_{i+1} - t_i) \hat{S}(t_i) \right]^2
@@ -428,3 +439,5 @@ $$
 $${#eq-varest2}
 which is derived by plugging in the Nelson-Aalen estimator of the cumulative hazard rate into the theoretical variance formula [@ditzhaus2023].
 Both variance estimators are valid but since most authors employ the estimator (@eq-varest1) we use it here per default as well.
+
+[^1]: The length (number of columns) of the vector (design matrix) may be increased by one in the context of regression modelling for the inclusion of an intercept term.

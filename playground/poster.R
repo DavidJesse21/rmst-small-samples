@@ -10,8 +10,9 @@ box::use(
 box::use(
   # simulation results
   simfuns2/analyze[calc_rejection_rates, calc_ci_metrics, setj_samples_alloc, setj_percent],
-  simfuns2/get_funs[get_scenario_table],
+  simfuns2/get_funs[get_scenario_table, get_algo_table],
 )
+
 
 
 # RMST visualization ----
@@ -76,11 +77,11 @@ ggrmst(fit, cutoff = 350) +
     name = "Survival probability\n",
     breaks = seq(0, 1, by = 0.2)
   ) +
-  theme_bw(base_size = 16)
+  theme_bw(base_size = 20)
 
 ggsave(
   "rmst.png", path = fs$path("playground"),
-  width = 10, height = 6, dpi = 300,
+  width = 10, height = 6.5, dpi = 300,
   type = "cairo"
 )
 
@@ -94,7 +95,7 @@ dts = get_scenario_table()
 
 # Type-I error rates
 dt1 = calc_rejection_rates(
-  dtr[scenario.id %in% dts[rmst_diff == 0, scenario.id]],
+  dtr[scenario.id %in% dts[rmst_diff == 0, scenario.id] & algo.id != 4],
   stats_NA = FALSE
 )
 dt1 = merge(
@@ -105,7 +106,7 @@ setj_percent(dt1, "reject")
 
 ggplot(dt1, aes(factor(algo.id), reject)) +
   geom_boxplot() +
-  theme_bw(base_size = 16) +
+  theme_bw(base_size = 20) +
   # Binomial confidence interval
   geom_hline(yintercept = 4.4, linetype = "dashed") +
   geom_hline(yintercept = 5.6, linetype = "dashed") +
@@ -115,7 +116,7 @@ ggplot(dt1, aes(factor(algo.id), reject)) +
   ) +
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+    labels = c("Asy", "St Perm", "PO Asy", "PO Boot")
   ) +
   # Differentiate between total sample sizes
   facet_wrap(
@@ -125,14 +126,14 @@ ggplot(dt1, aes(factor(algo.id), reject)) +
 
 ggsave(
   "sim-type1-err.png", path = fs$path("playground"),
-  width = 10, height = 6, dpi = 300,
+  width = 10, height = 6.5, dpi = 300,
   type = "cairo"
 )
 
 
 # Power
 dt2 = calc_rejection_rates(
-  dtr[scenario.id %in% dts[rmst_diff == 1.5, scenario.id]],
+  dtr[scenario.id %in% dts[rmst_diff == 1.5, scenario.id] & algo.id != 4],
   stats_NA = FALSE
 )
 dt2 = merge(
@@ -143,13 +144,13 @@ setj_percent(dt2, "reject")
 
 ggplot(dt2, aes(factor(algo.id), reject)) +
   geom_boxplot() +
-  theme_bw(base_size = 16) +
+  theme_bw(base_size = 20) +
   scale_y_continuous(
     name = "Power in %\n"
   ) +
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+    labels = c("Asy", "St Perm", "PO Asy", "PO Boot")
   ) +
   facet_wrap(
     ~ num_samples,
@@ -159,14 +160,14 @@ ggplot(dt2, aes(factor(algo.id), reject)) +
 
 ggsave(
   "sim-power.png", path = fs$path("playground"),
-  width = 10, height = 6, dpi = 300,
+  width = 10, height = 6.5, dpi = 300,
   type = "cairo"
 )
 
 
 # CI coverage
 dt3 = calc_ci_metrics(
-  merge(dtr, dts[, .(scenario.id, rmst_diff)], by = "scenario.id"),
+  merge(dtr[algo.id != 4], dts[, .(scenario.id, rmst_diff)], by = "scenario.id"),
   stats_NA = FALSE
 )
 dt3 = merge(
@@ -177,13 +178,13 @@ setj_percent(dt3, "coverage")
 
 ggplot(dt3, aes(factor(algo.id), coverage)) +
   geom_boxplot() +
-  theme_bw(base_size = 16) +
+  theme_bw(base_size = 20) +
   scale_y_continuous(
     name = "Coverage in %\n"
   ) +
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+    labels = c("Asy", "St Perm", "PO Asy", "PO Boot")
   ) +
   facet_wrap(
     ~ num_samples,
@@ -195,6 +196,6 @@ ggplot(dt3, aes(factor(algo.id), coverage)) +
 
 ggsave(
   "sim-coverage.png", path = fs$path("playground"),
-  width = 10, height = 6, dpi = 300,
+  width = 10, height = 6.5, dpi = 300,
   type = "cairo"
 )

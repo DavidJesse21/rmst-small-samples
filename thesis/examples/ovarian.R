@@ -279,7 +279,7 @@ ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
   geom_errorbar(linewidth = 1.1, width = 0.2) +
   geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.9, color = "#222222") +
   theme_bw() +
-  facet_wrap(~ cutoff, labeller = label_parsed) +
+  facet_wrap(~ cutoff, labeller = label_parsed, scales = "free_x") +
   labs(
     x = "Method\n", y = "\nEstimate"
   ) +
