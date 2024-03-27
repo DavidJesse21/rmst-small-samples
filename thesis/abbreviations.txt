@@ -11,3 +11,4 @@ GWDG & Gesellschaft für wissenschaftliche Datenverarbeitung Goettingen
 RNG & Random Number Generator
 PD-L1 & Programmed Death Ligand 1
 ECOG & Eastern Cooperative Oncology Group
+i.i.d. & independent and identically distributed

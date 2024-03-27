@@ -1,0 +1,141 @@
+---
+keep-tex: true
+format:
+  pdf:
+    pdf-engine: pdflatex
+    toc: false
+    toc-depth: 2
+    number-sections: true
+    toccolor: black
+    citecolor: blue
+    linkcolor: black
+    fig-pos: "htbp"
+    documentclass: scrartcl
+    classoption: [headings=normal, numbers=noenddot]
+    fontsize: 12pt
+    geometry:
+      - left=1cm
+      - right=1cm
+      - top=1cm
+      - bottom=1cm
+      - bindingoffset=5mm
+execute: 
+  echo: false
+  warning: false
+  output: true
+crossref: 
+  eq-prefix: ""
+knitr:
+  opts_knit:
+    root.dir: "C:/Users/david/Uni/00 Master Goettingen/05 Masterthesis/master-thesis"
+---
+
+
+```{r}
+#| include: false
+
+options(box.path = "R")
+
+box::use(
+  fs,
+  data.table[...],
+  kableExtra[...],
+  survival[Surv, survdiff],
+  data.table.extras[setj_at]
+)
+
+box::use(simfuns2/analyze[setj_percent])
+
+# Data set
+load(fs$path("data", "Hellmann", ext = "Rdata"))
+dt = data
+rm(data)
+setDT(dt)
+dt
+
+# Results
+dt_res = readRDS(fs$path("thesis", "objects", "res_hellmann", ext = "rds"))
+
+# format p-values
+format_pval = function(x) {
+  fifelse(
+    x < 0.1, "<0.1",
+    format(round(x, 1), digits = 2, nsmall = 1)
+  )
+}
+```
+
+
+```{r}
+#| label: tbl-res-hellmann
+#| tbl-cap: "Test"
+
+# Obtain p-values and reshape the results for latex table
+dtt = dt_res[variable == "group", .(method, cutoff, pval)]
+dtt = dcast(dtt, method ~ cutoff, value.var = "pval")
+setnames(dtt, old = as.character(c(12, 15, 18)), new = \(x) paste0("t", x))
+
+# Reorder rows by method
+dtt = dtt[c(1, 4, 2:3)]
+
+# Also include log-rank test
+pval_lr = survdiff(Surv(time, event) ~ group, data = dt)$pvalue
+dtt = rbindlist(list(
+  dtt,
+  data.table(method = "lr", t12 = NA_real_, t15 = pval_lr, t18 = NA_real_)
+))
+
+# Convert to percent
+setj_percent(dtt, 2:4)
+setj_at(dtt, 2:4, format_pval)
+
+# Need to relabel methods
+dtt[, method := c("Asy", "Perm", "PO1", "PO2", "LR")]
+
+# NAs as empty cells
+options(knitr.kable.NA = '')
+
+# Table
+kbl(
+  dtt,
+  format = "latex",
+  booktabs = TRUE,
+  escape = FALSE,
+  col.names = c("Method", sprintf("$t^* = %d$", c(12, 15, 18))),
+  align = c("l", rep("r", 3)),
+  linesep = c(rep("", 3), "\\hline", ""),
+  position = "b"
+) |>
+  #
+  # Column specifications
+  column_spec(1, width = "2.5cm", border_right = TRUE) |>
+  column_spec(2:4, width = "3cm") |>
+  #
+  kable_styling(position = "center", font_size = 12, latex_options ) |>
+  # Organize rows by type of method
+  pack_rows(
+    r"(Tests for $\\mu_1(t^*) = \\mu_0(t^*)$)", 1, 4,
+    bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE, escape = FALSE
+  ) |>
+  pack_rows(
+    r"(Test for $S_1 = S_0$)", 5, 5,
+    bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE, escape = FALSE
+  ) |>
+  # Legend
+  footnote(
+    general = paste0(
+      r"(\\textit{Abbreviations:} )",
+      "Asy, asymptotic test; ", "Perm, studentized permutation test; ",
+      "PO1, pseudo-observations; ",
+      "PO2, pseudo-observations + bootstrap test; ",
+      "LR, log-rank test."
+    ),
+    escape = FALSE,
+    general_title = "",
+    threeparttable = TRUE
+  )
+```
+
+
+
+

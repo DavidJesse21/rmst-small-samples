@@ -63,6 +63,7 @@ chapter = function(name) {
 # Load modules and functions
 box::use(
   data.table[...],
+  data.table.extras[setj_at],
   # plotting
   ggplot2[...],
   patchwork[wrap_plots, plot_layout],
@@ -96,6 +97,14 @@ theme_set(theme_bw(base_size = 16))
 dtr = readRDS(here("simulation", "results", "2024-02-08_results1.rds"))
 setDT(dtr)
 dts = get_scenario_table()
+
+# Function for formatting p-values in tables
+format_pval = function(x) {
+  fifelse(
+    x < 0.1, "<0.1",
+    format(round(x, 1), digits = 2, nsmall = 1)
+  )
+}
 ```
 
 

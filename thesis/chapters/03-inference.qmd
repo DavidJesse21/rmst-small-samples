@@ -14,12 +14,12 @@ Here, $S_j$ and $G_j$ denote the survival functions of the survival and censorin
 Furthermore, it is to note that $T_{ji}$ and $C_{ji}$ are assumed to be mutually independent, i.e. the survival time does not impact the censoring process or vice versa.
 As each subject has been randomized to either one of the groups, we do not need to worry about potential confounding variables.
 
-Since we are not willing to assume that the proportional hazards assumptions holds and want to have an interpretable estimand available, we construct the statistical analysis based on the difference in restricted mean survival times.
-For a given $t^*$, this leads to the specification of the following pair of hypotheses:
+Since we are not willing to assume that the proportional hazards assumption holds and want to have an interpretable estimand available, we construct the statistical analysis based on the difference in restricted mean survival times.
+For a given restriction time $t^*$, this leads to the specification of the following pair of hypotheses:
 $$
 H_0: \mu_1(t^*) - \mu_0(t^*) = 0 \quad \text{vs.} \quad H_1: \mu_1(t^*) - \mu_0(t^*) \neq 0
 $$ {#eq-test-problem}
-In the following subsections we present the different methods presented studied in this thesis for conducting such a test.
+In the following subsections we present the different methods studied in this thesis for conducting such a test.
 
 
 ## Asymptotic Test {#sec-asy}
@@ -29,7 +29,7 @@ A Wald-type test statistic can be constructed using the point and variance estim
 $$
 Z = \frac{\muhat_1(t^*) - \muhat_0(t^*)}{\sqrt{\Varhat[\muhat_1(t^*)] + \Varhat[\muhat_0(t^*)]}}
 $$ {#eq-tstat}
-Asymptotically, this test statistic follows a standard normal distribution under the null hypothesis, i.e.
+Using the martingale central limit theorem in combination with the functional $\delta$-method it can be shown that, asymptotically, this test statistics follows a standard normal distribution under the null hypothesis [@zhao2016], i.e.
 $$
 Z \danull \dnorm(0, 1) \, .
 $$ {#eq-dapprox}
@@ -56,9 +56,8 @@ Now, instead of employing the standard normal approximation (@eq-dapprox) the di
 For this, let $(\tvec, \deltavec)^{\pi} \equiv \{(t_{ji}, \delta_{ji})^{\pi}: \, j = 0, 1;\, i = 1, \ldots, n_j\}$ represent a permuted version of the original data meaning that the treatment indicator $Z$ has been randomly shuffled and reassigned to the individual observations $(t_{ji}, \delta_{ji})$ of the original data.
 We repeat this procedure $B$ times (e.g. $B = 5000$) and calculate a test statistic similar to (@eq-tstat) for each of the permuted data sets:
 $$
-Z^{\pi} = \left|
-\frac{\muhat_1^{\pi}(t^*) - \muhat_0^{\pi}(t^*)}{\sqrt{\Varhat[\muhat_1^{\pi}(t^*)] + \Varhat[\muhat_0^{\pi}(t^*)]}}
-\right|    
+Z^{\pi} =
+\frac{| \muhat_1^{\pi}(t^*) - \muhat_0^{\pi}(t^*) |}{\sqrt{\Varhat[\muhat_1^{\pi}(t^*)] + \Varhat[\muhat_0^{\pi}(t^*)]}}   
 $$ {#eq-tstat-perm}
 We can then carry out the studentized permutation test
 $$
@@ -66,12 +65,14 @@ $$
 \, ,
 $$ {#eq-test-perm}
 where $q_{1 - \alpha}^{\pi}$ denotes $(1 - \alpha)$-quantile of the the permutation test statistics.
-Similarly as for the asymptotic approach, a confidence interval can be constructed by replacing $z_{1 - \alpha/2}$ in (@eq-ci-asy) by $q_{1 - \alpha}^{\pi}$:
+@ditzhaus2023 show that the distribution of (@eq-tstat-perm) is asymptotically equivalent to that of (@eq-tstat), motivating its usage for constructing a confidence interval similar to (@eq-ci-asy).
+Hence, the standard normal quantile $z_{1 - \alpha/2}$ simply gets replaced by $q_{1 - \alpha}^{\pi}$:
 $$
 CI^{\pi} = \left[ \muhat_1(t^*) - \muhat_0(t^*) \mp q_{1 - \alpha}^{\pi} \sqrt{\Varhat[\muhat_1(t^*)] + \Varhat[\muhat_0(t^*)]} \right]
 $$ {#eq-ci-perm}
 It should be noted that the testing problem (@eq-test-problem) is two-sided and that the studentized permutation test as it is presented here makes use of this fact, exploiting the asymptotic symmetry of the test statistic (@eq-tstat).
 Nonetheless, this procedure can also be adapted to one-sided testing problems.
+Moreover, the test and confidence intervals obtained using asymptotic theory and using studentized permutation coincide as $n \to \infty$ [@ditzhaus2023].
 
 When @horiguchi2020a first introduced a permutation test for two-sample RMST contrasts they extensively discussed how to handle scenarios in which for a permuted data set either $\hat{S}_0(t^*)$ or $\hat{S}_1(t^*)$ is not uniquely defined because the largest event time in that group is smaller than $t^*$ and censored.
 Following @ditzhaus2023 and based on the results by @horiguchi2020a we use the "horizontal extension" strategy in which we set $\hat{S}_j(t^*) = \hat{S}_j(t_{\text{max}})$ in these cases, where, $t_{\text{max}}$ denotes the largest event time within the respective group.
@@ -87,7 +88,7 @@ In this regard, hazard-based regression models may impede estimation, interpreta
 For instance, if we were interested in the RMST difference between two treatment groups, a hazard-based regression model would need to be converted to the survival function first and then be (numerically) integrated to obtain an estimate of the RMST.
 Next, the estimation and uncertainty quantification of the (adjusted) RMST difference we are interested in would require further post-estimation steps [@sachs2022].
 Moreover, these models might have underlying assumptions we would actually like to avoid such as the  proportional hazards assumption.
-Using pseudo-observations we aim to circumvent such a procedure by estimating a generalized linear model of the form
+Using pseudo-observations we aim to circumvent such a procedure by estimating a generalized linear model (GLM) of the form
 $$
 \expect[V_i | \xvec_i] = g^{-1}(\xvec_i' \betavec)
 \, .
@@ -105,11 +106,11 @@ $$ {#eq-pseudo}
 Here, $\hat{\theta}$ denotes a well-behaved marginal estimator of $V_i$.
 This could be any estimator satisfying asymptotic efficiency but usually a nonparametric estimator is used.
 The advanatges of these are that they do not exhibit any modelling assumptions and are usually fast to compute.
-Likewise, $\hat{\theta}_{-i}$ is the same kind of estimator but leaving out the $i$-th observation, i.e. using the $i$-th *jackknife sample* [@efron1993, Chapter 1].
+Likewise, $\hat{\theta}_{-i}$ is the same kind of estimator but leaving out the $i$-th observation, i.e. using the $i$-th *jackknife sample* [@efron1993, Chapter 11].
 Following @andersen2010, "the $i$-th pseudo-observation can be viewed as the contribution of the individual $i$ to the \[marginal\] estimate \[$\hat{\theta}$\] on the sample of size $n$".
 Thus, by calculating the pseudo-observations and using them as the response vector we bypass the need to deal with censored observations.
 It is important to note, though, that the estimation of the model (@eq-pseudoglm) proceeds using the pseudo-observations (@eq-pseudo) for all individuals $i = 1, \ldots, n$, regardless whether $V_i$ could actually be computed directly or not.
-One theoretical justification of using pseudo-observations as a response variable in a GLM is their unbiasedness (given an unbiased marginal estimator $\hat{\theta}$) (@andersen2010):
+One theoretical justification of using pseudo-observations as a response variable in a GLM is their unbiasedness (given an unbiased marginal estimator $\hat{\theta}$) [@andersen2010]:
 $$
 \begin{split}
   \expect(P_i) &= \expect[n \hat{\theta} - (n - 1) \hat{\theta}_{-i}] \\
@@ -123,21 +124,21 @@ However, one issue remains:
 Using pseudo-observations for the regression model (@eq-pseudoglm) relies on the assumption that the censoring mechanism is independent of any covariates.
 If this is not the case any estimate obtained from these pseudo-observations will be biased [@andersen2010].
 For such a situation there are two solutions available:
-First, if censoring depends on one or more categorical covariates then the pseudo-observations may be calculated stratified by the different (interaction) levels of these covariates.
+First, if censoring depends on one or more categorical covariates then the pseudo-observations may be calculated stratified by the different levels of these covariates and their interactions.
 This way unbiasedness is retained but in comparison with independent censoring the standard errors will be inflated [@andersen2010].
 If the covariates which impact the censoring mechanism are continuous then the pseudo-observations can be calculated by estimating a model for the censoring mechanism and using inverse probability of censoring weighting methods (IPCW) [@binder2014; @overgaard2019].
-The latter method, however, will not further concern us in this thesis.
+The latter method, however, will not be applied in this thesis.
 
-Another important aspect to keep in mind is that the formulation of a classical generalized linear model $\expect[Y_i | \xvec_i] = g^{-1}(\xvec_i' \betavec)$ is usually motivated and determined by (conditional) distributional assumptions about the response variable $y$ [@fahrmeir2013, Chapter 5.4].
+Another important aspect to keep in mind is that the formulation of a classical generalized linear model $\expect[Y_i | \xvec_i] = g^{-1}(\xvec_i' \betavec)$ is usually motivated and determined by (conditional) distributional assumptions about the response variable $y_i$ [@fahrmeir2013, Chapter 5.4].
 For instance, if we had a binary response $y_i \in \{0, 1\}$ it would be natural to presume $y_i$ to be binomially distributed.
 This would in turn imply the link function $g$ to be the canonical logit link function [@fahrmeir2013, Chapter 5.4].
 However, this approach is not reasonable for the pseudo-observations regression model (@eq-pseudoglm) for two reasons:
 First, the pseudo-observations are not available per se but must be computed first and a particular probabilistic model would be hard to justify.
 Second, the motivation for using the regression model (@eq-pseudoglm) in the first place is in obtaining effect estimates $\betavec$ with a particular interpretation.
-E.g. we could use the model (@eq-pseudoglm) to model survival probabilities and associated covariate effects.
+For instance, we could use the model (@eq-pseudoglm) to regress the covariates $\xvec_i$ on the survival probability and obtain associated effect estimates.
 If we wanted to estimate differences in survival probabilities between two treatment groups the link function $g$ would need to be specified as the identity link function [@sachs2022] although the estimation of a survival *probability* might make the logit link function appear more intuitive.
-Due to this special situation we need to employ quasi-likelihood methods instead [@fahrmeir2013, Chapter 5.5].
-Hence, we avoid making a proper distributional assumption but only need to make a correct specification of the expectation structure (@eq-pseudoglm) together with a *working variance* structure $\sigma^2_i$.
+Due to this special situation we need to employ quasi-likelihood methods instead of ordinary maximum-likelihood theory [@fahrmeir2013, Chapter 5.5].
+Hence, we avoid making a proper distributional assumption about the response variable but only need to make a correct specification of the expectation structure (@eq-pseudoglm) together with a *working variance* structure $\sigma^2_i$.
 From this specification we can derive the quasi-score function, also known as *generalized estimating equation* (GEE)
 $$
 s(\betavec) = 
@@ -149,7 +150,7 @@ This estimating equation is similar to the score function of a likelihood-based 
 The key difference is that the working variance $\sigma_i^2$ is not determined by some distributional assumption but can be specified by the researcher as a function of the form $\sigma^2(\mu)$ [@fahrmeir2013, Chapter 5.5].
 The easiest option is to specify $\sigma_i^2 = \sigma^2$, i.e. choosing a constant variance [@sachs2022].
 Other than that, the parameter estimates $\hat{\betavec}$ are similarly obtained by (numerically) finding the root of the generalized estimating equation $s(\hat{\betavec}) = \mathbf{0}$ [@fahrmeir2013, Chapter 5.5].
-Conducting statistical inference is also similar to how it would be done in a likelihood-based framework but details are devoted to the next subsection.
+Conducting statistical inference is also similar to how it would be done in a likelihood-based framework but details are devoted to @sec-po-asy.
 
 
 ### Asymptotic Test {#sec-po-asy}
@@ -160,23 +161,23 @@ $$
 \expect[\min(T, t^*) | Z] = \mu(t^* | Z) = \beta_0 + \beta_1 Z
 \, .
 $$ {#eq-rmstglm}
-Since here we are interested in the RMST *difference* $g^{-1}$ in (@eq-pseudoglm) is simply the identity link.
-The model (@eq-rmstglm) can now be interpreted as follows:
+Since here we are interested in the RMST *difference* $g^{-1}$ in @eq-pseudoglm is simply the identity link.
+The model described in @eq-rmstglm can now be interpreted as follows:
 If $Z = 0$, i.e. the observation comes from the control group, we have $\mu(t^* | Z = 0) = \mu_0(t^*) = \beta_0$.
 Hence, $\beta_0$ reflects the RMST of the control group.
 On the other hand, if $Z = 1$ then $\mu(t^* | Z = 1) = \mu_1(t^*) = \beta_0 + \beta_1$.
 Putting this together, we have $\mu_1(t^*) - \mu_0(t^*) = \beta_0 + \beta_1 - \beta_0 = \beta_1$.
 Therefore, $\beta_1$ can be interpreted as the RMST difference between the treatment groups.
 
-As pointed out in previous subsection point estimates for the vector of regression coefficients $\betavec$ can be obtained by solving the generalized estimating equation (@eq-gee).
+As pointed out in @sec-po-general point estimates for the vector of regression coefficients $\betavec$ can be obtained by solving the generalized estimating equation (@eq-gee).
 Succeeding inference and hypothesis tests then resemble those of generalized linear models [@fahrmeir2013, Chapter 5.4.2].
-I.e. for an estimate of a single parameter, here $\hat{\beta}_1$, we construct the test statistic
+Hence, for an estimate of a single parameter, here $\hat{\beta}_1$, we construct the test statistic
 $$
 Z_{\text{(PO)}} = \frac{\hat{\beta}_1}{\sehat(\hat{\beta}_1)}
 \, .
 $$ {#eq-tstat-po}
 Just like the test statistic (@eq-tstat), $Z_{\text{(PO)}}$ has, asymptotically, a standard normal distribution under the null hypothesis (cf. @eq-dapprox).
-As a result, we can obtain a similar type of test
+As a result, we can obtain the following similar statistical test
 $$
 \varphi^{(\text{PO})} = \mathbf{1} \{|Z_{(\text{PO})}| > z_{1- \alpha/2} \}
 \, ,
@@ -190,7 +191,7 @@ While the point estimation of the asymptotic method described in @sec-asy and th
 Using pseudo-observation regression models the estimation of standard errors is based on the estimation of the covariance matrix $\operatorname{Cov}(\hat{\betavec})$.
 If we were willing to assume that the working variance $\sigma^2_i$ was correctly specified we could use the inverse of the quasi-Fisher information matrix $\fmat(\hat{\betavec})$ as an estimator of the covariance matrix of $\hat{\betavec}$ [@fahrmeir2013, Chapter 5.5].
 However, we have already depicted that such an assumption is not reasonable.
-E.g. the support of the RMST ($\real^{+}$) is bounded from below.
+For instance, the support of the RMST ($\real^{+}$) is bounded from below.
 Therefore a model like (@eq-rmstglm) using an identity link is likely to exhibit a skewed distribution of the residuals, indicating heteroscedasticity.
 In addition, the property that the pseudo-observations are i.i.d. only holds *approximately* (cf. @sec-po-general).
 Because of these reasons the usage of a sandwich type estimator of the covariance matrix is suggested [@fahrmeir2013, Chapter 5.5; @andersen2003].
@@ -227,29 +228,29 @@ Using the diagonal elements of (@eq-covhc) for obtaining standard error estimate
 ### Bootstrap Test {#sec-po-boot}
 
 In comparison to the standard asymptotic method described in @sec-asy the approach using pseudo-observations might have the advantage of obtaining more accurate estimates of standard errors in finite sample settings.
-When comparing it to the studentized permutation method presented in @sec-studperm it may, however, be considered inferior apart from its flexibility to adapt it to situations beyond the testing problem (@eq-test-problem).
+When comparing it to the studentized permutation method presented in @sec-studperm, however,  it may be considered inferior apart from its flexibility to adapt it to situations beyond the testing problem (@eq-test-problem).
 This is because inference is still based on the assumption of the test statistic (@eq-tstat-po) to be standard normally distributed under the null hypothesis whereas the studentized permutation test does not make this assumption.
 Therefore, we now intend to incorporate a similar feature into the pseudo-observations approach using pseudo-observations.
 
 In principle, we could just focus on $\beta_1$ from the model (@eq-rmstglm) and apply a studentized permutation approach similar to the one applied by @ditzhaus2023.
 However, as we argue that the main advantage of an approach based on pseudo-observations is its possibility to be extended to more general settings, e.g. one where we want to test the effect of a continuous covariate, we want any adaption to this method to retain that flexibility.
-Nonetheless, the basic idea is still similar to that of the studentized permutation test:
+Nonetheless, the basic idea of the approach proposed in the following is still similar to that of the studentized permutation test:
 Instead of making a fixed assumption about the approximate distribution of the test statistic under the null hypothesis, in this case (@eq-tstat-po) following a standard normal distribution, and using this assumption even in small sample scenarios, we strive to estimate this distribution from the observed data directly.
 This means that we need to obtain parameters estimates and associated test statistics such as (@eq-tstat-po) as if the null hypothesis was true.
 For the studentized permutation test this has been done by calculating the test statistic (@eq-tstat-perm) using a permuted version $(\tvec, \deltavec)^{\pi}$ of the original data $(\tvec, \deltavec)$.
 Here, we slightly modify this notation, omitting the treatment group index $j$, but therefore including the matrix of covariates $\xmat$.
 Then, we denote the original data by $(\tvec, \deltavec, \xmat) \equiv \{(t_i, \delta_i, \xvec_i'): \, i = 1, \ldots, n \})$.
-In the simplest setting, $\xmat$ could also be a $n \times 1$ vector, e.g. representing the treatment assignment for each individual.
+In the simplest setting, $\xmat$ could just be an $n \times 1$ vector, e.g. representing the treatment assignment for each individual.
 Furthermore, let $(\tvec, \deltavec, \xmat)^b \equiv \{(t_i, \delta_i, \xvec_i')^b: \, i = 1, \ldots, n \})$ denote a similar data set that has been obtained by case resampling with replacement, which we call a *bootstrap sample*.
 We then generate such bootstrap samples $B$ times as it would be done for the permutation data sets $(\tvec, \deltavec)^{\pi}$ (@sec-studperm).
 For each of the $B$ bootstrap samples we now seek to calculate the pseudo-observations (@eq-pseudo) and subsequently estimate a corresponding regression model (@eq-pseudoglm).
-Finally, for any coefficient $\beta$ of such a model we calculate the bootstrap test statistic
+Finally, for any coefficient $\beta$ of such a model we can calculate the bootstrap test statistic
 $$
-Z^b = \left| \frac{\betahat^b - \betahat}{\sehat(\betahat^b)} \right|
+Z^b = \frac{| \betahat^b - \betahat |}{\sehat(\betahat^b)}
 \, .
 $$ {#eq-tstat-boot}
 Whereas $\betahat$ denotes the estimate of $\beta$ that has been obtained using the original data, all other components of (@eq-tstat-boot) with $b$ in the superscript are estimated based on the $b$-th bootstrap sample.
-The rationale of this formula is that "the estimate of $\beta$ from the bootstrap samples should, on average, be equal to $\betahat$, at least asymptotically" [@mackinnon2009] and therefore $Z^b$ should take values that lead to a retention of the null hypothesis.
+The rationale of this formula is that "the estimate of $\beta$ from the bootstrap samples should, on average, be equal to $\betahat$, at least asymptotically" [@mackinnon2009] and therefore $Z^b$ should mimic the distribution of (@eq-tstat-po) under the null hypothesis.
 Using these bootstrap samples, we can now conduct statistical inference similar as it has been done with the studentized permutation test.
 Therefore, a two-sided test for a given significance level $\alpha \in (0, 1)$ is given by
 $$
@@ -264,21 +265,21 @@ However, there is one obstacle to this approach hindering its practical feasibil
 Due to the computation of the pseudo-observations even the asymptotic test (@eq-test-po) already incorporates a resampling scheme.
 Applying a bootstrap on top of that implies a nested resampling procedure, which gets computationally more expensive (a) the larger the original sample is and (b) the more bootstrap samples we want to draw, i.e. the more accurate we want our statistical test in principle to be.
 Such a problem can become apparent quickly.
-E.g. if we had a sample of size $n = 50$ and wanted to draw $B = 1000$ bootstrap samples, then we would need to carry out $n \cdot B = 50000$ computations in total.
-One way to tackle this problem could be to emprace parallel computing capabilities.
+For instance, if we had a sample of size $n = 50$ and wanted to draw $B = 1000$ bootstrap samples, then we would need to carry out $n \cdot B = 50000$ computations in total.
+One way to tackle this problem could be to embrace parallel computing capabilities.
 However, a more subtle approach may be to try to eliminate one of the two resampling levels entirely.
-This is indeed possible by using an approximate version of the pseudo-observations
+This is indeed possible by using an approximate version of the pseudo-observations:
 $$
 \begin{split}
   P_i &= n \hat{\theta} - (n - 1) \hat{\theta}_{-i} \\
   &= \hat{\theta} + (n - 1) (\hat{\theta} - \hat{\theta}_{-i}) \\
   &\approx \hat{\theta} + n \frac{\partial \hat{\theta}}{\partial w_i}
 \end{split}
-\, ,
 $$ {#eq-pseudo-approx}
-which is known as *infinitesimal jackknife* (IJ) pseudo-observations.
-These require that the marginal estimator $\hat{\theta}$ can be written as a function of weights $w_i$ attached to each individual $i = 1, \ldots, n$ in the data.
+These approximations are based on the first order influence function of $\hat{\theta}$ and are known as *infinitesimal jackknife* (IJ) pseudo-observations [@parner2023].
+It is required that the marginal estimator $\hat{\theta}$ can be written as a function of weights $w_i$ attached to each individual $i = 1, \ldots, n$ in the data.
 As pointed out, the advanage over ordinary pseudo-observations obtained by using the jackknife samples is the computational speed.
-Despite this, the loss in numerical accuracy is negligible even for moderate sample sizes, making IJ pseudo-observations an attractive alternative to ordinary pseudo-observations.
+Despite this, the loss in numerical accuracy is negligible even for moderate sample sizes, making IJ pseudo-observations an attractive alternative to ordinary pseudo-observations [@parner2023].
 
-TODO: references and understanding
+Similar to the application of the studentized permutation test, using bootstrap resampling in combination with pseudo-observations we are likely to encounter situations, in which the underlying marginal estimators of the RMST are not uniquely defined at $t^*$ due to right-censoring.
+We employ the same simple strategy that has been used by @horiguchi2020a and @ditzhaus2023 for the permutation methods, i.e. we extend the Kaplan-Meier estimate "horizontally" up to that time point.

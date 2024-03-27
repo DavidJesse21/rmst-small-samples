@@ -213,3 +213,62 @@ ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
   ) +
   scale_x_discrete(limits = rev(levels(dtp$method))) +
   coord_flip()
+
+
+# Table (p-values) ----
+
+box::use(kableExtra[...])
+
+box::use(simfuns2/analyze[setj_percent])
+
+# Obtain p-values and reshape the results for latex table
+dtt = dt_res[, .(method, cutoff, pval)]
+dtt = dcast(dtt, cutoff ~ method, value.var = "pval")
+setcolorder(dtt, neworder = c("cutoff", "asy", "studperm", "po_asy", "po_boot"))
+
+# Also include log-rank test
+pval_lr = survdiff(Surv(time, event) ~ group, data = dt)$pvalue
+dtt[, lr := c(NA_real_, pval_lr, NA_real_)]
+
+# Convert to percent
+setj_percent(dtt, 2:6)
+
+# NAs as empty cells
+options(knitr.kable.NA = '')
+
+# Table
+kbl(
+  dtt,
+  format = "latex",
+  digits = 2,
+  booktabs = TRUE,
+  centering = TRUE,
+  escape = FALSE,
+  col.names = c(r"($t^*$)", "Asy", "Perm", "PO1", "PO2", "LR")
+) |>
+  kable_styling(
+    position = "center",
+    font_size = 12
+  ) |>
+  # Borders
+  column_spec(1, border_right = TRUE) |>
+  column_spec(5, border_right = TRUE) |>
+  # Make it more accessible using stripes options
+  kable_styling(
+    latex_options = "striped",
+    stripe_index = 2,
+    stripe_color = "#e9ecef"
+  ) |>
+  # Legend
+  footnote(
+    general = paste0(
+      r"(\\textit{Abbreviations:} )",
+      "Asy, asymptotic test; ", "Perm, studentized permutation test; ",
+      "PO1, pseudo-observations; ",
+      "PO2, pseudo-observations + bootstrap test; ",
+      "LR, log-rank test."
+    ),
+    general_title = "",
+    escape = FALSE,
+    threeparttable = TRUE
+  )

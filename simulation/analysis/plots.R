@@ -8,8 +8,9 @@ box::use(
 
 box::use(
   simfuns2/analyze[calc_rejection_rates, calc_ci_metrics, setj_samples_alloc, setj_percent],
-  simfuns2/get_funs[get_scenario_table]
+  simfuns2/get_funs[get_scenario_table, get_algo_table]
 )
+
 
 dtr = readRDS(fs$path("simulation", "results", "2024-02-08_results1", ext = "rds"))
 setDT(dtr)
@@ -62,10 +63,6 @@ ggplot(dt1, aes(factor(algo.id), reject)) +
     ~ num_samples,
     labeller = labeller(num_samples = \(x) paste0("N = ", x))
   )
-
-
-dt1[, sum(between(reject, 4.4, 5.6)), by = algo.id]
-dt1[, mean(between(reject, 4.4, 5.6)), by = algo.id]
 
 
 # Power ----

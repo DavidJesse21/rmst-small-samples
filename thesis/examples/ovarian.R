@@ -9,13 +9,17 @@ box::use(
   eventglm[rmeanglm],
   withr[with_seed],
   fs,
-  ggsurvfit[survfit2, ggsurvfit, add_censor_mark]
+  ggsurvfit[survfit2, ggsurvfit, add_censor_mark],
+  data.table.extras[setj_at],
+  kableExtra[...]
 )
 
 box::use(
   rmst/km[rmst_diff_test, rmst_diff_studperm],
-  rmst/pseudo[pseudo_strat, pseudo_infjack, rmst_pseudo_test, rmst_pseudo_boot_test]
+  rmst/pseudo[pseudo_strat, pseudo_infjack, rmst_pseudo_test, rmst_pseudo_boot_test],
+  simfuns2/analyze[setj_percent]
 )
+
 
 dt = survival::ovarian
 setDT(dt)
@@ -285,4 +289,104 @@ ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
   ) +
   scale_x_discrete(limits = rev(levels(dtp$method))) +
   coord_flip()
+
+
+# Table ----
+
+# Obtain p-values and reshape the results for latex table
+dtt = dt_res[variable == "group", .(method, cutoff, pval)]
+dtt = dcast(dtt, cutoff ~ method, value.var = "pval")
+setcolorder(dtt, neworder = c("cutoff", "asy", "studperm", "po_asy", "po_boot", "po_asy_adj", "po_boot_adj"))
+
+# Also include log-rank test
+pval_lr = survdiff(Surv(time, event) ~ group, data = dt)$pvalue
+dtt[, lr := c(NA_real_, pval_lr, NA_real_)]
+
+# Convert to percent
+setj_percent(dtt, 2:8)
+
+# NAs as empty cells
+options(knitr.kable.NA = '')
+
+# Table
+kbl(
+  dtt,
+  format = "latex",
+  digits = 2,
+  booktabs = TRUE,
+  centering = TRUE,
+  escape = FALSE,
+  col.names = c(r"($t^*$)", "Asy", "Perm", "PO1", "PO2", "PO1 Adj", "PO2 Adj", "LR")
+) |>
+  kable_styling(
+    position = "center",
+    font_size = 12
+  ) |>
+  # Borders
+  column_spec(1, border_right = TRUE) |>
+  column_spec(5, border_right = TRUE) |>
+  # Make it more accessible using stripes options
+  kable_styling(
+    latex_options = "striped",
+    stripe_index = 2,
+    stripe_color = "#e9ecef"
+  ) |>
+  # Legend
+  footnote(
+    general = paste0(
+      r"(\\textit{Abbreviations:} )",
+      "Asy, asymptotic test; ", "Perm, studentized permutation test; ",
+      "PO1, pseudo-observations; ",
+      "PO2, pseudo-observations + bootstrap test; ",
+      "LR, log-rank test; ",
+      "Adj, adjusted."
+    ),
+    general_title = "",
+    escape = FALSE,
+    threeparttable = TRUE
+  )
+
+
+# Table 2 ----
+
+# Obtain p-values and reshape the results for latex table
+dtt = dt_res[variable == "group", .(method, cutoff, pval)]
+dtt = dcast(dtt, method ~ cutoff, value.var = "pval")
+setnames(dtt, old = as.character(c(500, 750, 1000)), new = \(x) paste0("t", x))
+
+# Change row order (based on methods)
+dtt = dtt[c(1, 6, 2:5)]
+
+# Also include log-rank test
+pval_lr = survdiff(Surv(time, event) ~ group, data = dt)$pvalue
+dtt = rbindlist(list(
+  dtt,
+  data.table(method = "lr", t500 = NA_real_, t750 = pval_lr, t1000 = NA_real_)
+))
+
+# Convert to percent
+setj_percent(dtt, 2:4)
+
+# Format p-values for table
+format_pval = \(x) fifelse(x < 0.01, "<0.01", as.character(round(x, 2)))
+setj_at(dtt, 2:4, format_pval)
+
+# Need to relabel methods
+dtt[, method := c("Asy", "Perm", "PO1", "PO2", "PO1 Adj", "PO2 Adj", "LR")]
+
+# NAs as empty cells
+options(knitr.kable.NA = '')
+
+# Table
+kbl(
+  dtt,
+  format = "latex",
+  booktabs = TRUE,
+  escape = FALSE,
+  col.names = c("Method", sprintf("$t^* = %d$", c(500, 750, 1000)))
+) |>
+  kable_styling(
+    full_width = TRUE
+  ) |>
+  column_spec(1, width = "1.5cm", border_right = TRUE)
 

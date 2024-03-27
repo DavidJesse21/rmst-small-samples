@@ -6,18 +6,20 @@ bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 
 It is considered good practice to complement statistical simulation studies with applications to real-world data sets, e.g. to illustrate if or to what extent the choice of method matters in practical applications [@friedrich2024].
 Here, this is one goal we want to achieve, thus highlighting similarities and differences between the methods when applied to the same real-world problem.
+
 Moreover, we want to look into an aspect of the methods based on pseudo-observations that we have not covered in the simulation study, that is the possibility to directly adjust for covariates.
-The latter may be particularly interesting as it is known from other contexts that the incorporation of prognostic covariates into the analysis can increase the precision of treatment effect estimates and consequently increase the power of associated tests [@kahan2014].
-This is also true for analyses with time-to-event endpoints using the hazard ratio as effect measure [@kahan2014] but there also exists some similar evidence for RMST differences, though not based on pseudo-observations methods [@karrison2018].
-Investigating this idea further might be particularly interesting in view of the finding that the pseudo-observations bootstrap method could be too conservative in null scenarios and vice versa often had less power than its comparators in alternative scenarios.
-Of course, a systematic assessment of these thoughts would require an additional simulation study.
-Nonetheless, we might be able to obtain an initial impression for this using exemplary data sets.
+This facet is particularly interesting as it is known from other contexts that the incorporation of prognostic covariates into the analysis can increase the precision of treatment effect estimates and consequently increase the power of associated tests [@kahan2014].
+This is also true for analyses with time-to-event endpoints using the hazard ratio as effect measure [@kahan2014] but there also exists some similar evidence for RMST differences already, though not based on pseudo-observations methods [@karrison2018].
+Investigating this idea further might be especially interesting in view of the finding that the pseudo-observations bootstrap method could be too conservative in null scenarios and vice versa often had less power than its comparators in alternative scenarios.
+Of course, a systematic assessment of these thoughts requires further research and simulation studies.
+Nonetheless, we might be able to obtain an initial impression of this idea using exemplary data sets.
+
 In the following, we compare the different methods for estimating and testing RMST differences examined in this thesis using three different data sets.
 Similar as for the simulation study, we set the nominal significance level $\alpha$ to $5\%$ and consider a two-sided testing problem.
 For both, the studentized permutation and the pseudo-observations bootstrap test, we use $N_{\text{res}} = 5000$ resampling iterations.
 Moreover, for each example, we consider three different cutoff time points $t^*$ in order to highlight the dependence of the conclusions of this choice.
-As @ditzhaus2023 have noted in their illustration, we also want to emphasize that no adjustments for multiple testing are made.
-Thus, each combination of the chosen cutoff time point and the chosen method must be viewed as if it was prespecified although this is obviously not the case.
+As @ditzhaus2023 noted in their illustration, we also want to emphasize that no adjustments for multiple testing are made.
+Thus, each combination of a data set, the cutoff time point and the respective method must be viewed as if it was a single prespecified test although this is obviously not the case.
 
 
 ## @hellmann2018 {#sec-ex-hellmann}
@@ -65,25 +67,11 @@ The first example data set is the same as the one presented by @ditzhaus2023, wh
 In the study by @hellmann2018 the authors investigate the effect of nivolumab plus ipilimumab compared to chemotherapy for the treatment of non-small-cell lung cancer on progression-free survival.
 The original population in the study included 299 patients with a high tumor mutational burden.
 Besides the main study the authors also conducted some subgroup analyses.
-For one of these analyses they stratified the study population based on the tumor PD-L1 (programmed death ligand 1) expression being less than or greater or equal than $1\%$.
+For one of these analyses they stratified the sample based on the tumor PD-L1 (programmed death ligand 1) expression being less than or greater or equal than $1\%$.
 The subpopulation of patients with an PD-L1 expression of $< 1\%$ then consisted of 86 patients only, of which 48 were assigned to chemotherapy and 38 to nivolumab plus ipilimumab.
-@fig-hellmann displays the Kaplan-Meier curves that have been estimated from the reconstructed data.
-As it is often the case in oncology trials assessing immunotherapies in comparison with a chemotherapy, here we can also observe a delayed effect of the nivolumab plus ipilimumab treatment, resulting in crossing survival curves, making the proportional hazards assumption questionable.
-In fact, the proportional hazards assumption can even be formally rejected using the test for proportional hazards by @grambsch1994, resulting in a p-value of $0.01\%$, displayed in the top-right corner of the plot.
-
-Just as @ditzhaus2023 did, we now consider RMST-based analyses for the treatment effect of nivolumab plus ipilimumab against chemotherapy using the methods presented in this thesis.
-Likewise, we consider the cutoff values $t^* = 12,\, 15,\, 18$ months, for which the results are shown in @fig-res-hellmann.
-The figure displays the point estimate for each method as well as its 95%-confidence interval.
-In addition to that TODO conveys the corresponding p-values for a more detailed comparison of the different methods.
-As already noted in @sec-sim-design the point estimates of the different methods are either exactly the same, as it is the case for the standard asymptotic and the studentized permutation method, or nearly identical, since in the end, all methods are based on the Kaplan-Meier estimator of the survival function.
-Hence, of greater interest are the confidence intervals and test decisions of the different methods.
-For $t^* = 12$ months all methods just retain the null hypothesis of no treatment effect difference for the given significance level $\alpha = 5\%$.
-With regard to the standard asymptotic test, the different conclusion drawn here as opposed to @ditzhaus2023 is due to the fact that we have used Greenwood's variance estimator (@eq-varest1) instead of the Nelson-Aalen plug-in estimator (@eq-varest2).
-
-For $t^* = 15,\, 18$, however, all methods reject the null hypothesis in favour of the alternative that, on average, the nivolumab plus ipilimumab therapy prolongs progression-free survival when comparing it to chemotherapy.
-Thus, in terms of a binary test decision, all methods lead to the same implications.
-Nonetheless, we can see that the confidence intervals of the studentized permutation method and those of the pseudo-observations methods are quite similar, whereas those of the standard asymptotic approach are a bit narrower.
-Therefore, concerning the quantification of uncertainty, the choice of the method does have an impact.
+@fig-hellmann displays the Kaplan-Meier curves of the two groups that have been estimated using the reconstructed data.
+As it is often the case in oncology trials comparing immunotherapies with a chemotherapy, we can also observe a delayed effect of the nivolumab plus ipilimumab treatment, resulting in crossing survival curves, making the proportional hazards assumption questionable.
+In fact, the proportional hazards assumption can formally be rejected using the test for proportional hazards by @grambsch1994, resulting in a p-value of $0.01\%$, displayed in the top-right corner of the plot.
 
 ```{r}
 #| label: fig-res-hellmann
@@ -115,6 +103,90 @@ ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
   scale_x_discrete(limits = rev(levels(dtp$method))) +
   coord_flip()
 ```
+
+```{r}
+#| label: tbl-res-hellmann
+#| tbl-cap: "P-Values in % for the reconstructed data from \\cite{hellmann2018}"
+
+# Obtain p-values and reshape the results for latex table
+dtt = dt_res[variable == "group", .(method, cutoff, pval)]
+dtt = dcast(dtt, method ~ cutoff, value.var = "pval")
+setnames(dtt, old = as.character(c(12, 15, 18)), new = \(x) paste0("t", x))
+
+# Reorder rows by method
+dtt = dtt[c(1, 4, 2:3)]
+
+# Also include log-rank test
+pval_lr = survdiff(Surv(time, event) ~ group, data = dt)$pvalue
+dtt = rbindlist(list(
+  dtt,
+  data.table(method = "lr", t12 = NA_real_, t15 = pval_lr, t18 = NA_real_)
+))
+
+# Convert to percent
+setj_percent(dtt, 2:4)
+setj_at(dtt, 2:4, format_pval)
+
+# Need to relabel methods
+dtt[, method := c("Asy", "Perm", "PO1", "PO2", "LR")]
+
+# NAs as empty cells
+options(knitr.kable.NA = '')
+
+# Table
+kbl(
+  dtt,
+  format = "latex",
+  booktabs = TRUE,
+  escape = FALSE,
+  col.names = c("Method", sprintf("$t^* = %d$", c(12, 15, 18))),
+  align = c("l", rep("r", 3)),
+  linesep = c(rep("", 3), "\\hline", ""),
+  position = "h"
+) |>
+  # Column specifications
+  column_spec(1, width = "2.5cm", border_right = TRUE) |>
+  column_spec(2:4, width = "3.2cm") |>
+  # IMPORTANT: this makes it somehow work
+  kable_styling(position = "center", font_size = 10) |>
+  # Organize rows by type of method
+  pack_rows(
+    r"(Tests for $\\mu_1(t^*) = \\mu_0(t^*)$)", 1, 4,
+    bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE, escape = FALSE
+  ) |>
+  pack_rows(
+    r"(Test for $S_1 = S_0$)", 5, 5,
+    bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE, escape = FALSE
+  ) |>
+  # Legend
+  footnote(
+    general = paste0(
+      r"(\\textit{Abbreviations:} )",
+      "Asy, asymptotic test; ", "Perm, studentized permutation test; ",
+      "PO1, pseudo-observations asymptotic; ",
+      "PO2, pseudo-observations bootstrap; ",
+      "LR, log-rank test."
+    ),
+    escape = FALSE,
+    general_title = "",
+    threeparttable = TRUE
+  )
+```
+
+Just as @ditzhaus2023 did, we now consider RMST-based analyses for the treatment effect of nivolumab plus ipilimumab against chemotherapy using the methods presented in this thesis.
+Likewise, we consider the cutoff values $t^* = 12,\, 15,\, 18$ months, for which the results are shown in @fig-res-hellmann.
+The figure displays the point estimate for each method as well as its 95%-confidence interval.
+In addition to that @tbl-res-hellmann conveys the corresponding p-values for a more detailed comparison of the different methods augmented by the p-value of the log-rank test for testing the null hypothesis $S_1 = S_0$.
+
+As we have already noted in @sec-sim-design and can be seen in @fig-res-hellmann, the point estimates of the different methods are either exactly the same, as it is the case for the standard asymptotic and the studentized permutation method, or are nearly identical.
+Therefore, of greater interest are the confidence intervals and test decisions of the different methods.
+For $t^* = 12$ months all methods just retain the null hypothesis of no treatment effect difference for a significance level of $\alpha = 5\%$.
+With regard to the standard asymptotic test, the different conclusion drawn here as opposed to @ditzhaus2023 is due to the fact that we have used Greenwood's variance estimator (@eq-varest1) instead of the Nelson-Aalen plug-in estimator (@eq-varest2).
+With respect to the other methods the studentized permutation test suggests the least evidence for concluding that in fact there was a treatment effect followed by the bootstrap approach (see @tbl-res-hellmann).
+For $t^* = 15,\, 18$, however, all methods reject the null hypothesis in favour of the alternative that, on average, the nivolumab plus ipilimumab therapy prolongs progression-free survival when comparing it to chemotherapy.
+Thus, in terms of a binary test decision, all methods lead to the same implication.
+Nonetheless, we can see that the confidence intervals of the studentized permutation method and those of the pseudo-observations methods are quite similar, whereas those of the standard asymptotic approach are a bit narrower.
+Therefore, concerning the quantification of uncertainty, the choice of the method does have an impact.
 
 
 ## @edmonson1979 {#sec-ex-ovarian}
@@ -161,10 +233,11 @@ The first treatment regimen consisted of cyclophosphamide only, whereas the othe
 The data set is publicly available in the R `{survival}` package [@R-survival] as the "ovarian" data set.
 Like before, we plot and present the Kaplan-Meier curves in @fig-ovarian.
 Visually, we might expect a positive treatment effect in favour of the combination regimen.
-However, towards the end of the study, the differences in survival probability become smaller, making this deduction less clear.
+However, towards the end of the study, the differences in survival probabilities become smaller, making this deduction less clear.
 In addition, we have to consider that this study is extremely small with only 13 patients assigned to each treatment group, respectively.
 Regarding the proportional hazards assumption, here it is more vague, whether it holds or is violated.
 The Grambsch-Therneau test outputs a p-value of about $10\%$, thus retaining the null hypothesis that the proportional hazards assumption does hold.
+
 Nonetheless, we keep considering RMST-based analyses, again choosing three different cutoff time points, here $t^* = 500,\, 750,\, 1000$ days.
 Furthermore, what makes this data set interesting is the fact that, in addition to the endpoint variables and the treatment assignment, it also consists of additional covariates.
 For instance, it contains the age of the patients as well as their ECOG (Eastern Cooperative Oncology Group) performance scores measured at baseline.
@@ -173,7 +246,7 @@ In the given example, however, only patients with a score of 1 or 2 were observe
 Therefore, we can reduce this variable to a binary covariate, using the score 2 as reference category.
 Ultimately, this means that for the given example we can compare not only 4 but 6 different methods for estimating the RMST difference between the treatment regimens.
 The two added methods result from an adjusted version of the pseudo-observations approaches using the aforementioned covariates.
-Corresponding results are presented in @fig-res-ovarian.
+Corresponding results are presented in @fig-res-ovarian and @tbl-res-glioma for the effect estimates and p-values, respectively.
 
 ```{r}
 #| label: fig-res-ovarian
@@ -205,20 +278,95 @@ ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
   coord_flip()
 ```
 
+```{r}
+#| label: tbl-res-ovarian
+#| tbl-cap: "P-Values in % for the data from \\cite{edmonson1979}"
+
+# Obtain p-values and reshape the results for latex table
+dtt = dt_res[variable == "group", .(method, cutoff, pval)]
+dtt = dcast(dtt, method ~ cutoff, value.var = "pval")
+setnames(dtt, old = as.character(c(500, 750, 1000)), new = \(x) paste0("t", x))
+
+# Reorder rows by method
+dtt = dtt[c(1, 6, 2, 4, 3, 5)]
+
+# Also include log-rank test
+pval_lr = survdiff(Surv(time, event) ~ group, data = dt)$pvalue
+dtt = rbindlist(list(
+  dtt,
+  data.table(method = "lr", t500 = NA_real_, t750 = pval_lr, t1000 = NA_real_)
+))
+
+# Convert to percent
+setj_percent(dtt, 2:4)
+setj_at(dtt, 2:4, format_pval)
+
+# Need to relabel methods
+dtt[, method := c("Asy", "Perm", "PO1", "PO2", "PO1 Adj", "PO2 Adj", "LR")]
+
+# NAs as empty cells
+options(knitr.kable.NA = '')
+
+# Table
+kbl(
+  dtt,
+  format = "latex",
+  booktabs = TRUE,
+  escape = FALSE,
+  col.names = c("Method", sprintf("$t^* = %d$", c(500, 750, 1000))),
+  align = c("l", rep("r", 3)),
+  linesep = c(rep("", 3), "\\hline", "", "\\hline", "")
+) |>
+  # Column specifications
+  column_spec(1, width = "2.5cm", border_right = TRUE) |>
+  column_spec(2:4, width = "3.2cm") |>
+  #
+  kable_styling(position = "center", font_size = 10) |>
+  # Organize rows by type of method
+  pack_rows(
+    r"(Tests for $\\mu_1(t^*) = \\mu_0(t^*)$)", 1, 4,
+    bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE, escape = FALSE
+  ) |>
+  pack_rows(
+    r"(Adjusted tests for $\\mu_1(t^*) = \\mu_0(t^*)$)", 5, 6,
+    bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE, escape = FALSE
+  ) |>
+  pack_rows(
+    r"(Test for $S_1 = S_0$)", 7, 7,
+    bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE, escape = FALSE
+  ) |>
+  # Legend
+  footnote(
+    general = paste0(
+      r"(\\textit{Abbreviations:} )",
+      "Asy, asymptotic test; ", "Perm, studentized permutation test; ",
+      "PO1, pseudo-observations asymptotic; ",
+      "PO2, pseudo-observations bootstrap; ",
+      "Adj, adjusted; ",
+      "LR, log-rank test."
+    ),
+    escape = FALSE,
+    general_title = "",
+    threeparttable = TRUE
+  )
+```
+
 As previously, the point estimates of the unadjusted approaches are (nearly) identical.
 Other than that, the findings obtained using different methods are more diverse than for the Hellmann example.
-Particularly, for $t^* = 500$ days we have that the usage of the asymptotic method leads to a rejection of the null hypothesis of no RMST differene whereas all other undadjusted methods retain that null hypothesis for the given significance level.
-On the other hand, for $t^* = 750$ and $t^* = 1000$ days all undadjusted approaches, including the asymptotic test, retain the null hypothesis, i.e. implying similar conclusions.
-Despite this, the relevance of the choice of the concrete method becomes apparent.
-For example, for all time points the confidence interval of the bootstrap method is the widest and the p-value the largest.
-Using pseudo-observations together with the standard normal approximation results in somewhat narrower confidence intervals and smaller p-values.
-Comparable to the results of the simulation study, the outcomes obtained with the studentized permutation method are in between those of the two pseudo-observations approaches.
+Particularly, for $t^* = 500$ days we have that the usage of the standard asymptotic method leads to a rejection of the null hypothesis of no RMST differene whereas all other undadjusted methods retain that null hypothesis for the significance level $\alpha = 5\%$ (@tbl-res-ovarian).
+On the other hand, for $t^* = 750$ and $t^* = 1000$ days all undadjusted approaches, including the asymptotic test, retain the null hypothesis with p-values of at least 15%, i.e. implying similar conclusions.
+Knowing well that the log-rank test tests a different hypothesis, it also supports the claim that there is no treatment effect.
+
+Despite this, the relevance of the choice of the concrete method becomes more apparent here than for the Hellmann example.
+For instcance, in @fig-res-ovarian we can see that the confidence intervals of the standard asymptotic approach are much narrower than those of the bootstrap method.
+The confidence intervals of the studentized permutation and asymptotic pseudo-observations approaches, on the other hand, can be seen as a kind of compromise between the aformentioned two methods.
 
 Of greater interest, however, are the results that we obtain with the pseudo-observations methods for which we adjust for additional covariates.
 As mentioned before, the adjusted methods include the age of the patients and their ECOG performance score as further covariates.
-For all time points, we can see that this results in both, a treatment effect estimate that is greater in magnitude and narrower confidence intervals associated with it.
-In the case of $t^* = 500$ this goes so far that the treatment effect estimate is deemed statistically significant, even when considering the bootstrap method that has been shown to exhibit a conservative behaviour in scenarios with very small sample sizes.
-Conversely, for $t^* = 750,\, 1000$ the effect estimates are again considered insignificant, but the properties of a larger effect estimate and narrower confidence intervals remain.
+In @fig-res-ovarian we can see that adjustment for covariates leads to both, a larger treatment effect estimate as well as narrower confidence intervals associated with it.
+For $t^* = 500$ this goes so far that the treatment effect is deemed statistically significant, even when considering the bootstrap method that we have observed to make rather conservative test decisions in scenarios with such small sample sizes (@tbl-res-ovarian).
+Nonetheless, for $t^* \in \{750,\, 1000\}$ the adjusted methods also retain the null hypothesis, though the p-values are much smaller in this case.
+In the same manner, the confidence intervals also retain much narrower compared to the unadjusted methods.
 
 
 ## @grana2002 {#sec-ex-glioma}
@@ -254,7 +402,7 @@ ggsurvfit(
   theme(legend.position = "top") +
   scale_y_continuous(limit = c(0, 1)) +
   annotate(
-    "text", x = 55, y = 0.95,
+    "text", x = 55, y = 0.95, size = 5,
     label = sprintf("Grambsch-Therneau test (p-value): %.2f%%", pval_gt * 100)
   )
 ```
@@ -267,11 +415,15 @@ Here, we consider the overall survival endpoint only.
 The data were made publicly available by the authors in form of tables in their paper.
 Besides the time-to-event endpoints and the treatment assignment they also recorded further characteristics, including the age of the patients as well as the glioma type (grade III or glioblastoma).
 Furthermore, it is worth noticing that treatment assignment was not randomized.
-In their publication the authors analyzed the data separately for the two different glioma types using the log-rank test as their primary analysis tool.
-Here, for simplicity, we consider the whole data set and conduct RMST-based analyses.
-Again, the marginal Kaplan-Meier estimates of the survival curves for the two treatment regimens are depicted in @fig-glioma.
-Moreover, we again compare the results obtained using the different methods based on undadjusted analyses on the one hand and include adjusted pseudo-observations regression models using the age and histology (glioma type) as control variables on the other hand.
-The corresponding results are shown in @fig-res-glioma.
+Like before, we plot the Kaplan-Meier estimates of the survival functions for the two treatment regimens in @fig-glioma.
+As for the Edmonson example, based on this figure we can expect that there is a treatment effect in favour of the adjuvant therapy.
+This impression is even more marked here, as the separation of the survival curves is more consistent and increases over time.
+As a result, the p-value of the Grambsch-Therneau test is even larger than for the Edmonson example.
+
+In their publication, @grana2002 analyzed the data separately for the two different glioma types using the log-rank test as the primary analysis tool.
+For the RMST-based analyses we consider the whole data set instead for simplicity.
+With respect to the adjusted methods we then consider the glioma type as well as the age of the patients as control variables.
+As in the previous example we also compare the undadjusted methods with each other.
 
 ```{r}
 #| label: fig-res-glioma
@@ -304,6 +456,89 @@ ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
   coord_flip()
 ```
 
-First and foremost, we can conclude that in this example, for all of the selected cutoff time points ($t^* = 20,\, 30,\, 40$ months), the test decision is the same for all methods, determining a positive treatment effect of the adjuvant therapy.
-Among the unadjusted methods the observed differences regarding the width of the confidence intervals are the same as for the previous examples.
-For the adjusted methods we can see that the inclusion of the covariates leads to smaller but also more precise (narrower confidence intervals) effect estimates.
+```{r}
+#| label: tbl-res-glioma
+#| tbl-cap: "P-Values in % for the data from \\cite{grana2002}"
+
+# Obtain p-values and reshape the results for latex table
+dtt = dt_res[variable == "group", .(method, cutoff, pval)]
+dtt = dcast(dtt, method ~ cutoff, value.var = "pval")
+setnames(dtt, old = as.character(c(20, 30, 40)), new = \(x) paste0("t", x))
+
+# Reorder rows by method
+dtt = dtt[c(1, 6, 2, 4, 3, 5)]
+
+# Also include log-rank test
+pval_lr = survdiff(Surv(time, event) ~ group, data = dt)$pvalue
+dtt = rbindlist(list(
+  dtt,
+  data.table(method = "lr", t20 = NA_real_, t30 = pval_lr, t40 = NA_real_)
+))
+
+# Convert to percent
+setj_percent(dtt, 2:4)
+setj_at(dtt, 2:4, format_pval)
+
+# Need to relabel methods
+dtt[, method := c("Asy", "Perm", "PO1", "PO2", "PO1 Adj", "PO2 Adj", "LR")]
+
+# NAs as empty cells
+options(knitr.kable.NA = '')
+
+# Table
+kbl(
+  dtt,
+  format = "latex",
+  booktabs = TRUE,
+  escape = FALSE,
+  col.names = c("Method", sprintf("$t^* = %d$", c(20, 30, 40))),
+  align = c("l", rep("r", 3)),
+  linesep = c(rep("", 3), "\\hline", "", "\\hline", "")
+) |>
+  # Column specifications
+  column_spec(1, width = "2.5cm", border_right = TRUE) |>
+  column_spec(2:4, width = "3.2cm") |>
+  #
+  kable_styling(position = "center", font_size = 10) |>
+  # Organize rows by type of method
+  pack_rows(
+    r"(Tests for $\\mu_1(t^*) = \\mu_0(t^*)$)", 1, 4,
+    bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE, escape = FALSE
+  ) |>
+  pack_rows(
+    r"(Adjusted tests for $\\mu_1(t^*) = \\mu_0(t^*)$)", 5, 6,
+    bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE, escape = FALSE
+  ) |>
+  pack_rows(
+    r"(Test for $S_1 = S_0$)", 7, 7,
+    bold = FALSE, latex_gap_space = "0.5em", hline_after = TRUE, escape = FALSE
+  ) |>
+  # Legend
+  footnote(
+    general = paste0(
+      r"(\\textit{Abbreviations:} )",
+      "Asy, asymptotic test; ", "Perm, studentized permutation test; ",
+      "PO1, pseudo-observations asymptotic; ",
+      "PO2, pseudo-observations bootstrap; ",
+      "Adj, adjusted; ",
+      "LR, log-rank test."
+    ),
+    escape = FALSE,
+    general_title = "",
+    threeparttable = TRUE
+  )
+```
+
+Regardless of the chosen cutoff time point ($t^* \in \{20,\, 30,\, 40\}$), in this example, all tests make the same decision, signifying a positive treatment effect of the adjuvant therapy (@tbl-res-glioma).
+As it can be expected visually form @fig-glioma the log-rank test does not deviate from this.
+
+When taking a closer look at the point estimates and their confidence intervals in @fig-res-glioma we can see two things.
+
+As for the previous two examples the width of the confidence interval varies slightly depending on the chosen method.
+The patterns are again consistent with our other findings, i.e. the standard asymptotic approach having the narrowest confidence interval and the bootstrap method having the widest one.
+Regarding the adjusted methods, there is a similar effect as we have seen it in the Edmonson example.
+Hence, there is a shift in the treatment effect estimate and the confidence intervals shrink.
+Nonetheless, there are qualitative differences in this comparison.
+Previously, adjusting for covariates led to an effect estimate that has a larger magnitude.
+Here, the opposite is the case, i.e. covariate adjustment leads to a smaller effect estimate.
+While the confidence intervals obtained using covariate adjustment are smaller than those of the undadjusted methods, the differences are less remarkable in this example.

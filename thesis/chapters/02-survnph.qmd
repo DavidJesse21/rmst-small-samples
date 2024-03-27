@@ -21,7 +21,7 @@ For this reason, we introduce the treatment indicator variable $Z \in \{0, 1\}$ 
 Alternatively, the group associations may also be indicated using the subscript $j$ with the same attributions as for $Z$.
 Lastly, $\xvec_i \in \real^{p}$ is used for denoting a vector of $p$ covariates associated with an individual $i$.
 Besides the treatment assignment this vector might record other characteristics of interest such as the age of a patient.
-Correspondingly, $\xmat \in \real^{n \times (p+1)}$ denotes the design matrix for a whole data set.[^1]
+Correspondingly, $\xmat \in \real^{n \times p}$ denotes the design matrix for a whole sample of size $n$.[^1]
 
 The random variable $T$ can be characterized by its *distribution function*
 $$
@@ -81,7 +81,7 @@ HR(t) = \frac{h_1(t)}{h_0(t)} = \theta \quad \forall \, t
 $$ {#eq-phr}
 Here, $\theta \in (0, \infty)$ is some constant highlighting this assumption, which is known as the *proportional hazards* assumption.
 This assumption may or may not hold, which can be illustrated using the Weibull distribution as a theoretical example.
-The hazard function of the Weibull distribution is [@kalbfleisch2002, Chapter 2.2.]
+The hazard function of the Weibull distribution is [@kalbfleisch2002, Chapter 2.2]
 $$
 h(t) = \lambda \alpha (\lambda t)^{\alpha - 1}
 \, ,
@@ -288,7 +288,7 @@ H_1: S_1(t) \neq S_0(t) \; \text{for at least one } t
 $$ {#eq-lrtest-problem}
 While the log-rank test for the testing problem (@eq-lrtest-problem) is valid under both, proportional and non-proportional hazards, it loses power in the case of NPH [@rufibach2019].
 However, the bigger issue can be considered the fact that the underlying estimand of the log-rank test is the hazard ratio of the Cox model [@rufibach2019].
-Thus, while the log-rank test may still be applied, the interpretation of the associated effect becomes ambiguous.
+Thus, while the log-rank test may still be applied, the interpretation of the associated effect estimate becomes ambiguous.
 
 
 ## Restricted Mean Survival Time {#sec-rmst}
@@ -413,7 +413,7 @@ $$
   \prod_{t_j \leq t} \left(1 - \frac{d_j}{Y_j}\right) & \text{for } t \geq t_1
 \end{cases}
 $$
-Here, $t_j$ ($j = 1, 2, \ldots, m$) denote the ordered and ditinct event times observed in the survival data.
+Here, $t_j$ ($j = 1, 2, \ldots, m$) denote the ordered and distinct event times observed in the survival data.
 Moreover, $Y_j$ denotes the number of individuals at risk just prior to $t_j$ and $d_j$ the number of observed events at $t_j$. 
 The reasons for the usage of the Kaplan-Meier estimator for estimating the RMST are twofold.
 On the one hand, using a non-parametric estimator avoids making any possibly false assumptions about the shape of the survival curve.
@@ -422,7 +422,7 @@ Specifically, the point estimator utilizing the Kaplan-Meier estimator of the su
 $$
 \muhat(t^*) = \sum_{j=0}^D (t_{j+1} - t_j) \hat{S}(t_j) \, ,
 $$ {#eq-pointest}
-where as before $t_1 < t_2 < \ldots < t_D$ denote the ordered and distinct event times observed in the survival data and $t_{D+1} = t^*$.
+where like before $t_1 < t_2 < \ldots < t_D$ denote the ordered and distinct event times observed in the survival data and $t_{D+1} = t^*$.
 An estimator for the variance of (@eq-pointest) based on Greenwood's formula is given by [@hasegawa2020]
 $$
 \Varhat[\muhat(t^*)] = \sum_{j=1}^D 

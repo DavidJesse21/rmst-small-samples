@@ -434,6 +434,22 @@
       ],
       "Hash": "b4c06e554f33344e044ccd7fdca750a9"
     },
+    "data.table.extras": {
+      "Package": "data.table.extras",
+      "Version": "0.1.0",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "DavidJesse21",
+      "RemoteRepo": "data.table.extras",
+      "RemoteRef": "main",
+      "RemoteSha": "113a19fb4e0e97af711dfb47a0b2ca67b19c30d1",
+      "Requirements": [
+        "checkmate",
+        "data.table"
+      ],
+      "Hash": "d6cb5b7fcb83351204f2978601aaf344"
+    },
     "deSolve": {
       "Package": "deSolve",
       "Version": "1.40",

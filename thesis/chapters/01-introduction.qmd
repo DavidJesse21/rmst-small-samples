@@ -63,7 +63,7 @@ In @sec-survnph we first introduce basic concepts and notations used in survival
 Furthermore, we briefly elucidate the proportional hazards assumption and the hazard ratio as corresponding effect measure as well as statistical methods employing these concepts.
 For situations in which this assumption is not met we introduce the restricted mean survival time as an alternative estimand for the hazard ratio.
 Next, we present different methods for conducting statistical inference based on the RMST in @sec-inference.
-Here, we start by explicitly formulating the statistical testing problem and then continue by explaining all methods in detail.
+Here, we start by explicitly formulating the statistical testing problem and then continue by explaining all methods under investigation in this thesis in detail.
 These methods include the asymptotic test, the studentized permutation test as well as the two aforementioned methods based on pseudo-observations.
 Following this, we present the design and results of our simulation study benchmarking these methods in @sec-simulation.
 To complement the simulation study with practical examples we apply these methods on some real-world data sets in @sec-examples.
