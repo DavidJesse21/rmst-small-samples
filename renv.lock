@@ -27,6 +27,13 @@
       ],
       "Hash": "3e0051431dff9acfe66c23765e55c556"
     },
+    "KMsurv": {
+      "Package": "KMsurv",
+      "Version": "0.1-5",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "aee647d15e5541ad44d157f7b78fda01"
+    },
     "MASS": {
       "Package": "MASS",
       "Version": "7.3-60",

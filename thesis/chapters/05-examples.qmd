@@ -2,6 +2,66 @@
 bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 ---
 
+```{r}
+# FPM functions ----
+
+fit_fpm = function(data, df1 = 3, df2 = 2) {
+  li_anc = rep(list(~ group), df2)
+  names(li_anc) = paste0("gamma", 1:df2)
+  
+  m = flexsurvspline(
+    Surv(time, event) ~ group, data = data,
+    k = df1 - 1, anc = li_anc
+  )
+  
+  return(m)
+}
+
+plot_fpm = function(m, t_eval, type = c("survival", "hazard", "HR"), hr_order = 0:1, ...) {
+  type = match.arg(type, c("survival", "hazard", "HR"))
+  
+  li_dt = summary(
+    m,
+    type = if (type == "survival") "survival" else "hazard",
+    t = t_eval,
+    ci = FALSE
+  )
+  
+  invisible(lapply(li_dt, setDT))
+  invisible(lapply(names(li_dt), function(x) {
+    li_dt[[x]][, group := sub("group=(.*)", "\\1", x)]
+  }))
+  
+  dt = rbindlist(li_dt)
+  dt[, group := factor(group, levels = sub("group=(.*)", "\\1", names(li_dt)))]
+  
+  # Survival and hazards
+  if (type %in% c("survival", "hazard")) {
+    p = ggplot(dt, aes(time, est, color = group)) +
+      geom_line(...)
+  } else {
+    # Hazard ratio
+    dt = dcast(dt, time ~ group, value.var = "est")
+    setnames(dt, old = 2:3, new = paste0("haz", hr_order))
+    dt[, hr := haz0 / haz1]
+    
+    p = ggplot(dt, aes(time, hr)) +
+      geom_line(...)
+  }
+  
+  return(p)
+}
+
+
+# ggplot ----
+
+blank_x = theme(
+  axis.title.x = element_blank(),
+  axis.text.x = element_blank(),
+  axis.ticks.x = element_blank()
+)
+```
+
 # Empirical Examples {#sec-examples}
 
 It is considered good practice to complement statistical simulation studies with applications to real-world data sets, e.g. to illustrate if or to what extent the choice of method matters in practical applications [@friedrich2024].
@@ -27,8 +87,8 @@ Thus, each combination of a data set, the cutoff time point and the respective m
 ```{r}
 #| label: fig-hellmann
 #| fig-width: 10
-#| fig-height: 6
-#| fig-cap: "Kaplan-Meier curves of the reconstructed data from @hellmann2018"
+#| fig-height: 10
+#| fig-cap: "Estimated survival functions for the reconstructed data from @hellmann2018"
 
 # Read Hellmann data
 load(here(fs$path("data", "Hellmann", ext = "Rdata")))
@@ -36,15 +96,16 @@ dt = data
 rm(data)
 setDT(dt)
 
-# Grambsch-Therneau test
-x = cox_zph(coxph(Surv(time, event) ~ group, data = dt, x = TRUE))
-pval_gt = x$table[1, "p"]
+# Cox HR
+cox = coxph(Surv(time, event) ~ group, data = dt, x = TRUE)
+cox_hr = unname(exp(coef(cox)))
 
-# Kaplan-Meier plots
-ggsurvfit(
+# Kaplan-Meier plot
+p_km = ggsurvfit(
   survfit2(Surv(time, event) ~ group, data = dt),
   linewidth = 1.1
 ) +
+  theme_bw(base_size = 16) +
   scale_color_manual(
     name = "Treatment",
     values = c("#E69F00", "#56B4E9"),
@@ -53,14 +114,50 @@ ggsurvfit(
       "Nivolumab + Ipilimumab"
     )
   ) +
-  labs(x = "\nTime (Months)", y = "Survival probability\n") +
+  xlab(NULL) +
+  blank_x +
+  ylab("Survival probability\n") +
   scale_y_continuous(limit = c(0, 1)) +
-  theme_bw(base_size = 16) +
   theme(legend.position = "top") +
-  annotate(
-    "text", x = 17.5, y = 0.95, size = 5,
-    label = sprintf("Grambsch-Therneau test (p-value): %.2f%%", pval_gt * 100)
+  scale_x_continuous(limits = c(0, 25))
+
+# For FPMs
+dt2 = copy(dt)
+dt2[, group := fifelse(group == 0, "Chemotherapy", "Nivolumab + Ipilimumab")]
+
+# FPM
+m = fit_fpm(dt2, 3, 2)
+t_eval = seq(0.1, 25, by = 0.1)
+
+# Hazards
+p_haz = plot_fpm(m , t_eval, "hazard", linewidth = 1.1)
+p_haz = p_haz +
+  xlab(NULL) +
+  blank_x +
+  ylab("Hazard Rate\n") +
+  scale_color_manual(
+    name = "Treatment",
+    values = c("Chemotherapy" = "#E69F00", "Nivolumab + Ipilimumab" = "#56B4E9")
+  ) +
+  theme(legend.position = "none") +
+  scale_x_continuous(limits = c(0, 25))
+
+# HR
+p_hr = plot_fpm(m, t_eval, "HR", linewidth = 1.1, hr_order = 0:1)
+p_hr = p_hr +
+  xlab(NULL) +
+  ylab(expression(paste("Hazard Ratio ", h[1](t)/h[0](t), "\n"))) +
+  scale_x_continuous(limits = c(0, 25)) +
+  geom_hline(
+    yintercept = cox_hr,
+    linetype = "dashed",
+    linewidth = 1
   )
+
+# Plot
+wrap_plots(p_km, p_haz, p_hr) +
+  plot_layout(ncol = 1, axes = "collect_x") &
+  xlab("\nTime (months)")
 ```
 
 The first example data set is the same as the one presented by @ditzhaus2023, which the authors have reconstructed from a Kaplan-Meier plot in @hellmann2018 using the algorithm by @guyot2012.
@@ -69,9 +166,16 @@ The original population in the study included 299 patients with a high tumor mut
 Besides the main study the authors also conducted some subgroup analyses.
 For one of these analyses they stratified the sample based on the tumor PD-L1 (programmed death ligand 1) expression being less than or greater or equal than $1\%$.
 The subpopulation of patients with an PD-L1 expression of $< 1\%$ then consisted of 86 patients only, of which 48 were assigned to chemotherapy and 38 to nivolumab plus ipilimumab.
-@fig-hellmann displays the Kaplan-Meier curves of the two groups that have been estimated using the reconstructed data.
-As it is often the case in oncology trials comparing immunotherapies with a chemotherapy, we can also observe a delayed effect of the nivolumab plus ipilimumab treatment, resulting in crossing survival curves, making the proportional hazards assumption questionable.
-In fact, the proportional hazards assumption can formally be rejected using the test for proportional hazards by @grambsch1994, resulting in a p-value of $0.01\%$, displayed in the top-right corner of the plot.
+
+@fig-hellmann presents the reconstructed data set using the same methods that we have applied for producing @fig-nph2, i.e. estimating the survival functions using the Kaplan-Meier estimator and estimating the hazard functions using flexible parametric models with $(3, 2)$ degrees of freedom.
+Again, the constant hazard ratio estimated by the Cox proportional hazards model is also displayed as a dashed line in the bottom panel.
+As it is often the case in oncology trials comparing immunotherapies with a chemotherapy, we can observe a delayed effect of the nivolumab plus ipilimumab treatment.
+Hence, the hazard rate of the population receiving the nivolumab therapy is initially higher than that of the chemotherapy group, but decreases afterwards.
+On the other hand, the hazard rate of the chemotherapy group keeps increasing over time.
+As a consequence, the estimated survival curves of the two populations cross each other roughly after four months, meaning that before that time point the survival probability of the chemotherapy group is generally higher than that of patients receiving the nivolumab treatment.
+After that time point, however, we can see a clear treatment effect in favor of the nivolumab therapy.
+Finally, the shape of the time-dependent hazard ratio also makes the proportional hazards assumption highly questionable.
+In fact, the proportional hazards assumption can formally be rejected using the test for proportional hazards by @grambsch1994, resulting in a p-value of $0.01\%$.
 
 ```{r}
 #| label: fig-res-hellmann
@@ -183,7 +287,7 @@ Therefore, of greater interest are the confidence intervals and test decisions o
 For $t^* = 12$ months all methods just retain the null hypothesis of no treatment effect difference for a significance level of $\alpha = 5\%$.
 With regard to the standard asymptotic test, the different conclusion drawn here as opposed to @ditzhaus2023 is due to the fact that we have used Greenwood's variance estimator (@eq-varest1) instead of the Nelson-Aalen plug-in estimator (@eq-varest2).
 With respect to the other methods the studentized permutation test suggests the least evidence for concluding that in fact there was a treatment effect followed by the bootstrap approach (see @tbl-res-hellmann).
-For $t^* = 15,\, 18$, however, all methods reject the null hypothesis in favour of the alternative that, on average, the nivolumab plus ipilimumab therapy prolongs progression-free survival when comparing it to chemotherapy.
+For $t^* = 15,\, 18$, however, all methods reject the null hypothesis in favor of the alternative that, on average, the nivolumab plus ipilimumab therapy prolongs progression-free survival when comparing it to chemotherapy.
 Thus, in terms of a binary test decision, all methods lead to the same implication.
 Nonetheless, we can see that the confidence intervals of the studentized permutation method and those of the pseudo-observations methods are quite similar, whereas those of the standard asymptotic approach are a bit narrower.
 Therefore, concerning the quantification of uncertainty, the choice of the method does have an impact.
@@ -194,8 +298,8 @@ Therefore, concerning the quantification of uncertainty, the choice of the metho
 ```{r}
 #| label: fig-ovarian
 #| fig-width: 10
-#| fig-height: 6
-#| fig-cap: "Kaplan-Meier curves of the data from @edmonson1979"
+#| fig-height: 10
+#| fig-cap: "Estimated survival functions for the data from @edmonson1979"
 
 # Load the data
 dt = survival::ovarian
@@ -203,44 +307,83 @@ setDT(dt)
 setnames(dt, old = c("futime", "fustat", "rx"), new = c("time", "event", "group"))
 dt[, group := group - 1L]
 dt[, ecog.ps := factor(ecog.ps, levels = as.character(2:1))]
+# Use months instead of days
+dt[, time := time / 30.417]
 
-# Grambsch-Therneau test
-x = cox_zph(coxph(Surv(time, event) ~ group, data = dt, x = TRUE))
-pval_gt = x$table[1, "p"]
+# Cox HR
+cox = coxph(Surv(time, event) ~ group, data = dt, x = TRUE)
+cox_hr = unname(exp(coef(cox)))
 
-# Kaplan-Meier plot
-ggsurvfit(
+
+p_km = ggsurvfit(
   survfit2(Surv(time, event) ~ group, data = dt),
   linewidth = 1.1
 ) +
+  theme_bw(base_size = 16) +
   scale_color_manual(
     name = "Treatment",
     values = c("#E69F00", "#56B4E9"),
-    labels = c("Cyclophosphamide", "Cyclophosphamide + Adriamycin")
+    labels = c("Control", "Experimental")
   ) +
-  labs(x = "\nTime (Days)", y = "Survival probability\n") +
-  theme_bw(base_size = 16) +
-  theme(legend.position = "top") +
+  xlab(NULL) +
+  blank_x +
+  ylab("Survival probability\n") +
   scale_y_continuous(limit = c(0, 1)) +
-  annotate(
-    "text", x = 875, y = 0.95, size = 5,
-    label = sprintf("Grambsch-Therneau test (p-value): %.2f%%", pval_gt * 100)
+  theme(legend.position = "top") +
+  #scale_x_continuous(limits = c(0, 1250))
+  scale_x_continuous(limits = c(0, 40))
+  
+
+dt2 = copy(dt)
+dt2[, group := fifelse(group == 0, "Control", "Experimental")]
+
+m = fit_fpm(dt2, 3, 2)
+t_eval = seq(0.1, 40, by = 0.2)
+#t_eval = seq(1, 1250, by = 4)
+
+p_haz = plot_fpm(m , t_eval, "hazard", linewidth = 1.1)
+p_haz = p_haz +
+  xlab(NULL) +
+  blank_x +
+  ylab("Hazard Rate\n") +
+  scale_color_manual(
+    name = "Treatment",
+    values = c("Control" = "#E69F00", "Experimental" = "#56B4E9")
+  ) +
+  theme(legend.position = "none") +
+  scale_x_continuous(limits = c(0, 40))
+
+p_hr = plot_fpm(m, t_eval, "HR", linewidth = 1.1, hr_order = 1:0)
+p_hr = p_hr +
+  xlab(NULL) +
+  ylab(expression(paste("Hazard Ratio ", h[1](t)/h[0](t), "\n"))) +
+  scale_x_continuous(limits = c(0, 40)) +
+  geom_hline(
+    yintercept = cox_hr,
+    linetype = "dashed",
+    linewidth = 1
   )
+
+wrap_plots(p_km, p_haz, p_hr) +
+  plot_layout(ncol = 1, axes = "collect_x") &
+  xlab("\nTime (months)")
 ```
 
 The next example is from a study by @edmonson1979, in which patients suffering from ovarian cancer were randomized to either one of two treatments.
 The first treatment regimen consisted of cyclophosphamide only, whereas the other group received adriamycin in addition to cyclophosphamide.
 The data set is publicly available in the R `{survival}` package [@R-survival] as the "ovarian" data set.
-Like before, we plot and present the Kaplan-Meier curves in @fig-ovarian.
-Visually, we might expect a positive treatment effect in favour of the combination regimen.
-However, towards the end of the study, the differences in survival probabilities become smaller, making this deduction less clear.
-In addition, we have to consider that this study is extremely small with only 13 patients assigned to each treatment group, respectively.
-Regarding the proportional hazards assumption, here it is more vague, whether it holds or is violated.
-The Grambsch-Therneau test outputs a p-value of about $10\%$, thus retaining the null hypothesis that the proportional hazards assumption does hold.
 
-Nonetheless, we keep considering RMST-based analyses, again choosing three different cutoff time points, here $t^* = 500,\, 750,\, 1000$ days.
-Furthermore, what makes this data set interesting is the fact that, in addition to the endpoint variables and the treatment assignment, it also consists of additional covariates.
-For instance, it contains the age of the patients as well as their ECOG (Eastern Cooperative Oncology Group) performance scores measured at baseline.
+Just like before, the relevant estimated survival quantities are displayed id @fig-ovarian.
+Looking at the estimated survival functions we might expect a positive treatment effect favoring the combination regimen.
+Yet, towards the end of the study, the differences in survival probabilites become smaller, making this deduction less clear.
+Regarding the proportional hazards assumption the figures also suggest that this assumption should be made with caution.
+For instance, there is a sharp increase in the hazard rate of the experimental treatment group after ten months up until the 20th month, making the proportionality assumption questionable.
+However, we must consider that the sample size in this example is extremely small, leading to potentially highly variable estimates of the different survival quantities.
+The Grambsch-Therneau test outputs a p-value of $10.15\%$, thus retaining the null hypothesis that the proportional hazards assumption does actually hold.
+
+Nonetheless, we keep considering RMST-based analyses, again choosing three different cutoff time points, here $t^* = 15,\, 20,\, 25$ months.
+Moreover, what makes this data set interesting is the fact that, in addition to the endpoint variables and the treatment assignment variable, it also consists of additional covariates.
+For instance, it contains the age of the patients as well as their ECOG (Eastern Cooperative Oncology Group) performance score measured at baseline.
 The latter is an ordinal score describing the physical condition of the patient, ranging from 0 (no restrictions) to 5 (dead) [@oken1982].
 In the given example, however, only patients with a score of 1 or 2 were observed.
 Therefore, we can reduce this variable to a binary covariate, using the score 2 as reference category.
@@ -259,12 +402,13 @@ dt_res = readRDS(here("thesis", "objects", "res_ovarian.rds"))
 dtp = dt_res[variable == "group"]
 dtp[, method := factor(
   method, levels = c("asy", "studperm", "po_asy", "po_boot", "po_asy_adj", "po_boot_adj"),
-  labels = c("Asy", "Stud Perm", "PO", "PO Boot", "PO (Adj)", "PO Boot\n(Adj)")
+  labels = c("Asy", "Stud Perm", "PO", "PO Boot", "PO Adj", "PO Boot Adj")
 )]
 dtp[, cutoff := factor(
-  cutoff, levels = c(500, 750, 1000),
-  labels = sprintf("t^`*` == %d", c(500, 750, 1000))
+  cutoff, levels = c(15, 20, 25),
+  labels = sprintf("t^`*` == %d", c(15, 20, 25))
 )]
+
 
 ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
   geom_point(size = 3) +
@@ -285,7 +429,7 @@ ggplot(dtp, aes(x = method, y = est, ymin = ci_lower, ymax = ci_upper)) +
 # Obtain p-values and reshape the results for latex table
 dtt = dt_res[variable == "group", .(method, cutoff, pval)]
 dtt = dcast(dtt, method ~ cutoff, value.var = "pval")
-setnames(dtt, old = as.character(c(500, 750, 1000)), new = \(x) paste0("t", x))
+setnames(dtt, old = as.character(c(15, 20, 25)), new = \(x) paste0("t", x))
 
 # Reorder rows by method
 dtt = dtt[c(1, 6, 2, 4, 3, 5)]
@@ -294,7 +438,7 @@ dtt = dtt[c(1, 6, 2, 4, 3, 5)]
 pval_lr = survdiff(Surv(time, event) ~ group, data = dt)$pvalue
 dtt = rbindlist(list(
   dtt,
-  data.table(method = "lr", t500 = NA_real_, t750 = pval_lr, t1000 = NA_real_)
+  data.table(method = "lr", t15 = NA_real_, t20 = pval_lr, t25 = NA_real_)
 ))
 
 # Convert to percent
@@ -313,7 +457,7 @@ kbl(
   format = "latex",
   booktabs = TRUE,
   escape = FALSE,
-  col.names = c("Method", sprintf("$t^* = %d$", c(500, 750, 1000))),
+  col.names = c("Method", sprintf("$t^* = %d$", c(15, 20, 25))),
   align = c("l", rep("r", 3)),
   linesep = c(rep("", 3), "\\hline", "", "\\hline", "")
 ) |>
@@ -351,22 +495,20 @@ kbl(
   )
 ```
 
-As previously, the point estimates of the unadjusted approaches are (nearly) identical.
-Other than that, the findings obtained using different methods are more diverse than for the Hellmann example.
-Particularly, for $t^* = 500$ days we have that the usage of the standard asymptotic method leads to a rejection of the null hypothesis of no RMST differene whereas all other undadjusted methods retain that null hypothesis for the significance level $\alpha = 5\%$ (@tbl-res-ovarian).
-On the other hand, for $t^* = 750$ and $t^* = 1000$ days all undadjusted approaches, including the asymptotic test, retain the null hypothesis with p-values of at least 15%, i.e. implying similar conclusions.
-Knowing well that the log-rank test tests a different hypothesis, it also supports the claim that there is no treatment effect.
+As previously, the point estimates of the unadjusted approaches are (nearly) identical, resulting in estimated RMST differences of about $3$ ($t^* = 15$), $3.5$ ($t^* = 20$) and $4$ ($t^* = 25$) months.
+Regarding the uncertainty quantification and corresponding test decisions, the findings are a little more diverse than for the Hellmann example, however.
+Particularly, for $t^* = 15$ months we have that all of the unadjusted approaches except for the bootstrap method reject the null hypothesis of no RMST difference.
+There, the standard asymptotic approach suggests the strongest evidence for this rejection (p-value of $2.7\%$).
+On the other hand, for $t^* \in \{20, 25\}$ all of the unadjusted methods retain that null hypothesis for the significance level $\alpha = 5\%$ (see @tbl-res-ovarian), i.e. implying similar conclusions.
+The log-rank test also supports the statement that no treatment effect can be detected, knowing well, however, that it tests a different null hypothesis.
 
-Despite this, the relevance of the choice of the concrete method becomes more apparent here than for the Hellmann example.
-For instcance, in @fig-res-ovarian we can see that the confidence intervals of the standard asymptotic approach are much narrower than those of the bootstrap method.
-The confidence intervals of the studentized permutation and asymptotic pseudo-observations approaches, on the other hand, can be seen as a kind of compromise between the aformentioned two methods.
-
-Of greater interest, however, are the results that we obtain with the pseudo-observations methods for which we adjust for additional covariates.
+Of greater interest, however, are the results that we obtain using the pseudo-observations methods with which we adjust for additional covariates.
 As mentioned before, the adjusted methods include the age of the patients and their ECOG performance score as further covariates.
-In @fig-res-ovarian we can see that adjustment for covariates leads to both, a larger treatment effect estimate as well as narrower confidence intervals associated with it.
-For $t^* = 500$ this goes so far that the treatment effect is deemed statistically significant, even when considering the bootstrap method that we have observed to make rather conservative test decisions in scenarios with such small sample sizes (@tbl-res-ovarian).
-Nonetheless, for $t^* \in \{750,\, 1000\}$ the adjusted methods also retain the null hypothesis, though the p-values are much smaller in this case.
-In the same manner, the confidence intervals also retain much narrower compared to the unadjusted methods.
+In @fig-res-ovarian we can see that adjustment for covariates leads to both, a slightly larger treatment effect estimate as well as narrower confidence intervals associated with it.
+For $t^* = 20$ months this implies that in contrast to all undadjusted methods the null hypothesis is rejected for $\alpha = 5\%$ (see @tbl-res-ovarian).
+This even holds when using the bootstrap method that we have observed to be rather conservative in scenarios with such small sample sizes (@sec-sim-type1).
+Nonetheless, for $t^* = 25$ months, the null hypothesis is also retained by the adjusted methods.
+However, the p-values are much smaller and the fact that the confidence intervals are narrower compared to the unadjusted methods remains.
 
 
 ## @grana2002 {#sec-ex-glioma}
@@ -374,8 +516,8 @@ In the same manner, the confidence intervals also retain much narrower compared 
 ```{r}
 #| label: fig-glioma
 #| fig-width: 10
-#| fig-height: 6
-#| fig-cap: "Kaplan-Meier curves of the data from @grana2002"
+#| fig-height: 10
+#| fig-cap: "Estimated survival functions for the data from @grana2002"
 
 # Load the data
 dt = fread(here("data", "glioma.csv"))
@@ -383,28 +525,60 @@ dt[, pid := NULL]
 setnames(dt, new = \(x) sub(".*?_", "", x))
 dt[, group := fifelse(group == "Control", 0L, 1L)]
 
-# Grambsch-Therneau test
-x = cox_zph(coxph(Surv(time, event) ~ group, data = dt, x = TRUE))
-pval_gt = x$table[1, "p"]
+# Cox HR
+cox = coxph(Surv(time, event) ~ group, data = dt, x = TRUE)
+cox_hr = unname(exp(coef(cox)))
 
-# Kaplan-Meier plot
-ggsurvfit(
+p_km = ggsurvfit(
   survfit2(Surv(time, event) ~ group, data = dt),
   linewidth = 1.1
 ) +
+  theme_bw(base_size = 16) +
   scale_color_manual(
     name = "Treatment",
     values = c("#E69F00", "#56B4E9"),
     labels = c("Control", "Adjuvant")
   ) +
-  labs(x = "\nTime (Months)", y = "Survival probability\n") +
-  theme_bw(base_size = 16) +
-  theme(legend.position = "top") +
+  xlab(NULL) +
+  blank_x +
+  ylab("Survival probability\n") +
   scale_y_continuous(limit = c(0, 1)) +
-  annotate(
-    "text", x = 55, y = 0.95, size = 5,
-    label = sprintf("Grambsch-Therneau test (p-value): %.2f%%", pval_gt * 100)
+  theme(legend.position = "top") +
+  scale_x_continuous(limits = c(0, 70))
+
+dt2 = copy(dt)
+dt2[, group := fifelse(group == 0, "Control", "Adjuvant")]
+
+m = fit_fpm(dt2, 3, 2)
+t_eval = seq(0.2, 70, by = 0.25)
+
+p_haz = plot_fpm(m , t_eval, "hazard", linewidth = 1.1)
+p_haz = p_haz +
+  xlab(NULL) +
+  blank_x +
+  ylab("Hazard Rate\n") +
+  scale_color_manual(
+    name = "Treatment",
+    values = c("Control" = "#E69F00", "Adjuvant" = "#56B4E9")
+  ) +
+  theme(legend.position = "none") +
+  scale_x_continuous(limits = c(0, 70))
+
+p_hr = plot_fpm(m, t_eval, "HR", linewidth = 1.1, hr_order = 0:1)
+p_hr = p_hr +
+  xlab(NULL) +
+  ylab(expression(paste("Hazard Ratio ", h[1](t)/h[0](t), "\n"))) +
+  scale_x_continuous(limits = c(0, 70)) +
+  scale_y_continuous(limits = c(0, 0.6)) +
+  geom_hline(
+    yintercept = cox_hr,
+    linetype = "dashed",
+    linewidth = 1
   )
+
+wrap_plots(p_km, p_haz, p_hr) +
+  plot_layout(ncol = 1, axes = "collect_x") &
+  xlab("\nTime (months)")
 ```
 
 Latly, we consider another study from the field of oncology by @grana2002.
@@ -415,15 +589,17 @@ Here, we consider the overall survival endpoint only.
 The data were made publicly available by the authors in form of tables in their paper.
 Besides the time-to-event endpoints and the treatment assignment they also recorded further characteristics, including the age of the patients as well as the glioma type (grade III or glioblastoma).
 Furthermore, it is worth noticing that treatment assignment was not randomized.
-Like before, we plot the Kaplan-Meier estimates of the survival functions for the two treatment regimens in @fig-glioma.
-As for the Edmonson example, based on this figure we can expect that there is a treatment effect in favour of the adjuvant therapy.
-This impression is even more marked here, as the separation of the survival curves is more consistent and increases over time.
-As a result, the p-value of the Grambsch-Therneau test is even larger than for the Edmonson example.
+
+Again, the estimated survival and hazard functions of the two treatment regimens as well as the time-dependent hazard ratio are depicted in @fig-glioma.
+From a graphical view it is reasonable to expect a treatment effect in favor of the adjuvant therapy.
+This impression is even more marked here than for the Edmonson example as the separation of the two survival curves is more consistent over time.
+Although there is still some variability in the estimated time-dependent hazard ratio it is much more stable than that from the Edmonson example.
+As a result, the p-value of the Grambsch-Therneau test is even larger with a value of $19.95\%$.
 
 In their publication, @grana2002 analyzed the data separately for the two different glioma types using the log-rank test as the primary analysis tool.
 For the RMST-based analyses we consider the whole data set instead for simplicity.
 With respect to the adjusted methods we then consider the glioma type as well as the age of the patients as control variables.
-As in the previous example we also compare the undadjusted methods with each other.
+As in the previous examples we also compare the unadjusted methods with each other.
 
 ```{r}
 #| label: fig-res-glioma
@@ -533,7 +709,6 @@ Regardless of the chosen cutoff time point ($t^* \in \{20,\, 30,\, 40\}$), in th
 As it can be expected visually form @fig-glioma the log-rank test does not deviate from this.
 
 When taking a closer look at the point estimates and their confidence intervals in @fig-res-glioma we can see two things.
-
 As for the previous two examples the width of the confidence interval varies slightly depending on the chosen method.
 The patterns are again consistent with our other findings, i.e. the standard asymptotic approach having the narrowest confidence interval and the bootstrap method having the widest one.
 Regarding the adjusted methods, there is a similar effect as we have seen it in the Edmonson example.
@@ -541,4 +716,4 @@ Hence, there is a shift in the treatment effect estimate and the confidence inte
 Nonetheless, there are qualitative differences in this comparison.
 Previously, adjusting for covariates led to an effect estimate that has a larger magnitude.
 Here, the opposite is the case, i.e. covariate adjustment leads to a smaller effect estimate.
-While the confidence intervals obtained using covariate adjustment are smaller than those of the undadjusted methods, the differences are less remarkable in this example.
+While the confidence intervals obtained using covariate adjustment are smaller than those of the unadjusted methods, the differences are less remarkable in this example.

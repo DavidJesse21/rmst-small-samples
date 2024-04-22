@@ -5,7 +5,7 @@ bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 # Conclusion {#sec-conclusion}
 
 This thesis dealt with conducting statistical inference for two populations with a time-to-event endpoint under non-proportional hazards.
-We further focussed on procedures for which the effect measure and the statistical test are aligned with each other.
+We further focused on procedures for which the effect measure and the statistical test are aligned with each other.
 This led us to an assessment of the restricted mean survival time as a population-level summary measure.
 We then reviewed the literature about corresponding methods for estimating and testing such effects and found that the standard asymptotic test based on a standard normal approximation suffers from an inflated type-I error rate in finite sample settings.
 While there exist a couple of proposed methods dealing with this problem we put greater emphasis on the studentized permutation test by @ditzhaus2023.
@@ -24,29 +24,31 @@ On the one hand, we validated the results by @ditzhaus2023 regarding their propo
 On the other hand, we extended the repertoire of statistical methods for such tests for scenarios with moderate sample sizes by the two proposed methods based on pseudo-observations.
 For these, we could show that they provide further valid alternatives that should be preferred over the standard asymptotic test.
 The performance of both methods was only slightly inferior, overall, to that of the studentized permutation test.
-For the asymptotic pseudo-observations method this was due to a slightly too liberal behaviour in settings with very small sample sizes, whereas the bootstrap approach was a little too conservative in these scenarios.
+For the asymptotic pseudo-observations method this was due to a slightly too liberal behavior in settings with very small sample sizes, whereas the bootstrap approach was a little too conservative in these scenarios.
 @ditzhaus2023 mentioned that their studentized permutation method can directly be extended to other settings in survival analysis, e.g. to situations with competing risks or to the usage of related summary measures such as window mean survival time  [@paukner2021].
-The same holds true for the pseudo-observations methods presented in this thesis and might even be considered more straightforward as existing software solutions can be applied.
+The same holds true for the pseudo-observations methods presented in this thesis and might even be considered more straightforward as existing software solutions can be applied directly.
 
-Casting estimation and testing problems for the RMST into the framework of generalized linear models makes the pseudo-observations approaches attractive alternatives that should be considered further, both by practicioners and by methodological researchers in statistics.
+Casting estimation and testing problems for the RMST into the framework of generalized linear models makes the pseudo-observations approaches attractive alternatives that should be considered further, both by practitioners and by methodological researchers in statistics.
 The most interesting feature of the pseudo-observations methods can be considered the ease of incorporating prognostic covariates into the analysis, which can increase precision and power of the effect estimate and the statistical test, respectively.
-The demonstration on real-world data sets in @sec-examples already gave a flavour of this idea.
+The demonstration on real-world data sets in @sec-examples already gave a flavor of this idea.
 While for the pseudo-observations methods we simply need to add the corresponding covariates into the regression model, the other approaches considered in this thesis would need to be modified, e.g. by means of stratification.
 However, even if we implemented such modifications to the other methods, we still might expect them to be less effective in taking advantage of the adjustment for covariates than the pseudo-observations approaches.
 For instance, taking a continuous covariate into account, using the pseudo-observations methods we can make full use of this information by simply incorporating it into the regression model.
 Using an approach based on stratification, on the other hand, would require us to more or less arbitrarily divide the continuous variable into discrete categories.
-Especially for situations with small sample sizes as considered in this thesis, this might lead to small subgroups and therefore imprecise and variable effect estimates.
-These thoughts could be investigated in more detail and be systematically evaluated in future research.
+Especially for situations with small sample sizes as considered in this thesis, this might lead to small subgroups and therefore imprecise and volatile effect estimates.
+These thoughts could further be investigated and be systematically evaluated by means of simulation studies in future research.
+Here, one particular challenge would consist in setting up proper models for simulating survival data conditional on other covariates than the treatment indicator for a given RMST difference $\Delta$.
+Other aspects and questions arising from these ideas are, for instance, the effects of incorporating non-prognostic covariates into the analysis or the misspecification of the functional form of an effect.
 
 Another aspect that could be studied further is the application of other resampling procedures for pseudo-observations regression models as alternatives to the nonparametric bootstrap presented in this thesis.
 While the nonparametric bootstrap makes only few assumptions and is straightforward to implement, alternative resampling schemes may exhibit a better performance.
-One particular methodh we think of is the wild bootstrap [@liu1988].
+One particular method we think of is the wild bootstrap [@liu1988].
 Intuitively, we think that such an approach can also work for pseudo-observations regression models.
 However, theoretical considerations need to be made in this context.
 First, we need to keep in mind that we employ quasi-likelihood methods and therefore need to figure out which resampling methods are valid for these types of models.
 Second, it is not clear in how far the usage of pseudo-observations alters or complicates things as opposed to situations in which the response vector is fully observed and used as-is.
 Besides potential improvements in terms of operating characteristics, what makes these ideas interesting is that they would be computationally much more efficient than the bootstrap procedure proposed in this thesis as we would avoid recalculating the pseudo-observations in each bootstrap iteration.
 
-Lastly, we note that @munko2023 considered extensions of RMST-based tests to settings with more than two populations.
+Lastly, we note that @munko2024 considered extensions of RMST-based tests to settings with more than two populations.
 There they investigate how to conduct a test for the global null hypothesis of equal RMSTs across all groups as well as carrying out multiple contrast tests for the pairwise RMST differences.
 Similarly, the pseudo-observations approaches proposed in this thesis might be used and investigated for such problems.

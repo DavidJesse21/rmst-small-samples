@@ -11,7 +11,8 @@ box::use(
   fs,
   ggsurvfit[survfit2, ggsurvfit, add_censor_mark],
   data.table.extras[setj_at],
-  kableExtra[...]
+  kableExtra[...],
+  flexsurv[flexsurvspline]
 )
 
 box::use(
@@ -26,38 +27,141 @@ setDT(dt)
 setnames(dt, old = c("futime", "fustat", "rx"), new = c("time", "event", "group"))
 dt[, group := group - 1L]
 dt[, ecog.ps := factor(ecog.ps, levels = as.character(2:1))]
+# Use months instead of days
+dt[, time := time / 30.417]
 
 ?ovarian
+
+theme_set(theme_bw())
+
+blank_x = theme(
+  axis.title.x = element_blank(),
+  axis.text.x = element_blank(),
+  axis.ticks.x = element_blank()
+)
+
+
+# FPM functions ----
+
+# Fit FPM
+fit_fpm = function(data, df1 = 3, df2 = 2) {
+  li_anc = rep(list(~ group), df2)
+  names(li_anc) = paste0("gamma", 1:df2)
+  
+  m = flexsurvspline(
+    Surv(time, event) ~ group, data = data,
+    k = df1 - 1, anc = li_anc
+  )
+  
+  return(m)
+}
+
+
+# Plot FPM
+plot_fpm = function(m, t_eval, type = c("survival", "hazard", "HR"), hr_order = 0:1, ...) {
+  type = match.arg(type, c("survival", "hazard", "HR"))
+  
+  li_dt = summary(
+    m,
+    type = if (type == "survival") "survival" else "hazard",
+    t = t_eval,
+    ci = FALSE
+  )
+  
+  invisible(lapply(li_dt, setDT))
+  invisible(lapply(names(li_dt), function(x) {
+    li_dt[[x]][, group := sub("group=(.*)", "\\1", x)]
+  }))
+  
+  dt = rbindlist(li_dt)
+  dt[, group := factor(group, levels = sub("group=(.*)", "\\1", names(li_dt)))]
+  
+  # Survival and hazards
+  if (type %in% c("survival", "hazard")) {
+    p = ggplot(dt, aes(time, est, color = group)) +
+      geom_line(...)
+  } else {
+    # Hazard ratio
+    dt = dcast(dt, time ~ group, value.var = "est")
+    setnames(dt, old = 2:3, new = paste0("haz", hr_order))
+    dt[, hr := haz0 / haz1]
+    
+    p = ggplot(dt, aes(time, hr)) +
+      geom_line(...)
+  }
+  
+  return(p)
+}
+
 
 
 # EDA  ----
 
-x = cox_zph(coxph(Surv(time, event) ~ group, data = dt, x = TRUE))
-pval_gt = x$table[1, "p"]
+cox = coxph(Surv(time, event) ~ group, data = dt, x = TRUE)
+cox_hr = unname(exp(coef(cox)))
+cox_zph(cox)$table[1, "p"]
 
-ggsurvfit(
+
+p_km = ggsurvfit(
   survfit2(Surv(time, event) ~ group, data = dt),
   linewidth = 1.1
 ) +
+  # theme_bw(base_size = 16) +
   scale_color_manual(
     name = "Treatment",
     values = c("#E69F00", "#56B4E9"),
     labels = c("Control", "Experimental")
   ) +
-  labs(x = "\nTime (Days)", y = "Survival probability\n") +
-  theme(legend.position = "top") +
+  xlab(NULL) +
+  blank_x +
+  ylab("Survival probability\n") +
   scale_y_continuous(limit = c(0, 1)) +
-  annotate(
-    "text", x = 1000, y = 0.95,
-    label = sprintf("Grambsch-Therneau test (p-value): %.2f%%", pval_gt * 100)
+  theme(legend.position = "top") +
+  #scale_x_continuous(limits = c(0, 1250))
+  scale_x_continuous(limits = c(0, 40))
+  
+
+dt2 = copy(dt)
+dt2[, group := fifelse(group == 0, "Control", "Experimental")]
+
+m = fit_fpm(dt2, 3, 2)
+t_eval = seq(0.1, 40, by = 0.2)
+#t_eval = seq(1, 1250, by = 4)
+
+p_haz = plot_fpm(m , t_eval, "hazard", linewidth = 1.1)
+p_haz = p_haz +
+  xlab(NULL) +
+  blank_x +
+  ylab("Hazard Rate\n") +
+  scale_color_manual(
+    name = "Treatment",
+    values = c("Control" = "#E69F00", "Experimental" = "#56B4E9")
+  ) +
+  theme(legend.position = "none") +
+  scale_x_continuous(limits = c(0, 40))
+
+p_hr = plot_fpm(m, t_eval, "HR", linewidth = 1.1, hr_order = 1:0)
+p_hr = p_hr +
+  xlab(NULL) +
+  ylab(expression(paste("Hazard Ratio ", h[1](t)/h[0](t), "\n"))) +
+  scale_x_continuous(limits = c(0, 40)) +
+  geom_hline(
+    yintercept = cox_hr,
+    linetype = "dashed",
+    linewidth = 1
   )
+
+wrap_plots(p_km, p_haz, p_hr) +
+  plot_layout(ncol = 1, axes = "collect_x") &
+  xlab("\nTime (months)")
 
 
 if (!fs$file_exists(fs$path("thesis", "objects", "res_ovarian", ext = "rds"))) {
   
   # Methods ----
   
-  cutoffs = c(500, 750, 1000)
+  #cutoffs = c(500, 750, 1000)
+  cutoffs = c(15, 20, 25)
   
   # Asymptotic 2-sample test
   res_asy = lapply(cutoffs, function(cutoff) {
@@ -273,8 +377,8 @@ dtp[, method := factor(
   labels = c("Asy", "Stud Perm", "PO", "PO Boot", "PO Adj", "PO Boot Adj")
 )]
 dtp[, cutoff := factor(
-  cutoff, levels = c(500, 750, 1000),
-  labels = sprintf("t^`*` == %d", c(500, 750, 1000))
+  cutoff, levels = c(15, 20, 25),
+  labels = sprintf("t^`*` == %d", c(15, 20, 25))
 )]
 
 
@@ -352,7 +456,7 @@ kbl(
 # Obtain p-values and reshape the results for latex table
 dtt = dt_res[variable == "group", .(method, cutoff, pval)]
 dtt = dcast(dtt, method ~ cutoff, value.var = "pval")
-setnames(dtt, old = as.character(c(500, 750, 1000)), new = \(x) paste0("t", x))
+setnames(dtt, old = as.character(c(15, 20, 25)), new = \(x) paste0("t", x))
 
 # Change row order (based on methods)
 dtt = dtt[c(1, 6, 2:5)]
@@ -361,7 +465,7 @@ dtt = dtt[c(1, 6, 2:5)]
 pval_lr = survdiff(Surv(time, event) ~ group, data = dt)$pvalue
 dtt = rbindlist(list(
   dtt,
-  data.table(method = "lr", t500 = NA_real_, t750 = pval_lr, t1000 = NA_real_)
+  data.table(method = "lr", t15 = NA_real_, t20 = pval_lr, t25 = NA_real_)
 ))
 
 # Convert to percent
@@ -383,7 +487,7 @@ kbl(
   format = "latex",
   booktabs = TRUE,
   escape = FALSE,
-  col.names = c("Method", sprintf("$t^* = %d$", c(500, 750, 1000)))
+  col.names = c("Method", sprintf("$t^* = %d$", c(15, 20, 25)))
 ) |>
   kable_styling(
     full_width = TRUE

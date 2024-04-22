@@ -50,7 +50,7 @@ Next, we present the studentized permutation test introduced by @ditzhaus2023 as
 In principle, this approach is not exceedingly different compared to the asymptotic one.
 In fact, it relies on the same type of non-parametric estimators of the RMST and its variance.
 We should note, however, that @ditzhaus2023 derive and use the variance estimator (@eq-varest2) instead of (@eq-varest1).
-What distinguishes their method from the asymptotic test is the fact that it does not make a fixed assumption about the distribution of the test statistic (@eq-tstat) under the null hypothesis but aims at estimating it non-parametrically from the observed data.
+What distinguishes their method from the asymptotic test is the fact that it does not make a fixed assumption about the distribution of the test statistic (@eq-tstat) under the null hypothesis but aims at estimating it nonparametrically from the observed data.
 Adopting the notation by @ditzhaus2023, we again compute the Wald-type test statistic (@eq-tstat) based on the original data $(\tvec, \deltavec) \equiv \{(t_{ji}, \delta_{ji}): \, j = 0, 1;\, i = 1, \ldots, n_j\}$.
 Now, instead of employing the standard normal approximation (@eq-dapprox) the distribution of the test statistic under the null hypothesis is estimated from the data using the concept of random permutations.
 For this, let $(\tvec, \deltavec)^{\pi} \equiv \{(t_{ji}, \delta_{ji})^{\pi}: \, j = 0, 1;\, i = 1, \ldots, n_j\}$ represent a permuted version of the original data meaning that the treatment indicator $Z$ has been randomly shuffled and reassigned to the individual observations $(t_{ji}, \delta_{ji})$ of the original data.
@@ -105,7 +105,7 @@ P_i = n \hat{\theta} - (n - 1) \hat{\theta}_{-i}
 $$ {#eq-pseudo}
 Here, $\hat{\theta}$ denotes a well-behaved marginal estimator of $V_i$.
 This could be any estimator satisfying asymptotic efficiency but usually a nonparametric estimator is used.
-The advanatges of these are that they do not exhibit any modelling assumptions and are usually fast to compute.
+The advantages of these are that they do not exhibit any modelling assumptions and are usually fast to compute.
 Likewise, $\hat{\theta}_{-i}$ is the same kind of estimator but leaving out the $i$-th observation, i.e. using the $i$-th *jackknife sample* [@efron1993, Chapter 11].
 Following @andersen2010, "the $i$-th pseudo-observation can be viewed as the contribution of the individual $i$ to the \[marginal\] estimate \[$\hat{\theta}$\] on the sample of size $n$".
 Thus, by calculating the pseudo-observations and using them as the response vector we bypass the need to deal with censored observations.
@@ -278,7 +278,7 @@ $$
 $$ {#eq-pseudo-approx}
 These approximations are based on the first order influence function of $\hat{\theta}$ and are known as *infinitesimal jackknife* (IJ) pseudo-observations [@parner2023].
 It is required that the marginal estimator $\hat{\theta}$ can be written as a function of weights $w_i$ attached to each individual $i = 1, \ldots, n$ in the data.
-As pointed out, the advanage over ordinary pseudo-observations obtained by using the jackknife samples is the computational speed.
+As pointed out, the advantage over ordinary pseudo-observations obtained by using the jackknife samples is the computational speed.
 Despite this, the loss in numerical accuracy is negligible even for moderate sample sizes, making IJ pseudo-observations an attractive alternative to ordinary pseudo-observations [@parner2023].
 
 Similar to the application of the studentized permutation test, using bootstrap resampling in combination with pseudo-observations we are likely to encounter situations, in which the underlying marginal estimators of the RMST are not uniquely defined at $t^*$ due to right-censoring.

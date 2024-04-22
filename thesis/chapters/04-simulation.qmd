@@ -8,7 +8,7 @@ With the intention of evaluating and comparing the empirical performance of the 
 In order to embed the design of this study into a structured framework we make use of the ADEMP methodology introduced by @morris2019a.
 ADEMP is an acronym translating to *Aims*, *Data-generating mechanisms*, *Estimands* (and other targets), *Methods* and *Performance measures*.
 The concrete configuration of these aspects is described in the first subsection.
-Thereafter, we briefly comment computational aspects impacting the results and their reproducibility.
+Thereafter, we briefly comment on computational aspects regarding the implementation of the presented methods into statistical software on the one hand as well as the execution of the simulation study and its reproducibility.
 Lastly, we present the results of the study and discuss our findings.
 
 
@@ -32,8 +32,8 @@ In addition, we investigate the following three of the nine pairs of event time 
 \end{itemize}
 Here, $\theta_{\Delta}$ denotes a generic parameter whose meaning depends on the respective context.
 It then gets calibrated according to the given effect size $\Delta$ and the restriction time $t^*$, the latter being fixed to $t^* = 10$.
-For S1 this corresponds to the rate parameter of the exponential distribution for the treatment group, whereas for S7 this is the time point at which the hazard of the treatment group changes.
-On the other hand, for S8 $\theta_{\Delta}$ is the scale parameter of the Weibull distribution for the treatment group.[^2]
+For S1 this corresponds to the rate parameter for the exponential distribution of the treatment group, whereas for S7 this is the time point at which the hazard of the treatment group changes.
+On the other hand, for S8 $\theta_{\Delta}$ is the scale parameter for the Weibull distribution of the treatment group.[^2]
 For the censoring distributions, in contrast, we keep using all levels examined by @ditzhaus2023:
 \begin{itemize}
   \item[C1] unequally Weibull distributed censoring (Weib, uneq): $C_0 \sim \dweib(3, 1/18)$ and $C_1 \dweib(0.5, 1/40)$
@@ -107,20 +107,20 @@ kbl(
 For their simulation study evaluating the unstudentized permutation test @horiguchi2020a regenerated the simulated data whenever the RMST was inestimable for at least one of the two groups using a Kaplan-Meier-based estimator of the RMST.
 As described in @sec-studperm such a situation occurs when the largest event time is smaller than $t^*$ and is censored.
 @ditzhaus2023 also adopted this procedure for their simulation study.
-Accordingly, we employ this routine as well.
+As a consequence, we employ the same routine in our study.
 
 *Estimands and other targets*\newline
-Although all of the methods involve the point estimation of a particular parameter, namely the two-sample RMST difference $\Delta = \muhat_1(t^*) - \muhat_0^(t^*)$, they are all based on the Kaplan-Meier estimator of the survival function.
+Although all of the methods involve the point estimation of a particular parameter, namely the two-sample RMST difference $\Delta = \muhat_1(t^*) - \muhat_0(t^*)$, they are all based on the Kaplan-Meier estimator of the survival function.
 Because of this, the point estimates of the different methods will be either exactly or nearly identical.
 The main distinction is how the statistical test of the null hypothesis in (@eq-test-problem) is conducted.
-Therefore, that null hypothesis is the target of the simulation study.
+Therefore, this null hypothesis is the target of the simulation study.
 
 *Methods*\newline
 All methods that will be assessed in this study have been presented and explained in detail in @sec-inference.
 Of primary interest, however, are the two proposed methods based on pseudo-observations, i.e. the one employing an asymptotic test and the other one using a bootstrap test.
 For the latter we use IJ pseudo-observations as described in @sec-po-boot.
 In order to acquire additional information about how the usage of IJ instead of ordinary pseudo-observations might impact the performance of the bootstrap test, we also include an asymptotic test using these IJ pseudo-observations.
-However, corresponding results are devoted to the appendix (TODO: reference appendix.)
+However, these results are devoted to [Appendix @sec-sim-results2].
 
 In this simulation study, the standard asymptotic test (@eq-test-asy) has the role of the main reference method as it can be expected that among all methods presented in this thesis this is the one most commonly employed in practice, both by applied scientists [e.g. @manner2019] and methodological researchers [e.g. @dormuth2023].
 On the other hand, based on the results from their simulation study, we consider the studentized permutation method by @ditzhaus2023 as the current gold standard for conducting two-sample RMST tests.
@@ -129,7 +129,7 @@ Based on the results by @ditzhaus2023, in our opinion, these two methods cannot 
 
 *Performance measures*\newline
 Given the null hypothesis in (@eq-test-problem) as the target of the simulation study and the original problem that the standard asymptotic test (@eq-test-asy) has an inflated type-I error rate, the type-I error rate is also the primary performance measure.
-Corresponding secondary performance measures are the power and the coverage probability of the respective test and its associated confidence interval.
+Corresponding secondary performance measures are the power and the coverage probability of the respective test and its associated confidence interval, respectively.
 
 
 ## Computational Details {#sec-sim-comp}
@@ -145,7 +145,7 @@ For the approaches based on pseudo-observations we used the `rmeanglm()` functio
 This function is essentially a wrapper around the `stats::glm()` function adapted to regression models for pseudo-observations.
 Using the arguments `model.censoring` and `formula.censoring` of that function it is possible to customize how the pseudo-observations are computed.
 While the latter is used to specify which variables should be controlled for when calculating the pseudo-observations, to the former we can pass custom "modules" (R functions) that carry out the actual calculation of the pseudo-observations before estimating the regression model.
-Although the `{eventglm}` already provides a range of such modules, we programmed these functions by ourselves as well.
+Although the `{eventglm}` package already provides a wide range of such modules, we programmed these functions by ourselves as well, since the "horizontal extension strategy" does not work with these implementations.
 For the IJ pseudo-observations module we used the `pseudo()` function from the `{survival}` package [@R-survival].
 Further direct and indirect package dependencies were required for running the simulation study, all of which were tracked and managed using the `{renv}` package [@R-renv], contributing to the reproducibility of the results.
 
@@ -367,7 +367,7 @@ There are only few scenarios, for which the empirical type-I error rate is not w
 Moving to the proposed methods based on pseudo-observations, overall we can conclude that they provide further valid alternatives to the studentized permutation approach for testing RMST differences and should be preferred over the standard asymptotic test.
 In summary, both tests controlled the type-I error in 88 scenarios, i.e. only two cases less than the studentized permutation test.
 Their slight inferiority relative to the studentized permutation test mainly results from scenarios with very small sample sizes ($K = 1$), where the two methods controlled the type-I error only in 10 (bootstrap) and 13 (asymptotic) scenarios.
-However, when the two tests fail in these situations they do for different reasons.
+However, when the two tests fail in these situations they do so for different reasons.
 On the one hand, for the asymptotic approach we can observe a small tendency of making too liberal test decisions.
 The bootstrap approach, on the other hand, seems to be too conservative with the empirical type-I error rate being as low as 3.3% .
 While for larger sample sizes ($K = 2$) these tendencies can still be percieved, they become much less relevant already.

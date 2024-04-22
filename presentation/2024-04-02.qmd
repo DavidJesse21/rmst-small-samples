@@ -1,10 +1,10 @@
 ---
-title: "Resampling-based Inference for restricted mean Survival Times"
+title: "Resampling-based Inference for Restricted Mean Survival Times"
 author:
   - "David Jesse\\newline"
   - "First supervisor: Prof. Dr. Tim Friede\\newline"
   - "Second supervisor: Dr. Cynthia Huber"
-date: 2024-02-06
+date: 2024-04-02
 date-format: "DD MMMM, YYYY"
 latex-min-runs: 2
 format: 
@@ -41,7 +41,9 @@ options(box.path = "R")
 
 box::use(
   simfuns2/analyze[calc_rejection_rates, calc_ci_metrics, setj_samples_alloc, setj_percent],
-  simfuns2/get_funs[get_scenario_table]
+  simfuns2/get_funs[get_scenario_table],
+  plotting/surv[plot_surv_models],
+  plotting/cens[plot_cens_models]
 )
 
 
@@ -99,15 +101,13 @@ ggrmst = function(fit, cutoff,
 theme_set(theme_bw(base_size = 16))
 ```
 
-
-
 ## Overview
 
-- restricted mean survival time (RMST) contrasts as alternative estimands to the hazard ratio (HR) for time-to-event endpoints
+- restricted mean survival time (RMST) contrasts as alternative effect measures to the hazard ratio (HR) for time-to-event endpoints
 
 - two-sample comparisons under small to moderate sample sizes
 
-- comparison of different inference methods w.r.t. type I error control, power and CI coverage
+- comparison of different inference methods w.r.t. type-I error rate, power and CI coverage
 
 - asymptotic and resampling-based methods
 
@@ -122,7 +122,7 @@ $$
 
 - most common effect measure: hazard ratio (HR)
 $$
-HR(t) = h_1(t) / h_0(t) := \theta
+HR(t) = h_1(t) / h_0(t) = \theta \quad \forall \, t
 $$
 
 - proportional hazards assumption
@@ -133,13 +133,11 @@ $$
   
 - hard to interpret clinically, even if the PH assumption holds
 
-- no causal interpretation (even not in RCTs)
 
-
-## Restricted mean Survival Time (RMST)
+## Restricted Mean Survival Time (RMST)
 
 $$
-\mu(t^*) = E[min(T, t^*)] = \int_0^{t^*} S(u) \,du
+\mu(t^*) = \expect[\min(T, t^*)] = \int_0^{t^*} S(u) \,du
 $$
 
 - expected survival within the (pre-)specified follow-up period from time $0$ to $t^*$
@@ -169,7 +167,7 @@ ggrmst(fit, cutoff = 350) +
 ```
 
 
-## Inference for RMST contrasts
+## Inference for RMST Contrasts
 
 $$
 H_0: \mu_1(t^*) - \mu_0(t^*) = 0 \quad \text{vs.} \quad H_1: \mu_1(t^*) - \mu_0(t^*) \neq 0
@@ -177,15 +175,15 @@ $$
 
 - focus on two-sample comparisons in an RCT setting
 
-- asymptotic test based on NPMLE (Kaplan-Meier) estimator
+- asymptotic test based on Kaplan-Meier estimator
 
-  - inflation of type I error under small to moderate sample sizes
+  - inflation of type-I error under small to moderate sample sizes
   
 - other approaches so far
 
-  - Horiguchi & Uno, 2020: "simple" permutation method
-  
   - Ditzhaus et al., 2023: studentized permutation method
+
+  - (Horiguchi & Uno, 2020: "simple" permutation method)
   
   - (Zhou, 2021: empirical likelihood ratio)
 
@@ -198,25 +196,24 @@ $$
 
 - propose further existing resampling-based approaches
   
-  - pseudo-observations
+  - pseudo-observations + asymptotic test
   
-  - pseudo-observations + bootstrap hypothesis testing
+  - pseudo-observations + bootstrap test
   
 - pseudo-observation approaches might have some advantages for further extensions
 
   - usage with and adjustment for (continuous) covariates
   
-  - (easier) extension to more general designs
-  
+  - flexibility in general
+
 
 # Methods
-
 
 ## Asymptotic Test
 
 - studentized test statistic
 $$
-Z = \frac{\hat{\mu}_1(t^*) - \hat{\mu}_0(t^*)}{\sqrt{\widehat{Var}[\hat{\mu}_1(t^*)] + \widehat{Var}[\hat{\mu}_0(t^*)]}}
+Z = \frac{\hat{\mu}_1(t^*) - \hat{\mu}_0(t^*)}{\sqrt{\Varhat[\hat{\mu}_1(t^*)] + \Varhat[\hat{\mu}_0(t^*)]}}
 $$
 
 - asymptotic distribution
@@ -240,7 +237,7 @@ $$
 - for each permuted data set compute the studentized test statistic
 $$
 Z^{\pi} =
-\left| \frac{\hat{\mu}_1^{\pi}(t^*) - \hat{\mu}_0^{\pi}(t^*)}{\sqrt{\widehat{Var}[\hat{\mu}_1^{\pi}(t^*)] + \widehat{Var}[\hat{\mu}_0^{\pi}(t^*)]}} \right| 
+\frac{| \hat{\mu}_1^{\pi}(t^*) - \hat{\mu}_0^{\pi}(t^*) |}{\sqrt{\Varhat[\hat{\mu}_1^{\pi}(t^*)] + \Varhat[\hat{\mu}_0^{\pi}(t^*)]}}
 $$
 
 - statistical test
@@ -248,7 +245,7 @@ $$
 \varphi^{\pi} = \mathbf{1} \{|Z| > q_{1 - \alpha}^{\pi} \}
 $$
   - $q_{1 - \alpha}^{\pi}$: $(1 - \alpha)$-quantile of the the permutation test statistics
-  
+
 
 ## Pseudo-Observations (1)
 
@@ -270,7 +267,7 @@ $$
 
 - test statistic
 $$
-Z = \frac{\betahat}{\widehat{\text{se}}(\betahat)}
+Z = \frac{\betahat}{\sehat(\betahat)}
 $$
 
 - statistical test
@@ -283,11 +280,10 @@ $$
   - categorical covariates: stratified computation
   
   - continuous covariates: IPCW approaches
-  
 
 ## Pseudo-Observations (2)
 
-- idea: refine PO approach by using bootstrap hypothesis testing
+- idea: refine PO approach by using a bootstrap test
 
   - relaxation of assumption on null distribution
 
@@ -296,8 +292,7 @@ $$
 - for each bootstrap resample compute the test statistic
 $$
 Z^b = 
-\left| \frac{\betahat^b - \betahat}{\widehat{se}(\betahat^b)}
-\right|
+\frac{| \betahat^b - \betahat |}{\sehat(\betahat^b)}
 $$
 
 - statistical test
@@ -320,10 +315,9 @@ $$
   &\approx \hat{\theta} + n \frac{\partial \hat{\theta}}{\partial w_i}
 \end{split}
 $$
-  
+
 
 # Simulation Study
-
 
 ## Settings
 
@@ -342,6 +336,24 @@ $$
 - RMST difference: $\Delta = 0, 1.5$ ($t^* = 10$)
 
 - 216 settings in total with 5000 simulation replications
+
+---
+
+```{r}
+#| label: surv-models
+#| fig-height: 4.5
+
+plot_surv_models(linewidth = 1.1, align = "h")
+```
+
+---
+
+```{r}
+#| label: cens-models
+#| fig-height: 4.5
+
+plot_cens_models(linewidth = 1.1, align = "h")
+```
 
 
 ## Computation & Reproducibility
@@ -370,7 +382,7 @@ $$
 #| fig-height: 4.5
 
 dt1 = calc_rejection_rates(
-  dtr[scenario.id %in% dts[rmst_diff == 0, scenario.id]],
+  dtr[scenario.id %in% dts[rmst_diff == 0, scenario.id] & algo.id != 4],
   stats_NA = FALSE
 )
 dt1 = merge(
@@ -381,7 +393,6 @@ setj_percent(dt1, "reject")
 
 ggplot(dt1, aes(factor(algo.id), reject)) +
   geom_boxplot() +
-  theme_bw() +
   # Binomial confidence interval
   geom_hline(yintercept = 4.4, linetype = "dashed") +
   geom_hline(yintercept = 5.6, linetype = "dashed") +
@@ -391,7 +402,7 @@ ggplot(dt1, aes(factor(algo.id), reject)) +
   ) +
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+    labels = c("Asy", "St Perm", "PO Asy", "PO Boot")
   ) +
   # Differentiate between total sample sizes
   facet_wrap(
@@ -408,7 +419,7 @@ ggplot(dt1, aes(factor(algo.id), reject)) +
 #| fig-height: 4.5
 
 dt2 = calc_rejection_rates(
-  dtr[scenario.id %in% dts[rmst_diff == 1.5, scenario.id]],
+  dtr[scenario.id %in% dts[rmst_diff == 1.5, scenario.id] & algo.id != 4],
   stats_NA = FALSE
 )
 dt2 = merge(
@@ -419,29 +430,29 @@ setj_percent(dt2, "reject")
 
 ggplot(dt2, aes(factor(algo.id), reject)) +
   geom_boxplot() +
-  theme_bw() +
   scale_y_continuous(
     name = "Power in %\n"
   ) +
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+    labels = c("Asy", "St Perm", "PO Asy", "PO Boot")
   ) +
   facet_wrap(
     ~ num_samples,
-    labeller = labeller(num_samples = \(x) paste0("N = ", x))
+    labeller = labeller(num_samples = \(x) paste0("N = ", x)),
+    scales = "free_y"
   )
 ```
 
 
-## Results - CI Coverage
+## Results - Coverage
 
 ```{r}
 #| label: plot-coverage
 #| fig-height: 4.5
 
 dt3 = calc_ci_metrics(
-  merge(dtr, dts[, .(scenario.id, rmst_diff)], by = "scenario.id"),
+  merge(dtr[algo.id != 4], dts[, .(scenario.id, rmst_diff)], by = "scenario.id"),
   stats_NA = FALSE
 )
 dt3 = merge(
@@ -458,7 +469,7 @@ ggplot(dt3, aes(factor(algo.id), coverage)) +
   ) +
   scale_x_discrete(
     name = "\nMethods",
-    labels = c("Asy", "Stud. Perm.", "PO", "PO IJ", "PO IJ Boot")
+    labels = c("Asy", "St Perm", "PO Asy", "PO Boot")
   ) +
   facet_wrap(
     ~ num_samples,
@@ -472,34 +483,33 @@ ggplot(dt3, aes(factor(algo.id), coverage)) +
 
 # Summary & Outlook
 
-
-## Summary
+## Summary 
 
 - RMST contrasts as alternative effect measures instead of hazard ratio
 
-- inflated type I error rate for standard asymptotic RMST test
+- inflated type-I error rate for standard asymptotic RMST test
 
 - resampling-based approaches could be shown to be a remedy for this
 
-- pseudo-observation approaches are valid alternatives to studentized permutation test with some potential advantages
+- proposed pseudo-observation approaches are valid alternatives to studentized permutation test with some potential advantages
 
-  - usage for a continuous covariate
+  - straightforward covariate adjustment (increase in precision and power)
   
-  - (easier) extension to more general settings (covariate adjustment, other designs)
-  
-  - (computation time; maybe not so relevant for single analyses)
-  
-  
+  - easy extension to other related settings (competing risks, effect measures, study designs)
+
+
 ## Outlook
 
-- comparison of methods with covariate adjustment
+- systematic investigation and comparison of covariate adjusted approaches
 
-- usage of PO methods for more general designs and/or testing problems (preprint by Munko et. al., 2023)
+- alternatives to the nonparametric bootstrap for PO regression models
 
-- other approaches for computing pseudo-observations
+  - e.g. wild bootstrap
 
-  - IPCW methods, parametric pseudo-observations, ...
-  
+  - theoretical justification and empirical performance
+
+- extension to other testing problems with more than two groups
+
+  - global test and multiple comparisons
 
 # Questions?
-

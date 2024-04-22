@@ -1,5 +1,7 @@
 ---
 #keep-tex: true
+latex-min-runs: 2
+latex-max-runs: 4
 format:
   pdf:
     template-partials:
@@ -73,6 +75,7 @@ box::use(
   # survival
   survival[Surv, survfit, survdiff, coxph, cox_zph = cox.zph],
   eventglm[rmeanglm],
+  flexsurv[flexsurvspline],
   # misc
   withr[with_seed],
   fs
@@ -146,3 +149,18 @@ format_pval = function(x) {
 \printbibliography[heading=none]
 \endgroup
 \def\printbibliography{}
+
+\newpage
+\appendix
+
+```{r child=chapter("99-appendix")}
+
+```
+
+\newpage
+\thispagestyle{empty}
+
+```{r child=chapter("99-affidavit")}
+
+```
+
