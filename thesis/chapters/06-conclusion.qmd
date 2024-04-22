@@ -8,7 +8,7 @@ This thesis dealt with conducting statistical inference for two populations with
 We further focused on procedures for which the effect measure and the statistical test are aligned with each other.
 This led us to an assessment of the restricted mean survival time as a population-level summary measure.
 We then reviewed the literature about corresponding methods for estimating and testing such effects and found that the standard asymptotic test based on a standard normal approximation suffers from an inflated type-I error rate in finite sample settings.
-While there exist a couple of proposed methods dealing with this problem we put greater emphasis on the studentized permutation test by @ditzhaus2023.
+While there exist a couple of proposed methods dealing with this problem we focused on the studentized permutation test by @ditzhaus2023.
 In addition to that, we proposed two further methods for such scenarios based on pseudo-observations regression models.
 The first of these two approaches also uses an asymptotic test but the estimation of the standard error of the effect estimate is carried out differently.
 Here, the HC3 covariance matrix estimator is used, which we believed to be more robust in settings with rather small sample sizes based on results from previous research.

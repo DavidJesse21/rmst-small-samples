@@ -13,10 +13,10 @@ This is only one reason why survival analysis has evolved into an own strand of 
 
 Many of the most commonly used statistical methods for effect estimation and hypothesis testing for survival data, such as the Cox model [@cox1972] or the log-rank test [@peto1972], either explicitly or implicitly rely on the *proportional hazards* (PH) assumption and the *hazard ratio* (HR) as the effect size of interest when comparing two treatment groups.
 However, in many modern clinical trials with time-to-event endpoints it has turned out that this assumption is clearly violated, i.e. we have *non-proportional hazards* (NPH).
-For instance, in oncology trials the comparison of treatments with different effect mechanisms often results in patterns in which the survival curves separate only after some delay time or cross each other at some time point [@bardo2023].
+For instance, in oncology trials the comparison of treatments with different effect mechanisms often results in patterns in which the survival curves separate only after some delay time or cross each other at some point in time [@bardo2023].
 Yet, the violation of the PH assumption might also be more subtle.
 The consequences of such a violation are that statistical testing procedures can suffer from a loss in power and that the interpretation of the effect estimate - the hazard ratio - becomes ambiguous.
-Therefore, it would be desirable to have valid statistical methods at hand that make less assumptions and yield interpretable results.
+Therefore, it would be desirable to have valid statistical methods at hand that make fewer assumptions and yield interpretable results.
 
 
 Statistical methods for analyzing time-to-event data under non-proportional hazards can be categorized into two classes [@bardo2023]:
@@ -29,7 +29,7 @@ A matching effect measure can then be constructed by considering different two-s
 
 For the RMST, there exists an analytical point estimator based on the Kaplan-Meier estimator of the survival function as well as different estimators of the associated standard error.
 From these estimators, Wald-type tests and confidence intervals can be constructed [@hasegawa2020].
-However, these methods rely on asymptotic theory and have been shown to suffer from an inflated type-I error rate when dealing with small to moderate sample sizes only [@horiguchi2020a].
+However, these methods rely on asymptotic theory and have been shown to suffer from an inflated type-I error rate when dealing with small to moderate sample sizes [@horiguchi2020a].
 For this reason, @horiguchi2020a have developed a permutation test, which in their simulation study outperformed the standard asymptotic test with respect to controlling the type-I error.
 Nonetheless, this method still has some shortcomings as pointed out by @ditzhaus2023.
 First, they note that classical permutation tests rely on the exchangeability assumption, which in the context of survival analysis translates to equal distribution functions of both, survival and censoring times, across the groups being compared.

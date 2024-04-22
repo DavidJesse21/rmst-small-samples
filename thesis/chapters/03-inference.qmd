@@ -94,9 +94,9 @@ $$
 \, .
 $$ {#eq-pseudoglm}
 Here, $V_i = f(T_i)$ denotes some transformation of the original data reflecting the estimand we are interested in.
-E.g. $f(T_i | t^*) = \min(T_i, t^*)$ and the expectation thereof correspond to the restricted mean survival time.
+For instance, $f(T_i | t^*) = \min(T_i, t^*)$ and the expectation thereof correspond to the restricted mean survival time.
 $g$ is some link function impacting the interpretation of the covariate effects $\betavec$ on $\expect[V_i | \xvec_i]$.
-Now, the problem is that $V_i$ cannot be calculated for all observations $i = 1, \ldots, n$ due to right-censoring, therefore prohibiting the direct estimation of the model (@eq-pseudoglm).
+The problem is that $V_i$ cannot be calculated for all observations $i = 1, \ldots, n$ due to right-censoring, therefore prohibiting the direct estimation of the model (@eq-pseudoglm).
 This is where pseudo-observations become relevant:
 Instead of using the original time-to-event data as the response we calculate pseudo-observations in the following way [@andersen2010; @sachs2022]:
 $$
@@ -115,7 +115,7 @@ $$
 \begin{split}
   \expect(P_i) &= \expect[n \hat{\theta} - (n - 1) \hat{\theta}_{-i}] \\
   &= n \expect[\hat{\theta}] - (n - 1) \expect[\hat{\theta}_{-i}] \\
-  &= n \theta - (n - 1) \theta \\
+  &= n V - (n - 1) V \\
   &= \theta
 \end{split}
 $$ {#eq-unbiased}
@@ -237,12 +237,12 @@ However, as we argue that the main advantage of an approach based on pseudo-obse
 Nonetheless, the basic idea of the approach proposed in the following is still similar to that of the studentized permutation test:
 Instead of making a fixed assumption about the approximate distribution of the test statistic under the null hypothesis, in this case (@eq-tstat-po) following a standard normal distribution, and using this assumption even in small sample scenarios, we strive to estimate this distribution from the observed data directly.
 This means that we need to obtain parameters estimates and associated test statistics such as (@eq-tstat-po) as if the null hypothesis was true.
-For the studentized permutation test this has been done by calculating the test statistic (@eq-tstat-perm) using a permuted version $(\tvec, \deltavec)^{\pi}$ of the original data $(\tvec, \deltavec)$.
+For the studentized permutation test this has been done by calculating the test statistic (@eq-tstat-perm) using permuted versions $(\tvec, \deltavec)^{\pi}$ of the original data $(\tvec, \deltavec)$.
 Here, we slightly modify this notation, omitting the treatment group index $j$, but therefore including the matrix of covariates $\xmat$.
 Then, we denote the original data by $(\tvec, \deltavec, \xmat) \equiv \{(t_i, \delta_i, \xvec_i'): \, i = 1, \ldots, n \})$.
 In the simplest setting, $\xmat$ could just be an $n \times 1$ vector, e.g. representing the treatment assignment for each individual.
 Furthermore, let $(\tvec, \deltavec, \xmat)^b \equiv \{(t_i, \delta_i, \xvec_i')^b: \, i = 1, \ldots, n \})$ denote a similar data set that has been obtained by case resampling with replacement, which we call a *bootstrap sample*.
-We then generate such bootstrap samples $B$ times as it would be done for the permutation data sets $(\tvec, \deltavec)^{\pi}$ (@sec-studperm).
+In a similar fashion to the studentized permutation test, we generate such bootstrap samples $B$ times.
 For each of the $B$ bootstrap samples we now seek to calculate the pseudo-observations (@eq-pseudo) and subsequently estimate a corresponding regression model (@eq-pseudoglm).
 Finally, for any coefficient $\beta$ of such a model we can calculate the bootstrap test statistic
 $$
@@ -281,5 +281,5 @@ It is required that the marginal estimator $\hat{\theta}$ can be written as a fu
 As pointed out, the advantage over ordinary pseudo-observations obtained by using the jackknife samples is the computational speed.
 Despite this, the loss in numerical accuracy is negligible even for moderate sample sizes, making IJ pseudo-observations an attractive alternative to ordinary pseudo-observations [@parner2023].
 
-Similar to the application of the studentized permutation test, using bootstrap resampling in combination with pseudo-observations we are likely to encounter situations, in which the underlying marginal estimators of the RMST are not uniquely defined at $t^*$ due to right-censoring.
+Similar to the application of the studentized permutation test, using bootstrap resampling in combination with pseudo-observations we are likely to encounter situations in which the underlying marginal estimators of the RMST are not uniquely defined at $t^*$ due to right-censoring.
 We employ the same simple strategy that has been used by @horiguchi2020a and @ditzhaus2023 for the permutation methods, i.e. we extend the Kaplan-Meier estimate "horizontally" up to that time point.

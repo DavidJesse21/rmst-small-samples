@@ -58,7 +58,7 @@ $$
 \end{split}
 $$
 Accordingly, if one of the aforementioned functions is given all of the remaining ones can be derived from it.
-A lot of the methods employed in survival analysis are actually built upon the hazard function.
+Many of the methods employed in survival analysis are actually built upon the hazard function.
 Its relevance shall be further underlined in the following subsection.
 
 
@@ -74,7 +74,7 @@ $$
 HR(t) = \frac{h_1(t)}{h_0(t)} \quad \text{for } h_0(t) > 0
 $$ {#eq-hr}
 Using this general definition it is clear that the hazard ratio is a function of time.
-However, many of the standard statistical methods used in survival analysis are based on the assumption that the hazards are proportional over and therefore independent of time:
+However, many of the standard statistical methods used in survival analysis are based on the assumption that the hazards are proportional over time, implying that the hazard ratio is independent of it:
 $$
 HR(t) = \frac{h_1(t)}{h_0(t)} = \theta \quad \forall \, t
 $$ {#eq-phr}
@@ -95,7 +95,7 @@ $$
   \frac{t^{\alpha_1 - 1}}{t^{\alpha_0 - 1}}
 \end{split}
 $$
-Here, we can see that the Weibull distribution exhibits proportional hazards when the shape parameter $\alpha$ is the same for both populations.
+Here, we can see that the Weibull distribution exhibits proportional hazards if the shape parameter $\alpha$ is the same for both populations.
 In this case, the hazard ratio is given by $(\lambda_1 / \lambda_0)^\alpha$.
 If this is not the case, however, the hazards are non-proportional.
 @fig-nph illustrates those two situations, depicting the survival and hazard functions as well as the hazard ratio of the two groups with differently parametrized Weibull distributions.
@@ -267,7 +267,7 @@ wrap_plots(
   plot_layout(ncol = 2, byrow = FALSE, axes = "collect_x")
 ```
 
-Obviously, @fig-nph depicts theoretical scenarios only that might be considered idealized to some extent.
+@fig-nph depicts theoretical scenarios only that might be considered idealized to some extent.
 Still, we can also use real-world data sets to contrast situations with hazards that are rather proportional or non-proportional over time.
 Such examples are given in @fig-nph2 where estimated survival and hazard functions are shown.
 The former are estimated using the nonparametric Kaplan-Meier estimator of the survival function, while the latter are derived from fitting flexible parametric models [@royston2002] with $(3, 2)$ degrees of freedom.
@@ -277,7 +277,7 @@ In addition to that, the dashed line represents the estimate of the time-indepen
 In the left column, we use the `diabetic` data set from the `{survival}` R package [@R-survival], which contains results from a trial of laser coagulation for the treatment of diabetic retinopathy.
 We can see that the survival curves do not cross a single time and diverge fairly evenly across time.
 Accordingly, the estimated hazard functions are proportional to most extent.
-Although the hazard ratio fluctuates a little bit in the initial phase of the study, it remains within a relatively small range overall, not deviating much from the fixed hazard ratio obtained from the Cox model.
+Although the hazard ratio fluctuates somewhat in the initial phase of the study, it remains within a relatively small range overall, not deviating much from the fixed hazard ratio obtained from the Cox model.
 
 On the other hand, the data set presented in the right column is reconstructed from a phase-III randomized controlled trial by @robert2015.
 Here, the population under investigation consisted of patients with advanced melanoma.

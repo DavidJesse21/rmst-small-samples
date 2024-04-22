@@ -65,7 +65,7 @@ blank_x = theme(
 # Empirical Examples {#sec-examples}
 
 It is considered good practice to complement statistical simulation studies with applications to real-world data sets, e.g. to illustrate if or to what extent the choice of method matters in practical applications [@friedrich2024].
-Here, this is one goal we want to achieve, thus highlighting similarities and differences between the methods when applied to the same real-world problem.
+Here, this is one goal we want to achieve, i.e. highlighting similarities and differences between the methods when applied to the same real-world problem.
 
 Moreover, we want to look into an aspect of the methods based on pseudo-observations that we have not covered in the simulation study, that is the possibility to directly adjust for covariates.
 This facet is particularly interesting as it is known from other contexts that the incorporation of prognostic covariates into the analysis can increase the precision of treatment effect estimates and consequently increase the power of associated tests [@kahan2014].
@@ -286,7 +286,7 @@ As we have already noted in @sec-sim-design and can be seen in @fig-res-hellmann
 Therefore, of greater interest are the confidence intervals and test decisions of the different methods.
 For $t^* = 12$ months all methods just retain the null hypothesis of no treatment effect difference for a significance level of $\alpha = 5\%$.
 With regard to the standard asymptotic test, the different conclusion drawn here as opposed to @ditzhaus2023 is due to the fact that we have used Greenwood's variance estimator (@eq-varest1) instead of the Nelson-Aalen plug-in estimator (@eq-varest2).
-With respect to the other methods the studentized permutation test suggests the least evidence for concluding that in fact there was a treatment effect followed by the bootstrap approach (see @tbl-res-hellmann).
+With respect to the other methods the studentized permutation test suggests the least evidence for concluding that in fact there is a treatment effect followed by the bootstrap approach (see @tbl-res-hellmann).
 For $t^* = 15,\, 18$, however, all methods reject the null hypothesis in favor of the alternative that, on average, the nivolumab plus ipilimumab therapy prolongs progression-free survival when comparing it to chemotherapy.
 Thus, in terms of a binary test decision, all methods lead to the same implication.
 Nonetheless, we can see that the confidence intervals of the studentized permutation method and those of the pseudo-observations methods are quite similar, whereas those of the standard asymptotic approach are a bit narrower.
@@ -581,7 +581,7 @@ wrap_plots(p_km, p_haz, p_hr) +
   xlab("\nTime (months)")
 ```
 
-Latly, we consider another study from the field of oncology by @grana2002.
+Lastly, we consider another study from the field of oncology by @grana2002.
 The authors conducted a controlled trial among 37 patients with high grade glioma, which is a class of tumors concerning the central nervous system.
 All of the patients had received surgery and radiotherapy before the trial.
 The authors of the study were then interested in the effect of adjuvant intralesional radioimmunotherapy on two endpoints, disease-free survival and overall survival.
@@ -591,7 +591,7 @@ Besides the time-to-event endpoints and the treatment assignment they also recor
 Furthermore, it is worth noticing that treatment assignment was not randomized.
 
 Again, the estimated survival and hazard functions of the two treatment regimens as well as the time-dependent hazard ratio are depicted in @fig-glioma.
-From a graphical view it is reasonable to expect a treatment effect in favor of the adjuvant therapy.
+A visual inspection suggests to expect a treatment effect in favor of the adjuvant therapy.
 This impression is even more marked here than for the Edmonson example as the separation of the two survival curves is more consistent over time.
 Although there is still some variability in the estimated time-dependent hazard ratio it is much more stable than that from the Edmonson example.
 As a result, the p-value of the Grambsch-Therneau test is even larger with a value of $19.95\%$.
@@ -706,7 +706,7 @@ kbl(
 ```
 
 Regardless of the chosen cutoff time point ($t^* \in \{20,\, 30,\, 40\}$), in this example, all tests make the same decision, signifying a positive treatment effect of the adjuvant therapy (@tbl-res-glioma).
-As it can be expected visually form @fig-glioma the log-rank test does not deviate from this.
+As it can be expected visually form @fig-glioma the log-rank test does not deviate from this decision.
 
 When taking a closer look at the point estimates and their confidence intervals in @fig-res-glioma we can see two things.
 As for the previous two examples the width of the confidence interval varies slightly depending on the chosen method.

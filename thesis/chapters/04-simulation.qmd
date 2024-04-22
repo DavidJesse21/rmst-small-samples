@@ -21,7 +21,8 @@ In particular, the focus is on settings with small to moderate sample sizes as a
 *Data-generating mechanisms*\newline
 The data-generating mechanisms are in principle adopted from the simulation study by @ditzhaus2023, including five factors being varied:
 The event time distributions, the censoring time distributions, the base allocation of the sample size, the sample multiplier as well as the effect size, i.e. the true RMST difference.
-However, we do not evaluate all of the scenarios constructed by @ditzhaus2023 but instead concentrate only on a subset of them that we consider to be representative in the sense of covering a range of possibly heterogeneous scenarios, especially with respect to the event time distributions of the two populations.
+However, we do not evaluate all of the scenarios constructed by @ditzhaus2023 but instead only concentrate on a subset of them.
+We selected this subset in a way that we think it covers a range of possibly heterogeneous scenarios, especially with respect to the event time distributions of the two populations.
 For the effect sizes $\Delta = \mu_1(t^*) - \mu_0(t^*)$ @ditzhaus2023 considered four values in total.
 Here, we only look at $\Delta \in \{0, 1.5\}$, reflecting scenarios under the null and under the alternative hypothesis, respectively.
 In addition, we investigate the following three of the nine pairs of event time distributions considered by @ditzhaus2023:
@@ -128,6 +129,7 @@ Other methods that were also investigated by @ditzhaus2023 and could have been i
 Based on the results by @ditzhaus2023, in our opinion, these two methods cannot be assigned to any of the two aforementioned categories and therefore we do not cover them in our own study.
 
 *Performance measures*\newline
+
 Given the null hypothesis in (@eq-test-problem) as the target of the simulation study and the original problem that the standard asymptotic test (@eq-test-asy) has an inflated type-I error rate, the type-I error rate is also the primary performance measure.
 Corresponding secondary performance measures are the power and the coverage probability of the respective test and its associated confidence interval, respectively.
 
@@ -136,14 +138,14 @@ Corresponding secondary performance measures are the power and the coverage prob
 
 For each of the scenarios described in @sec-sim-design we generated $N_{\text{sim}} = 5000$ data sets as it has been done by @ditzhaus2023.
 Similarly, we used $N_{\text{res}} = 2000$ resampling iterations, for both, the studentized permutation and the pseudo-observations bootstrap test. 
-The nominal significance level $\alpha$ was set to $5\%$
+The nominal significance level $\alpha$ was set to $5\%$.
 
-All computations were carried out using the `R` programming language in version 4.3.0 [@R-base] on the high performance computing cluster of the GWDG in Goettingen.
+All computations were carried out using the `R` programming language in version 4.3.0 [@R-base] on the high performance computing cluster of the GWDG in Göttingen.
 The asymptotic test as well as the studentized permutation test were implemented by ourselves based on code supplied by Marc Ditzhaus.
 
 For the approaches based on pseudo-observations we used the `rmeanglm()` function from the `{eventglm}` package [@sachs2022].
 This function is essentially a wrapper around the `stats::glm()` function adapted to regression models for pseudo-observations.
-Using the arguments `model.censoring` and `formula.censoring` of that function it is possible to customize how the pseudo-observations are computed.
+The arguments `model.censoring` and `formula.censoring` of that function permit to customize the computation of the pseudo-observations.
 While the latter is used to specify which variables should be controlled for when calculating the pseudo-observations, to the former we can pass custom "modules" (R functions) that carry out the actual calculation of the pseudo-observations before estimating the regression model.
 Although the `{eventglm}` package already provides a wide range of such modules, we programmed these functions by ourselves as well, since the "horizontal extension strategy" does not work with these implementations.
 For the IJ pseudo-observations module we used the `pseudo()` function from the `{survival}` package [@R-survival].
@@ -561,10 +563,10 @@ Again, the studentized permutation method achieves the best performance with 184
 Likewise, the pseudo-observations methods are competitive with 174 (asymptotic) and 175 (bootstrap) simulations for which the empirical coverage is close enough to the targeted one.
 The minor superiority of the studentized permutation method can again be contributed to the settings with very small sample sizes ($K = 1$), for which the pseudo-observations approaches cannot entirely keep up with the studentized permutation confidence interval.
 
-Additional findings may be provided by this figure regarding the study design.
+Additionally, this figure provides insights regarding the study design.
 It seems that, regardless of the chosen method, it is harder to achieve the nominal coverage rate when there are less subjects in the treatment arm than in the control arm ($(n_0, n_1) = (18, 12)$).
 As with many other findings from this study, this is especially the case for very small sample sizes ($K = 1$).
-In contrast, it does not seem to make such a big difference whether the samples are balanced between the two groups or if the number of samples predominates in the treatment arm.
+In contrast, it does not seem to make much difference whether the samples are balanced between the two groups or if the number of samples predominates in the treatment arm.
 Therefore, we may conclude that for an actual study we should seek a sample allocation that is either balanced or is slightly concentrated towards the treatment group.
 
 ```{r}
