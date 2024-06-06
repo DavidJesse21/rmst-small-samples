@@ -74,7 +74,7 @@ ggplot(dt2, aes(factor(algo.id), reject)) +
   facet_wrap(
     ~ num_samples,
     labeller = labeller(num_samples = \(x) paste0("N = ", x)),
-    scales = "free_y"
+    scales = "fixed"
   )
 
 # Plot coverage ----

@@ -4,60 +4,61 @@ bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 
 # Introduction {#sec-intro}
 
-In clinical trials, often the outcome of interest is the time from some well-defined onset until a certain type of event occurs, e.g. the time from randomization to a treatment until death.
-Such type of data is called *time-to-event* or *survival* data and has the special property that typically the event times of some subjects are only incompletely observed.
+In clinical trials, often the outcome of interest is the time from some well-defined time origin until a certain type of event occurs, e.g. the time from randomization to a treatment until death.
+Such type of data is called *time-to-event* or *survival* data and has the special property that, typically, the event times of some subjects are only incompletely observed.
 For instance, the study might end before an individual has actually experienced the event of interest.
-Another reason could be that a patient is lost to follow-up during the study and it is no longer possible to gather the required information for that patient.
 This phenomenon is called *censoring* and requires tailored statistical methods that are able to deal with it.
-This is only one reason why survival analysis has evolved into an own strand of research within statistics [@collett2015].
+This is one reason why survival analysis has evolved into an own strand of research within statistics [@collett2015].
 
-Many of the most commonly used statistical methods for effect estimation and hypothesis testing for survival data, such as the Cox model [@cox1972] or the log-rank test [@peto1972], either explicitly or implicitly rely on the *proportional hazards* (PH) assumption and the *hazard ratio* (HR) as the effect size of interest when comparing two treatment groups.
-However, in many modern clinical trials with time-to-event endpoints it has turned out that this assumption is clearly violated, i.e. we have *non-proportional hazards* (NPH).
-For instance, in oncology trials the comparison of treatments with different effect mechanisms often results in patterns in which the survival curves separate only after some delay time or cross each other at some point in time [@bardo2023].
+Many of the most commonly used statistical methods for effect estimation and hypothesis testing for survival data have a foundation on the *proportional hazards* (PH) assumption and the *hazard ratio* (HR) as the effect size of interest.
+For instance, the Cox model [@cox1972] directly makes this assumption and outputs an estimate of the HR.
+The log-rank test [@peto1972], on the other hand, does not explicitly assume PH but loses power when this assumption is violated, i.e. in scenarios with *non-proportional hazards* (NPH).
+Such situations occur frequently in modern clinical trials with time-to-event endpoints [@dormuth2022].
+For instance, in oncology trials the comparison of treatments with different effect mechanisms often results in delayed treatment effect patterns where the survival curves separate or cross each other at some later point in time [@bardo2024].
 Yet, the violation of the PH assumption might also be more subtle.
-The consequences of such a violation are that statistical testing procedures can suffer from a loss in power and that the interpretation of the effect estimate - the hazard ratio - becomes ambiguous.
+The consequences of such a violation are that statistical testing procedures can suffer from a loss of power and that the interpretation of the effect estimate -- the hazard ratio -- becomes ambiguous.
 Therefore, it would be desirable to have valid statistical methods at hand that make fewer assumptions and yield interpretable results.
 
-
-Statistical methods for analyzing time-to-event data under non-proportional hazards can be categorized into two classes [@bardo2023]:
-The first class focuses on hypothesis testing and mainly aims at robustifying the otherwise commonly used log-rank test against different kinds of NPH patterns [@royston2020].
+Statistical methods for analyzing time-to-event data under non-proportional hazards can be categorized into two classes [@bardo2024]:
+The first class focuses on hypothesis testing and mainly aims at robustifying the otherwise commonly used log-rank test against different kinds of NPH alternatives [@royston2020].
 In contrast, other approaches pay more attention to the selection of an appropriate population-level summary measure, which remains interpretable under both, proportional and non-proportional hazards.
 The choice of a corresponding statistical model or testing procedure then follows in a subsequent step based on the selected summary measure [@quartagno2023].
 One of such summary measures, which has gained a lot of popularity in recent years, is the *restricted mean survival time* (RMST).
 Loosely, the RMST is defined as the area under the (estimated) survival curve from time $0$ up to some (pre-)specified time point $t^*$, which corresponds to the expected survival time within this observation window [@royston2011].
-A matching effect measure can then be constructed by considering different two-sample contrasts such as the difference or the ratio of the RMSTs [@uno2014].
+An effect measure can then be constructed by considering different two-sample contrasts such as the difference or the ratio of the RMSTs [@uno2014].
 
 For the RMST, there exists an analytical point estimator based on the Kaplan-Meier estimator of the survival function as well as different estimators of the associated standard error.
 From these estimators, Wald-type tests and confidence intervals can be constructed [@hasegawa2020].
-However, these methods rely on asymptotic theory and have been shown to suffer from an inflated type-I error rate when dealing with small to moderate sample sizes [@horiguchi2020a].
-For this reason, @horiguchi2020a have developed a permutation test, which in their simulation study outperformed the standard asymptotic test with respect to controlling the type-I error.
+However, these methods rely on asymptotic theory and have been shown to suffer from an inflated type I error rate when dealing with small to moderate sample sizes [@horiguchi2020a].
+For this reason, @horiguchi2020a have developed a permutation test, which in their simulation study outperformed the standard asymptotic test with respect to controlling the type I error.
 Nonetheless, this method still has some shortcomings as pointed out by @ditzhaus2023.
 First, they note that classical permutation tests rely on the exchangeability assumption, which in the context of survival analysis translates to equal distribution functions of both, survival and censoring times, across the groups being compared.
-This property of the permutation test has not been challenged in the simulation study by @horiguchi2020a as for the assessment of the type-I error rate both distribution functions have been considered to be equal.
+This property of the permutation test has not been challenged in the simulation study by @horiguchi2020a as for the assessment of the type I error rate both distribution functions have been considered to be equal.
 Second, as mentioned by @horiguchi2020a themselves, their permutation test cannot be used for constructing analogous confidence intervals.
 Therefore, @ditzhaus2023 have taken up on this idea and created a studentized permutation test for RMST contrasts, which should solve both aforementioned issues.
-In a simulation study the authors demonstrate that their proposed method succeeds in doing so.
+In a simulation study, the authors demonstrate that their proposed method succeeds in doing so.
 
 Another approach for estimating and testing RMST contrasts is based on so-called *pseudo-observations* [@andersen2010].
-The main motivation of this approach is to circumvent the need to deal with censored observations when standard survival methods do not apply for the given research question.
-Another attractive property is that using pseudo-observations it is possible to directly evaluate covariate effects on arbitrary survival quantities without the need to convert an adjusted hazard regression model to the scale of that quantity and thereby estimating the effects indirectly.
+The main motivation of this approach is to circumvent the need to deal with censored observations and apply standard regression techniques to answer a given research question.
+This makes it possible to directly evaluate covariate effects on arbitrary survival quantities without the need to convert an adjusted hazard regression model to the scale of that quantity and thereby estimating the effects indirectly.
 It does this by calculating pseudo-observations of the survival quantity of interest for each subject in a first step and estimating a generalized linear model with these pseudo-observations as the response variable in a second step.
-For conducting statistical inference based on this model it has been suggested to use a sandwich type estimator for the covariance matrix of the regression coefficients as the pseudo-observations cannot be considered to be independent and identically distributed in finite-sample settings [@andersen2003].
+For conducting statistical inference based on this model it has been suggested to use a sandwich-type estimator for the covariance matrix of the regression coefficients as the pseudo-observations cannot be considered to be independent and identically distributed in finite-sample settings [@andersen2003].
 The usage of pseudo-observations in survival analysis has previously been proposed, in particular in the context of restricted mean survival times [@royston2011; @andersen2017; @ambrogi2022].
 However, to the best of our knowledge, it has not been investigated with a special emphasis on its performance under small to moderate sample sizes.
-Considering that the usage of sandwich type estimators has been shown to have good small sample properties in other contexts [e.g. @long2000] we hypothesize that this could also be the case for estimating RMST contrasts using pseudo-observations.
-If such an approach does have a satisfactory performance and can compete with the studentized permutation method there are some potential advantages to it inherited from the flexibility of generalized linear models.
-For instance, if we wanted to evaluate the effect of a continuous covariate instead of a categorical one this could easily be achieved using pseudo-observations but would not be possible in the same way using the studentized permutation method.
+Considering that the usage of sandwich-type estimators has been shown to have good small sample properties in other contexts [e.g. @long2000] we hypothesize that this could also be the case for estimating RMST contrasts using pseudo-observations.
+Because of that, we propose the application of pseudo-observations methods for estimating and testing RMST differences in scenarios with small to moderate sample sizes and want to investigate their operating characteristics in this thesis.
+If such approaches do have a satisfactory performance and can compete with the studentized permutation method there are some potential advantages to them inherited from the flexibility of generalized linear models.
+For instance, if we wanted to evaluate the effect of a continuous covariate instead of a categorical one this could easily be achieved using pseudo-observations but would not be possible in the same way using the studentized permutation method by @ditzhaus2023.
 Even if a potential continuous covariate was not of central interest itself but should only be adjusted for in the analysis it would not be immediately clear how to proceed.
-Although these aspects will not be the central focus of this thesis they serve as one motivation for investigating this approach for the problem of handling small sample sizes in the first place.
+Although these aspects will not be the central focus of this thesis they serve as one motivation for investigating these approaches for the problem of handling small sample sizes in the first place.
 
 In summary, we pursue two goals in this thesis:
 First, we want to replicate the results from the simulation study by @ditzhaus2023 regarding the asymptotic and their proposed studentized permutation test for two-sample RMST differences in the sense that we can draw the same conclusions from it as they did.
 Second, we want to amplify this benchmark by proposing two further approaches based on pseudo-observations.
-The first of these two approaches employs an asymptotic test for conducting inference based on pseudo-observation regression models using a sandwich type covariance matrix estimator.
+The first of these two approaches employs an asymptotic test for conducting inference based on pseudo-observation regression models using a sandwich-type covariance matrix estimator.
 With the second approach we try to refine this method by replacing the asymptotic test with a nonparametric bootstrap test.
 
-With these goals in mind the remainder of this thesis is structured as follows:
+With these goals in mind, the remainder of this thesis is structured as follows:
 In @sec-survnph we first introduce basic concepts and notations used in survival analysis.
 Furthermore, we briefly elucidate the proportional hazards assumption and the hazard ratio as corresponding effect measure as well as statistical methods employing these concepts.
 For situations in which this assumption is not met we introduce the difference in restricted mean survival times as an alternative estimand for the hazard ratio.

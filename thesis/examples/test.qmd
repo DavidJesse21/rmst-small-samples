@@ -63,6 +63,16 @@ format_pval = function(x) {
     format(round(x, 1), digits = 2, nsmall = 1)
   )
 }
+
+format_pval = function(x) {
+  make_bold = (x < 5)
+  xf = fifelse(
+    x < 0.1, "<0.1",
+    format(round(x, 1), digits = 2, nsmall = 1)
+  )
+  
+  cell_spec(xf, bold = make_bold)
+}
 ```
 
 

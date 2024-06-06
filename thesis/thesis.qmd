@@ -23,6 +23,7 @@ format:
       - top=2.5cm
       - bottom=2cm
       - bindingoffset=5mm
+      - footskip=1cm
     cite-method: biblatex
     biblatexoptions:
       - backend=biber
@@ -36,7 +37,7 @@ format:
       - eprint=false
       - url=false
       - date=year
-    biblio-style: authoryear-icomp
+    biblio-style: authoryear
     include-in-header: ["tex/preamble.tex", "tex/operators.tex"]
     include-before-body: ["tex/before_body.tex", "tex/abbreviations.tex"]
 bibliography: ["bib/references.bib", "bib/packages.bib"]
@@ -45,7 +46,7 @@ execute:
   warning: false
   output: true
 crossref: 
-  eq-prefix: "Eq."
+  eq-prefix: ""
 suppress-bibliography: true
 ---
 
@@ -103,10 +104,14 @@ dts = get_scenario_table()
 
 # Function for formatting p-values in tables
 format_pval = function(x) {
-  fifelse(
+  make_bold = (x <= 5)
+  xf = fifelse(
     x < 0.1, "<0.1",
     format(round(x, 1), digits = 2, nsmall = 1)
   )
+  
+  out = cell_spec(xf, bold = make_bold)
+  fifelse(out == "NA", NA_character_, out)
 }
 ```
 
@@ -145,6 +150,9 @@ format_pval = function(x) {
 \begingroup
 <!-- Increase space between bibliography entries -->
 \setlength\bibitemsep{0.5\baselineskip}
+<!-- Remove "In: Journal" -->
+\renewbibmacro{in:}{%
+  \ifentrytype{article}{}{\printtext{\bibstring{in}\intitlepunct}}}
 <!-- Bibliography -->
 \printbibliography[heading=none]
 \endgroup

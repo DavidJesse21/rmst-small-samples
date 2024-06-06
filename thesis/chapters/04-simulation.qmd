@@ -4,26 +4,26 @@ bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 
 # Simulation Study {#sec-simulation}
 
-With the intention of evaluating and comparing the empirical performance of the presented methods, in particular in settings with small to moderate sample sizes, we now set up a simulation study pursuing to cover a satisfactory range of different scenarios.
-In order to embed the design of this study into a structured framework we make use of the ADEMP methodology introduced by @morris2019a.
-ADEMP is an acronym translating to *Aims*, *Data-generating mechanisms*, *Estimands* (and other targets), *Methods* and *Performance measures*.
+To evaluate and compare the empirical performance of the presented methods, in particular in settings with small to moderate sample sizes, we now set up a simulation study pursuing to cover a satisfactory range of different scenarios.
+In order to embed the design of this study into a structured framework, we make use of the ADEMP methodology introduced by @morris2019a.
+ADEMP is an acronym translating to *Aims*, *Data-generating mechanisms*, *Estimands* (and other targets), *Methods*, and *Performance measures*.
 The concrete configuration of these aspects is described in the first subsection.
-Thereafter, we briefly comment on computational aspects regarding the implementation of the presented methods into statistical software on the one hand as well as the execution of the simulation study and its reproducibility.
+Thereafter, we briefly comment on computational aspects regarding the implementation of the presented methods in statistical software on the one hand as well as the execution of the simulation study and its reproducibility.
 Lastly, we present the results of the study and discuss our findings.
 
 
 ## Design {#sec-sim-design}
 
 *Aims*\newline
-The aim of this simulation study is to investigate the performance of different methods for estimating and testing the RMST difference between two samples, e.g. a control and an experimental treatment group in a clinical trial.
+The aim of this simulation study is to investigate the performance of pseudo-observations methods for estimating and testing the RMST difference between two samples, e.g. a control and an experimental treatment group in a clinical trial, in comparison to alternative approaches.
 In particular, the focus is on settings with small to moderate sample sizes as all methods under investigation either directly or indirectly rely on large sample approximations based on asymptotic theory.
 
 *Data-generating mechanisms*\newline
-The data-generating mechanisms are in principle adopted from the simulation study by @ditzhaus2023, including five factors being varied:
+The data-generating mechanisms are, in principle, adopted from the simulation study by @ditzhaus2023, including five factors being varied:
 The event time distributions, the censoring time distributions, the base allocation of the sample size, the sample multiplier as well as the effect size, i.e. the true RMST difference.
 However, we do not evaluate all of the scenarios constructed by @ditzhaus2023 but instead only concentrate on a subset of them.
 We selected this subset in a way that we think it covers a range of possibly heterogeneous scenarios, especially with respect to the event time distributions of the two populations.
-For the effect sizes $\Delta = \mu_1(t^*) - \mu_0(t^*)$ @ditzhaus2023 considered four values in total.
+For the effect size $\Delta = \mu_1(t^*) - \mu_0(t^*)$ @ditzhaus2023 considered four values in total.
 Here, we only look at $\Delta \in \{0, 1.5\}$, reflecting scenarios under the null and under the alternative hypothesis, respectively.
 In addition, we investigate the following three of the nine pairs of event time distributions considered by @ditzhaus2023:
 \begin{itemize}
@@ -33,9 +33,9 @@ In addition, we investigate the following three of the nine pairs of event time 
 \end{itemize}
 Here, $\theta_{\Delta}$ denotes a generic parameter whose meaning depends on the respective context.
 It then gets calibrated according to the given effect size $\Delta$ and the restriction time $t^*$, the latter being fixed to $t^* = 10$.
-For S1 this corresponds to the rate parameter for the exponential distribution of the treatment group, whereas for S7 this is the time point at which the hazard of the treatment group changes.
-On the other hand, for S8 $\theta_{\Delta}$ is the scale parameter for the Weibull distribution of the treatment group.[^2]
-For the censoring distributions, in contrast, we keep using all levels examined by @ditzhaus2023:
+For S1, this corresponds to the rate parameter for the exponential distribution of the treatment group, whereas for S7 this is the time point at which the hazard of the treatment group changes.
+On the other hand, for S8, $\theta_{\Delta}$ is the scale parameter for the Weibull distribution of the treatment group.[^2]
+For the censoring distributions, in contrast, we keep using all levels of this factor examined by @ditzhaus2023:
 \begin{itemize}
   \item[C1] unequally Weibull distributed censoring (Weib, uneq): $C_0 \sim \dweib(3, 1/18)$ and $C_1 \dweib(0.5, 1/40)$
   \item[C2] equally uniformly distributed censoring (Unif, eq): $C_0 \sim \dunif(0, 25)$ and $C_1 \sim \dunif(0, 25)$
@@ -45,7 +45,8 @@ A visual representation of the pairs of both, the survival and the censoring dis
 
 ```{r}
 #| label: fig-models
-#| fig-cap: "Simulation models for the event (top) and censoring (bottom) times"
+#| fig-scap: "Simulation models for the event (top) and censoring (bottom) times"
+#| fig-cap: "Simulation models for the event (top) and censoring (bottom) times. The vertical dashed line indicates the cutoff time point at $t^* = 10$ for which the RMST differences $\\Delta = 0$ and $\\Delta = 1.5$ hold, respectively."
 #| fig-width: 10
 #| fig-height: 8
 
@@ -57,14 +58,14 @@ wrap_plots(
 ```
 
 Moreover, we utilize the same assumptions about the sample sizes and their allocations as @ditzhaus2023.
-In particular, we consider three base settings of how the samples are allocated between the two groups, i.e. $(n_0, n_1) \in \{(12, 18); (15, 15); (18, 12)\}$.
-To obtain different total sample sizes these base allocations are multiplied with the integer $K$.
-In comparison to @ditzhaus2023, who considered $K \in \{1, 2, 4\}$, we add $K = 6$ to this set in order to incorporate scenarios for which we expect the asymptotic theory to take effect.
-The combination of all these factors, summarized in @tbl-simdesign, leads to a total of 216 scenarios that are being evaluated, i.e. 108 scenarios for assessing the type-I error control of the different methods ($\Delta = 0$) and 108 scenarios for analyzing the power of the tests ($\Delta = 1.5$).
+In particular, we consider three base settings of how the samples are allocated between the two groups, i.e. $(n_0, n_1) \in \{(12, 18);\, (15, 15);\, (18, 12)\}$.
+To obtain different total sample sizes, these base allocations are multiplied with the integer $K$.
+In comparison to @ditzhaus2023, who considered $K \in \{1,\, 2,\, 4\}$, we add $K = 6$ to this set to incorporate scenarios for which we expect the asymptotic theory to take effect.
+The combination of all these factors, summarized in @tbl-simdesign, leads to a total of 216 scenarios that are being evaluated, i.e. 108 scenarios for assessing the type I error control of the different methods ($\Delta = 0$) and 108 scenarios for analyzing the power of the tests ($\Delta = 1.5$).
 
 ```{r}
 #| label: tbl-simdesign
-#| tbl-cap: "Factors and levels for the data-generating mechanisms"
+#| tbl-cap: "Factors and their levels for the data-generating mechanisms used in the simulation study"
 
 dt = data.table(
   Factor = c(
@@ -105,8 +106,8 @@ kbl(
   )
 ```
 
-For their simulation study evaluating the unstudentized permutation test @horiguchi2020a regenerated the simulated data whenever the RMST was inestimable for at least one of the two groups using a Kaplan-Meier-based estimator of the RMST.
-As described in @sec-studperm such a situation occurs when the largest event time is smaller than $t^*$ and is censored.
+For their simulation study evaluating the unstudentized permutation test, @horiguchi2020a regenerated the simulated data whenever the RMST was inestimable for at least one of the two groups using a Kaplan-Meier-based estimator of the RMST.
+As described in @sec-studperm, such a situation occurs when the largest event time is smaller than $t^*$ and is censored.
 @ditzhaus2023 also adopted this procedure for their simulation study.
 As a consequence, we employ the same routine in our study.
 
@@ -119,36 +120,35 @@ Therefore, this null hypothesis is the target of the simulation study.
 *Methods*\newline
 All methods that will be assessed in this study have been presented and explained in detail in @sec-inference.
 Of primary interest, however, are the two proposed methods based on pseudo-observations, i.e. the one employing an asymptotic test and the other one using a bootstrap test.
-For the latter we use IJ pseudo-observations as described in @sec-po-boot.
+For the latter, we use IJ pseudo-observations as described in @sec-po-boot.
 In order to acquire additional information about how the usage of IJ instead of ordinary pseudo-observations might impact the performance of the bootstrap test, we also include an asymptotic test using these IJ pseudo-observations.
 However, these results are devoted to [Appendix @sec-sim-results2].
-
-In this simulation study, the standard asymptotic test (@eq-test-asy) has the role of the main reference method as it can be expected that among all methods presented in this thesis this is the one most commonly employed in practice, both by applied scientists [e.g. @manner2019] and methodological researchers [e.g. @dormuth2023].
+In this simulation study, the standard asymptotic test (@eq-test-asy) has the role of the main reference method as it can be expected that, among all methods presented in this thesis, this is the one most commonly employed in practice, both by applied scientists [e.g. @manner2019] and methodological researchers [e.g. @dormuth2023].
 On the other hand, based on the results from their simulation study, we consider the studentized permutation method by @ditzhaus2023 as the current gold standard for conducting two-sample RMST tests.
 Other methods that were also investigated by @ditzhaus2023 and could have been included in our simulation study are the unstudentized permutation test by @horiguchi2020a and the approach based on empirical likelihood ratios by @zhou2021.
-Based on the results by @ditzhaus2023, in our opinion, these two methods cannot be assigned to any of the two aforementioned categories and therefore we do not cover them in our own study.
+Based on the results by @ditzhaus2023, in our opinion, these two methods cannot be assigned to any of the two aforementioned categories and therefore we do not cover them in our study.
 
 *Performance measures*\newline
-
-Given the null hypothesis in (@eq-test-problem) as the target of the simulation study and the original problem that the standard asymptotic test (@eq-test-asy) has an inflated type-I error rate, the type-I error rate is also the primary performance measure.
-Corresponding secondary performance measures are the power and the coverage probability of the respective test and its associated confidence interval, respectively.
+Given the null hypothesis in (@eq-test-problem) as the target of the simulation study and the original problem that the standard asymptotic test (@eq-test-asy) has an inflated type I error rate, the type I error rate is also the primary performance measure.
+Corresponding secondary performance measures are the power and the coverage of the respective test and its associated confidence interval, respectively.
 
 
 ## Computational Details {#sec-sim-comp}
 
 For each of the scenarios described in @sec-sim-design we generated $N_{\text{sim}} = 5000$ data sets as it has been done by @ditzhaus2023.
-Similarly, we used $N_{\text{res}} = 2000$ resampling iterations, for both, the studentized permutation and the pseudo-observations bootstrap test. 
+Similarly, we used $B = 2000$ resampling iterations, for both, the studentized permutation and the pseudo-observations bootstrap test. 
 The nominal significance level $\alpha$ was set to $5\%$.
 
-All computations were carried out using the `R` programming language in version 4.3.0 [@R-base] on the high performance computing cluster of the GWDG in Göttingen.
+All computations were carried out using the `R` programming language in version 4.3.0 [@R-base] on the high-performance computing cluster of the GWDG in Göttingen.[^3]
 The asymptotic test as well as the studentized permutation test were implemented by ourselves based on code supplied by Marc Ditzhaus.
+The code for the simulation study is hosted in a repository on GitLab and can be accessed upon request.
 
-For the approaches based on pseudo-observations we used the `rmeanglm()` function from the `{eventglm}` package [@sachs2022].
+For the approaches based on pseudo-observations, we used the `rmeanglm()` function from the `{eventglm}` package [@sachs2022].
 This function is essentially a wrapper around the `stats::glm()` function adapted to regression models for pseudo-observations.
 The arguments `model.censoring` and `formula.censoring` of that function permit to customize the computation of the pseudo-observations.
 While the latter is used to specify which variables should be controlled for when calculating the pseudo-observations, to the former we can pass custom "modules" (R functions) that carry out the actual calculation of the pseudo-observations before estimating the regression model.
-Although the `{eventglm}` package already provides a wide range of such modules, we programmed these functions by ourselves as well, since the "horizontal extension strategy" does not work with these implementations.
-For the IJ pseudo-observations module we used the `pseudo()` function from the `{survival}` package [@R-survival].
+Although the `{eventglm}` package already provides a wide range of such modules, we programmed these functions by ourselves as well, since the "horizontal extension strategy" (see @sec-studperm and @sec-po-boot) does not work with these implementations.
+For the IJ pseudo-observations module, we used the `pseudo()` function from the `{survival}` package [@R-survival].
 Further direct and indirect package dependencies were required for running the simulation study, all of which were tracked and managed using the `{renv}` package [@R-renv], contributing to the reproducibility of the results.
 
 Another important consideration regarding the validity and reproducibility of the results is how we generated pseudo-random numbers.
@@ -157,24 +157,24 @@ Moreover, we used the `with_seed()` function from the `{withr}` package [@R-with
 On the other hand, the application of the different statistical methods on the simulated data sets was done in parallel using the `{parallel}` package, which gets shipped with base R [@R-base].
 While we kept using the `with_seed()` function, we now used the L'Ecuyer-CMRG algorithm and parallel RNG streams for generating pseudo-random numbers.
 For the standard asymptotic test and those based on pseudo-observations this has no implications.
-Conversely, the studentized permutation method and the boostrap test using pseudo-observations both rely on stochastic resampling, which is why a proper handling of (parallel) random number generation is required.
+Conversely, the studentized permutation method and the bootstrap test using pseudo-observations both rely on stochastic resampling, which is why proper handling of (parallel) random number generation was required.
 
 
 ## Results {#sec-sim-results}
 
-We present the results, both in form of tables and figures.
-The former should provide all results in great detail whereas the latter shall serve as a way to grasp the overall patterns and conclusion faster.
+We present the results in the form of both, tables and figures.
+The former should provide all results in great detail whereas the latter shall serve as a way to grasp the overall patterns and conclusions faster.
 
-### Type-I Error {#sec-sim-type1}
+### Type I Error {#sec-sim-type1}
 
-Regarding the type-I error rate @fig-type1err displays the results graphically aggregated by the total sample size across the two treatment groups.
-Additionally, @tbl-type1err augments this with detailed numerical results.
-In both, the table and the figure, we have depicted the 95% binomial confidence interval $[4.4\%, 5.6\%]$ around the nominal level $\alpha = 5\%$ derived from the fact that we have run  $N_{\text{sim}} = 5000$ simulations for each scenario.
-Therefore, we can consider any of the statistical tests to have succeeded in terms of controlling the type-I error rate for a given scenario, whenever the empirical type-I error rate falls within that confidence interval.
+Regarding the type I error rate, @fig-type1err displays the results graphically aggregated by the total sample size across the two treatment groups.
+Additionally, @tbl-type1err augments @fig-type1err with detailed numerical results.
+In both, the table and the figure, we have depicted information about the 95% binomial confidence interval $[4.4\%, 5.6\%]$ around the nominal level $\alpha = 5\%$ derived from the fact that we have run  $N_{\text{sim}} = 5000$ simulations for each scenario.
+Therefore, we can consider any of the statistical tests to have succeeded in terms of controlling the type I error for a given scenario, whenever the empirical type I error rate falls within that confidence interval.
 
 ```{r}
 #| label: tbl-type1err
-#| tbl-cap: "Type-I error rates in % (nominal level $\\alpha = 5\\%$)"
+#| tbl-cap: "Type I error rates of different methods in % (nominal level $\\alpha = 5\\\\%$). The values inside the binomial confidence interval $[4.4\\\\%, 5.6\\\\%]$ are printed bold"
 
 # Calculate rejection rates
 # For sake of illustration:
@@ -297,10 +297,10 @@ kbl(
   # Explain binomial confidence interval and abbreviations
   footnote(
     general = c(
-      paste0(
-        r"(\\textit{Note:} )",
-        "The values inside the binomial confidence interval [4.4\\\\%, 5.6\\\\%] are printed bold."
-      ),
+      # paste0(
+      #   r"(\\textit{Note:} )",
+      #   "The values inside the binomial confidence interval [4.4\\\\%, 5.6\\\\%] are printed bold."
+      # ),
       paste0(
         r"(\\textit{Abbreviations:} )",
         "Asy, asymptotic test; ", "Perm, studentized permutation test; ",
@@ -319,7 +319,8 @@ kbl(
 
 ```{r}
 #| label: fig-type1err
-#| fig-cap: "Type-I error rates in % (nominal level $\\alpha = 5\\%$)"
+#| fig-cap: "Type I error rates of different methods in % (nominal level $\\alpha = 5\\%$) aggregated by the total sample sizes ($N = n_0 + n_1$). The dashed lines depict the 95% binomial confidence interval $[4.4\\%, 5.6\\%]$"
+#| fig-scap: "Type I error rates of different methods in % (nominal level $\\alpha = 5\\\\%$) aggregated by the total sample sizes ($N = n_0 + n_1$)"
 #| fig-width: 10
 #| fig-height: 6
 
@@ -353,44 +354,89 @@ ggplot(dt1, aes(factor(algo.id), reject)) +
   )
 ```
 
-The first thing we can observe is that, in line with the findings by @horiguchi2020a and @ditzhaus2023, the standard asymptotic test indeed leads to too liberal test decisions, only controlling the type-I error in 31 out of 108 scenarios in total.
-This is particularly pronounced for small sample sizes ($K \in \{1, 2\}$).
-Noticeably, for $K = 1$ there is not a single instance for which the type-I error was controlled by the asymptotic test.
-For $K = 2$ it controlled the type-I error in only 3 out of 27 scenarios.
-The performance of the test improves for $K = 3$ but even for this subset the test fails in the majority of cases (10 out of 27 possible successes).
-When dealing with a total of 180 samples ($K = 6$) the test enhances further but still performs evidently worse than its competitors.
+The first thing we can observe is that, in line with the findings by @horiguchi2020a and @ditzhaus2023, the standard asymptotic test indeed leads to too liberal test decisions across the majority of scenarios (see @fig-type1err).
+From the raw data in @tbl-type1err we can conclude that it controlled the type I error in 35 out of 108 scenarios in total.
+This issue is particularly pronounced for small sample sizes ($K \in \{1,\, 2\}$).
+Noticeably, for $K = 1$, there is not a single instance for which the type I error was controlled by the asymptotic test.
+For $K = 2$ it controlled the type I error in 3 out of 27 scenarios, only.
+The performance of the test improves for $K = 4$ but even for this subset, the test failed in the majority of cases (10 out of 27 possible successes).
+When dealing with a total of 180 samples ($K = 6$) the test enhances further (22 successes) but still performs evidently worse than its competitors.
+Additionally, the type of allocation of the samples has a noticeable impact on the performance of the test:
+In settings with fewer samples in the treatment arm than in the control arm ($(n_0, n_1) = (18, 12)$), the asymptotic test successfully controlled the type I error in 8 out of 36 cases.
+In contrast, when the sample sizes were balanced ($(n_0, n_1) = (15, 15)$) or larger in the control arm ($(n_0, n_1) = (12, 18)$) there were 14 and 13 successes, respectively.
+On the other hand, the performance of the test with respect to the type I error control seems to be less impacted by the distributional configurations of the survival and censoring models, overall.
+Considering these parameters marginally, the number of successes differs by 2 cases at most between the different settings.
 
-Regarding the studentized permutation test our own findings largely agree with those by @ditzhaus2023.
-Across all scenarios it even showed the best performance of all test, being able to control the type-I error in 90 out of 108 scenarios.
-Relative to the other methods its performance particularly stands out for very small sample sizes ($K = 1$), where it controlled the type-I error in 16 out of 27 instances.
-For larger sample sizes ($K \in \{2, 4, 6\}$), the performance was also decent.
-There are only few scenarios, for which the empirical type-I error rate is not within the 95%-confidence interval around the nominal level $\alpha = 5\%$.
+Regarding the studentized permutation test, our own findings largely agree with those by @ditzhaus2023.
+Across all scenarios it even showed the best performance of all tests, being able to control the type I error in 93 out of 108 scenarios.
+Relative to the other methods, its performance particularly stands out for very small sample sizes ($K = 1$), where it controlled the type I error in 16 out of 27 instances.
+For larger sample sizes ($K \in \{2,\, 4,\, 6\}$), the performance is also decent with 25, 27 and 25 successes, respectively.
+As for the asymptotic test, the factor that influences the performance of the studentized permutation test the most besides the total sample size is the allocation of the samples.
+With the allocation $(n_0, n_1) = (18, 12)$ the test successfully controlled the type I error in 28 out of 36 scenarios in comparison to 33 ($(n_0, n_1) = (15, 15)$) and 32 ($(n_0, n_1) = (12, 18)$) occurrences.
+However, we can observe greater variations in the performance of the studentized permutation test regarding the different distributional settings of the survival times.
+In this regard, the best performance can be observed in settings with proportional hazards (S1, 34 out of 36 possible successes).
+For settings S7 (exponential and piecewise exponential distributions with crossing survival curves) and S8 (crossing Weibull survival curves with shape alternatives), on the other hand, there are 30 and 29 successes, respectively.
+As for the censoring models, the conclusions are rather similar to those for the asymptotic test:
+While we cannot necessarily rule out a potential effect of the considered censoring distributions, the observed differences are comparatively small.
+For the censoring models C2 (equal, uniform) and C3 (equal, Weibull), the studentized permutation test succeeded 32 times.
+In the case of unequal Weibull censoring (C1), on the other hand, there are 29 successes.
+Finally, it is worth noticing that when the studentized permutation test does actually fail we cannot decisively attribute this failure to the test being too conservative or too liberal, overall (see @fig-type1err).
 
-Moving to the proposed methods based on pseudo-observations, overall we can conclude that they provide further valid alternatives to the studentized permutation approach for testing RMST differences and should be preferred over the standard asymptotic test.
-In summary, both tests controlled the type-I error in 88 scenarios, i.e. only two cases less than the studentized permutation test.
-Their slight inferiority relative to the studentized permutation test mainly results from scenarios with very small sample sizes ($K = 1$), where the two methods controlled the type-I error only in 10 (bootstrap) and 13 (asymptotic) scenarios.
-However, when the two tests fail in these situations they do so for different reasons.
-On the one hand, for the asymptotic approach we can observe a small tendency of making too liberal test decisions.
-The bootstrap approach, on the other hand, seems to be too conservative with the empirical type-I error rate being as low as 3.3% .
-While for larger sample sizes ($K = 2$) these tendencies can still be percieved, they become much less relevant already.
+Moving to the first proposed method based on pseudo-observations and the corresponding asymptotic test, overall, we can conclude that it provides a valid alternative to the studentized permutation test when it comes to improving the type I error control relative to the standard asymptotic test (see @fig-type1err).
+In particular, it controlled the type I error successfully in 88 out of all 108 scenarios (see @tbl-type1err).
+For very small sample sizes ($K = 1$), it cannot entirely keep up with the studentized permutation test, however (see @fig-type1err).
+Nonetheless, for sample sizes larger than that ($K \in \{2,\, 4,\, 6\}$) the performance is almost similar.
+The concrete patterns of other factors impacting the performance of the pseudo-observations method are in line with those of the studentized permutation test and the standard asymptotic approach.
+For instance, the samples being more concentrated toward the control arm negatively impacts the performance of the test.
+In this case, the test controlled the type I error successfully in 24 out of 36 scenarios.
+In the other two instances, the test succeeded in 33 ($(n_0, n_1) = (12, 18)$) and 31 ($(n_0, n_1) = (15, 15)$) cases.
+Regarding the survival and censoring models, we can observe similar tendencies as for the studentized permutation test but they are less strong.
+The test performed best for survival model S1 (proportional hazards) but the differences to the other settings are less remarkable with only one success more than for the other two models.
+In terms of censoring, the method also performed worse in the case of unequal Weibull censoring (C1).
+But also in this regard, the difference in the number of successes sums up to 2, only.
+As opposed to the studentized permutation test, the failures of the asymptotic pseudo-observations approach can clearly be attributed to a slightly too liberal behavior of the test when the sample size is small (see @fig-type1err).
+
+Lastly, we discuss the results of the pseudo-observations approach incorporating a bootstrap hypothesis test.
+In terms of the total number of scenarios in which this method was able to control the type I error, it improves the previously discussed pseudo-observations approach even further with 90 out of 108 such occurrences. 
+However, it must be noted that for the most extreme scenario, in terms of the total sample size ($K = 1$), it actually performed slightly worse than the pseudo-observations approach employing an asymptotic test (12 compared to 13 successes).
+From @fig-type1err we can conclude that this is due to a too conservative behavior of the test which gets more pronounced the smaller the sample size is.
+Unlike the other tests, however, this method seems to be less impacted by how the samples are allocated.
+Precisely, we have 31 ($(n_0, n_1) = (12, 18)$), 29 ($(n_0, n_1) = (15, 15)$) and 30 ($(n_0, n_1) = (18, 12)$) successes.
+Conversely, the configuration of the survival distributions has a greater effect:
+While the method handled scenarios with proportional hazards (S1) extremely effectively (not a single failure in controlling the type I error), it had more trouble with crossing Weibull survival curves (S8).
+In the latter case, the method could control the type I error in 25 out of 36 cases.
+For model S7 (exponential and piecewise exponential distributions with crossing survival curves) this number corresponds to 29.
+As for the other methods, the influence of the different censoring models evaluated in this simulation study seems to be rather weak.
 
 
 ### Power {#sec-sim-power}
 
 In a similar fashion, the power values for the different methods and scenarios are displayed in @tbl-power and @fig-power, respectively.
 
-The first thing we can take away is that the standard asymptotic test has the highest power in all scenarios among the methods investigated.
-However, having the discussion of the results in @sec-sim-type1 in mind, this comes at the cost of an inflated type-I error rate.
+From @tbl-power we can take away that the standard asymptotic test has the highest power in all scenarios among the methods investigated.
+However, having the discussion of the results in @sec-sim-type1 in mind, this comes at the cost of an inflated type I error rate.
 Therefore, it is hard to assess the higher power of the asymptotic test as an advantage over the other methods.
-
 Other than that, the remaining methods can broadly be ranked in the following order (highest to lowest power): pseudo-observations asymptotic, studentized permutation, pseudo-observations bootstrap.
-Hence, the conservativeness of the bootstrap method can also be recognized in terms of the power of the test.
-This conservativeness seems to be more pronounced in scenarios with very small sample sizes ($K = 1$) and the sample allocation being unbalanced with the treatment arm consisting of less samples than the control arm ($(n_0, n_1) = (18, 12)$).
-Despite this, even though the methods can be ranked quite consistently, the absolute differences in all other scenarios are rather subtle and of minor practical relevance.
+Hence, the conservativeness of the bootstrap method that we have observed in @sec-sim-type1 can also be recognized in terms of the power of the test.
+This conservativeness is most pronounced in settings with very small sample sizes ($K = 1$) as can be seen in @fig-power as well as in the single rows of @tbl-power.
+There, we can also see that this behavior of the bootstrap method becomes more noticeable when there are fewer samples in the treatment arm than in the control arm ($(n_0, n_1) = (18, 12)$).
+Although this effect can also be observed for the other methods it is not as strong as for the bootstrap method.
+Nevertheless, even if the ranking of the methods is quite consistent across different scenarios, the absolute differences in power values between the respective methods are rather small and mostly of minor practical relevance.
+The only exceptions are the aforementioned scenarios with very small and unbalanced sample sizes.
+
+Turning the focus towards the comparison of different parameter values of the data generating process, the strongest differences can be observed with respect to the different pairs of survival models.
+In @tbl-power we can see that, regardless of the method considered, the power of the tests is the largest for model S8 (crossing Weibull survival curves with shape alternatives) followed by model S1 (exponential distributions) and model S7 (exponential and piecewise exponential distributions with crossing survival curves).
+Considering all methods as well as all other parameters of the data generating process the lowest power value for this model is 26.1% (S8) in comparison to 12.0% (S1) and 9.5% (S7).
+The largest values, on the other hand, are 98.6% (S8), 83.2% (S1) and 73.9% (S7).
+From this, we can conclude that assumptions about the shapes of the survival curves play a critical role in planning a study and calculating the sample size for a clinical trial using the RMST difference as the effect measure.
+The type of censoring model only had a minor effect on the power of the tests.
+For models C1 (Weibull, unequal) and C2 (uniform, equal), the power values are quite similar, overall.
+For model C3 (Weibull, equal), the power is a little bit larger, in general.
+
 
 ```{r}
 #| label: tbl-power
-#| tbl-cap: "Rejection rates (power) in % (nominal level $\\alpha = 5\\%$)"
+#| tbl-cap: "Rejection rates (power) of different methods in % (nominal level $\\alpha = 5\\\\%$)"
 
 # Calculate rejection rates (power)
 dt_pow = calc_rejection_rates(
@@ -399,6 +445,11 @@ dt_pow = calc_rejection_rates(
 )
 dt_pow = merge(dt_pow, dts[rmst_diff == 1.5], by = "scenario.id")
 
+# Convert to percent and highlight method with largest power
+setj_percent(dt_pow, "reject")
+dt_pow[, reject := round(reject, 1)]
+dt_pow[, max_pow := (reject == max(reject)), by = scenario.id]
+dt_pow[, reject := cell_spec(format(reject, digits = 1, nsmall = 1), bold = max_pow)][, max_pow := NULL]
 
 # For latex, directly starting off with a table in wide format might be easier
 dt_pow = dcast(dt_pow, scenario.id ~ algo.id, value.var = "reject")
@@ -406,10 +457,10 @@ setnames(dt_pow, old = as.character(c(1:3, 5)), new = paste0("algo", c(1:3, 5)))
 
 # Append scenario information...
 dt_pow = merge(dt_pow, dts, by = "scenario.id")
-setj_percent(dt_pow, paste0("algo", c(1:3, 5)))
-for (j in paste0("algo", c(1:3, 5))) {
-  set(dt_pow, j = j, value = round(dt_pow[[j]], 1))
-}
+# setj_percent(dt_pow, paste0("algo", c(1:3, 5)))
+# for (j in paste0("algo", c(1:3, 5))) {
+#   set(dt_pow, j = j, value = round(dt_pow[[j]], 1))
+# }
 dt_pow[, samples_alloc := factor(
   sprintf("n_%d_%d", n0 / samples_k, n1 / samples_k),
   levels = sprintf("n_%d_%d", c(12, 15, 18), c(18, 15, 12))
@@ -502,6 +553,10 @@ kbl(
   footnote(
     general = c(
       paste0(
+        r"(\\textit{Note:} )",
+        "Largest value per scenario is printed bold."
+      ),
+      paste0(
         r"(\\textit{Abbreviations:} )",
         "Asy, asymptotic test; ", "Perm, studentized permutation test; ",
         "PO1, pseudo-observations asymptotic; ",
@@ -519,7 +574,7 @@ kbl(
 
 ```{r}
 #| label: fig-power
-#| fig-cap: "Power values in % ($\\alpha = 5\\%$)"
+#| fig-cap: "Power values of different methods in % (nominal level $\\alpha = 5\\%$) aggregated by the total sample sizes ($N = n_0 + n_1$)"
 #| fig-width: 10
 #| fig-height: 6
 
@@ -545,7 +600,7 @@ ggplot(dt2, aes(factor(algo.id), reject)) +
   facet_wrap(
     ~ num_samples,
     labeller = labeller(num_samples = \(x) paste0("N = ", x)),
-    scales = "free_y"
+    scales = "fixed"
   )
 ```
 
@@ -553,33 +608,32 @@ ggplot(dt2, aes(factor(algo.id), reject)) +
 ### Coverage {#sec-sim-coverage}
 
 Finally, we discuss the empirical coverage rates of the confidence intervals associated with each method.
-As these results include both, null and alternative scenarios, this time we do not display the results numerically in a table but illustrate them in a single plot for a better overview (@fig-coverage).
-Similarly as for the type-I error rate in @sec-sim-type1, we depict the 95% binomial confidence interval around the nominal coverage rate (95%) based on the 5000 simulation samples obtained.
-Moreover, we not only distinguish between the total sample size but also between how the samples are allocated across the treatment groups.
+As these results include both, null and alternative scenarios, a display in the form of a table is difficult.
+Therefore, the main results are presented in @fig-coverage for a better overview.
+There, we distinguish not only between the total sample sizes (rows) but also between their allocations (columns).
+Similar to the results concerning the type I error rate in @sec-sim-type1, we depict the 95% binomial confidence interval around the nominal coverage rate (95%) based on the 5000 simulation samples obtained.
 
-In general, the results underline our previous findings for the type-I error rate (@sec-sim-type1) when it comes to comparing the different methods with each other.
-Consequently, the standard asymptotic method again fails in a majority of scenarios as the empirical coverage lies within the 95% binomial confidence interval only in about 25% of all cases.
-Again, the studentized permutation method achieves the best performance with 184 out of 216 instances, for which the empirical coverage rate is between 94.4% and 95.6%.
-Likewise, the pseudo-observations methods are competitive with 174 (asymptotic) and 175 (bootstrap) simulations for which the empirical coverage is close enough to the targeted one.
-The minor superiority of the studentized permutation method can again be contributed to the settings with very small sample sizes ($K = 1$), for which the pseudo-observations approaches cannot entirely keep up with the studentized permutation confidence interval.
-
-Additionally, this figure provides insights regarding the study design.
-It seems that, regardless of the chosen method, it is harder to achieve the nominal coverage rate when there are less subjects in the treatment arm than in the control arm ($(n_0, n_1) = (18, 12)$).
-As with many other findings from this study, this is especially the case for very small sample sizes ($K = 1$).
-In contrast, it does not seem to make much difference whether the samples are balanced between the two groups or if the number of samples predominates in the treatment arm.
-Therefore, we may conclude that for an actual study we should seek a sample allocation that is either balanced or is slightly concentrated towards the treatment group.
+In general, the results for the confidence intervals underline our previous findings for the type I error rate (@sec-sim-type1) when it comes to comparing the different methods with each other.
+Consequently, the standard asymptotic method fails to provide a confidence interval that maintains the nominal coverage in most scenarios.
+More precisely, the empirical coverage of this confidence interval lies within the 95% binomial confidence interval $[94.4\%, 95.5\%]$ in 59 out of 216 cases, only.
+In @fig-coverage, we can see that these cases mainly correspond to scenarios with larger sample sizes ($K \in \{4,\, 6\}$).
+Still, even for $K = 6$ we can notice a tendency of this method of having a coverage below 95% (see @fig-coverage).
+As for the type I error, the studentized permutation method achieves the best performance in terms of the empirical coverage of the corresponding confidence interval with 184 out of 216 successes.
+Likewise, the pseudo-observations methods are competitive with 174 (asymptotic) and 175 (bootstrap) simulation scenarios for which the empirical coverage is close enough to the targeted one.
+The minor superiority of the studentized permutation method can again be attributed to the settings with very small sample sizes ($K = 1$), for which the pseudo-observations approaches cannot entirely keep up with the studentized permutation confidence interval.
 
 ```{r}
 #| label: fig-coverage
-#| fig-cap: "Coverage in % (nominal level $\\alpha = 5\\%$)"
+#| fig-cap: "Confidence interval coverage of different methods in % (nominal level $\\alpha = 5\\%$) aggregated by sample allocations ($(n_0, n_1)$) and their multipliers ($K$). The dashed lines depict the 95% binomial confidence interval $[94.4\\%, 95.6\\%]$"
+#| fig-scap: "Confidence interval coverage of different methods in % (nominal level $\\alpha = 5\\\\%$) aggregated by sample allocations ($(n_0, n_1)$) and their multipliers ($K$)"
 #| fig-width: 10
-#| fig-height: 10
+#| fig-height: 11
 
 dt4 = calc_ci_metrics(
   merge(dtr[algo.id != 4], dts[, .(scenario.id, rmst_diff)], by = "scenario.id"),
   stats_NA = FALSE
 )
-dt4 = merge(dt4, dts[, .(scenario.id, samples_k, n0, n1)], by = "scenario.id")
+dt4 = merge(dt4, dts[, .(scenario.id, samples_k, n0, n1, surv_model)], by = "scenario.id")
 setj_percent(dt4, "coverage")
 setj_samples_alloc(dt4)
 
@@ -587,7 +641,10 @@ ggplot(dt4, aes(factor(algo.id), coverage)) +
   geom_boxplot() +
   facet_grid(
     rows = vars(samples_k), cols = vars(samples_alloc),
-    labeller = labeller(samples_k = \(x) sprintf("K = %s", x))
+    labeller = labeller(
+      samples_k = \(x) sprintf("K = %s", x),
+      samples_alloc = \(x) sprintf("n = %s", x)
+    )
   ) +
   # Binomial confidence interval
   geom_hline(yintercept = 94.4, linetype = "dashed") +
@@ -604,7 +661,59 @@ ggplot(dt4, aes(factor(algo.id), coverage)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+Furthermore, @fig-coverage highlights some of our previous findings regarding the study design, which are mostly independent of the chosen method.
+Hence, the nominal coverage of the confidence intervals is less frequently achieved when there are fewer subjects in the treatment arm than in the control arm ($(n_0, n_1) = (18, 12)$).
+Again, this effect is especially pronounced for cases with very small sample sizes ($K = 1$).
+In contrast, it does not seem to make much of a difference whether the samples are balanced between the two groups or if the number of samples predominates in the treatment arm.
+Nonetheless, this statement depends on the distributions of the event times that we are dealing with.
+@fig-coverage2 shows the same results as @fig-coverage from a different perspective.
+There, we can see that the described sample allocation effect is more distinct for model S8 (crossing Weibull survival curves with shape alternatives) than for the other two survival models.
+Still, we may conclude that for an actual study, we should seek a sample allocation that is either balanced or slightly concentrated toward the group for which a treatment effect is expected.
 
-[^2]: In comparison to the parametrization of the Weibull distribution in @eq-wb-hazard, @ditzhaus2023 use a different parametrization where the scale parameter is $\sigma = \lambda^{-1}$.
-For the sake of consistency we keep employing the parametrization as it is used in @eq-wb-hazard.
-Nonetheless, the distributional assumptions are equivalent.
+```{r}
+#| label: fig-coverage2
+#| fig-cap: "Confidence interval coverage for different sample allocations ($(n_0, n_1)$) in % (nominal level $\\alpha = 5\\%$) aggregated by survival models and different methods. The dashed lines depict the 95% binomial confidence interval $[94.4\\%, 95.6\\%]$"
+#| fig-scap: "Confidence interval coverage for different sample allocations ($(n_0, n_1)$) in % (nominal level $\\alpha = 5\\%$) aggregated by survival models and different methods"
+#| fig-width: 10
+#| fig-height: 11
+
+# Another view at the data
+dt4[, surv_model2 := factor(
+  fcase(
+    surv_model == "ph_exp", "S1: Exp. (proportional hazards)",
+    surv_model == "crossing_pwexp", "S7: Exp. vs. piecewise Exp.",
+    surv_model == "crossing_wb", "S8: Weibull (shape alternatives)"
+  ),
+  levels = c("S1: Exp. (proportional hazards)", "S7: Exp. vs. piecewise Exp.", "S8: Weibull (shape alternatives)")
+)]
+
+ggplot(dt4, aes(factor(samples_alloc), coverage)) +
+  geom_boxplot() +
+  facet_grid(
+    rows = vars(algo.id), cols = vars(surv_model2),
+    labeller = labeller(
+      algo.id = as_labeller(
+        setNames(c("Asy", "St Perm", "PO Asy", "PO Boot"), c(1:3, 5))
+      )
+    )
+  ) +
+  # Binomial confidence interval
+  geom_hline(yintercept = 94.4, linetype = "dashed") +
+  geom_hline(yintercept = 95.6, linetype = "dashed") +
+  # y-axis
+  scale_y_continuous(
+    name = "Coverage in %\n"
+  ) +
+  # x-axis
+  scale_x_discrete(
+    name = "\nSample allocations"
+  )
+```
+
+ \newpage
+
+[^2]: In comparison to the parametrization of the Weibull distribution in (@eq-wb-hazard), @ditzhaus2023 use a different parametrization where the scale parameter is $\sigma = \lambda^{-1}$.
+For the sake of consistency, we keep employing the parametrization as it is used in @eq-wb-hazard.
+Nonetheless, the distributional assumptions are equivalent to those in @ditzhaus2023.
+
+[^3]: \url{https://gwdg.de/hpc/systems/scc/}

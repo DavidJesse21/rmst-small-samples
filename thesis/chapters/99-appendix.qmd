@@ -6,18 +6,18 @@
 
 ## Additional Simulation Results {#sec-sim-results2}
 
-In the following we present the simulation results for the pseudo-observations method using an asymptotic test that we have already presented in @sec-sim-results.
+In the following, we present the simulation results for the pseudo-observations method using an asymptotic test that we have already presented in @sec-sim-results.
 We compare these results to those using the same asymptotic procedure but based on infinitesimal jackknife (IJ) pseudo-observations that we have used for the bootstrap method introduced in @sec-po-boot.
-The purpose is to get an impression of how the usage of IJ pseudo-observations instead of ordinary ones impacts the behavior the tesing procedure.
+The purpose is to get an impression of how the usage of IJ pseudo-observations instead of ordinary ones impacts the behavior of the testing procedure.
 
-In general, the results suggest that the impact of using IJ pseudo-observations instead of ordinary pseudo-observations is rather low as the type-I error rates and the power values are fairly similar.
+In general, the results suggest that the impact of using IJ pseudo-observations instead of ordinary pseudo-observations is rather low as the type I error rates and the power values are fairly similar.
 Looking at the plot of the coverage rates (@fig-coverage-pseudo), however, we can see that for very small ($K = 1$) and unbalanced sample sizes there is a small impact.
 In this sense, the usage of ordinary pseudo-observations is still favorable whenever feasible.
 Nonetheless, the present results suggest that the differences in the operating characteristics between the asymptotic test using ordinary and the bootstrap test using IJ pseudo-observations shown in @sec-sim-results can primarily attributed to the nonparametric bootstrap procedure.
 
 ```{r}
 #| label: tbl-type1err-pseudo
-#| tbl-cap: "Type-I error rates in % (nominal level $\\alpha = 5\\%$) of asymptotic tests using ordinary and infinitesimal jackknife pseudo-observations"
+#| tbl-cap: "Type I error rates in % (nominal level $\\alpha = 5\\\\%$) of asymptotic tests using ordinary and infinitesimal jackknife pseudo-observations. The values inside the binomial confidence interval $[4.4\\\\%, 5.6\\\\%]$ are printed bold"
 
 # Here we are interested in the comparison of ordinary and IJ pseudo-observations
 dt_err = calc_rejection_rates(
@@ -142,10 +142,10 @@ kbl(
   # Explain binomial confidence interval and abbreviations
   footnote(
     general = c(
-      paste0(
-        r"(\\textit{Note:} )",
-        "The values inside the binomial confidence interval [4.4\\\\%, 5.6\\\\%] are printed bold."
-      ),
+      # paste0(
+      #   r"(\\textit{Note:} )",
+      #   "The values inside the binomial confidence interval [4.4\\\\%, 5.6\\\\%] are printed bold."
+      # ),
       paste0(
         r"(\\textit{Abbreviations:} )",
         "PO, ordinary jackknife pseudo-observations; ",
@@ -163,7 +163,7 @@ kbl(
 
 ```{r}
 #| label: tbl-power-pseudo
-#| tbl-cap: "Rejection rates (power) in % (nominal level $\\alpha = 5\\%$) of asymptotic tests using ordinary and infinitesimal jackknife pseudo-observations"
+#| tbl-cap: "Rejection rates (power) in % (nominal level $\\alpha = 5\\\\%$) of asymptotic tests using ordinary and infinitesimal jackknife pseudo-observations"
 
 # Calculate rejection rates (power)
 # Here we are interested in the comparison of ordinary and IJ pseudo-observations
@@ -282,10 +282,6 @@ kbl(
   footnote(
     general = c(
       paste0(
-        r"(\\textit{Note:} )",
-        "The values inside the binomial confidence interval [4.4\\\\%, 5.6\\\\%] are printed bold."
-      ),
-      paste0(
         r"(\\textit{Abbreviations:} )",
         "PO, ordinary jackknife pseudo-observations; ",
         "PO IJ, infinitesimal jackknife pseudo-observations; ",
@@ -304,9 +300,11 @@ kbl(
 
 ```{r}
 #| label: fig-coverage-pseudo
-#| fig-cap: "Coverage in % (nominal level $\\alpha = 5\\%$) of asymptotic tests using ordinary and infinitesimal jackknife pseudo-observations"
+#| fig-cap: "Confidence interval coverage of asymptotic methods using ordinary and infinitesimal jackknife pseudo-observations in % (nominal level $\\alpha = 5\\%$) aggregated by sample allocations ($(n_0, n_1)$) and their multipliers ($K$). The dashed lines depict the 95% binomial confidence interval $[94.4\\%, 95.6\\%]$"
+#| fig-scap: "Confidence interval coverage of asymptotic methods using ordinary and infinitesimal jackknife pseudo-observations in % (nominal level $\\alpha = 5\\%$) aggregated by sample allocations ($(n_0, n_1)$) and their multipliers ($K$)"
 #| fig-width: 10
 #| fig-height: 10
+
 
 dt5 = calc_ci_metrics(
   merge(dtr[algo.id %in% 3:4], dts[, .(scenario.id, rmst_diff)], by = "scenario.id"),
@@ -320,7 +318,10 @@ ggplot(dt5, aes(factor(algo.id), coverage)) +
   geom_boxplot() +
   facet_grid(
     rows = vars(samples_k), cols = vars(samples_alloc),
-    labeller = labeller(samples_k = \(x) sprintf("K = %s", x))
+    labeller = labeller(
+      samples_k = \(x) sprintf("K = %s", x),
+      samples_alloc = \(x) sprintf("n = %s", x)
+    )
   ) +
   # Binomial confidence interval
   geom_hline(yintercept = 94.4, linetype = "dashed") +

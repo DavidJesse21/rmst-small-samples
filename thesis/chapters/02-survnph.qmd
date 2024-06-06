@@ -4,7 +4,7 @@ bibliography: ["../bib/references.bib", "../bib/packages.bib"]
 
 # Survival Analysis under Non-proportional Hazards {#sec-survnph}
 
-In this section we present some fundamental concepts and quantities used in survival analysis and in doing so introduce the basic notation used throughout this thesis, for which we orientate ourselve towards @collett2015[Chapter 1] and @bardo2023.
+In this section, we present some fundamental concepts and quantities used in survival analysis and in doing so introduce the basic notation used throughout this thesis, for which we orientate ourselves towards @collett2015[Chapter 1] and @bardo2024.
 Moreover, a special emphasis is placed on the prevalence of the proportional hazards assumption in survival analysis.
 Eventually, we introduce the restricted mean survival time as a model-free summary measure that can be used for analyzing survival data under non-proportional hazards.
 
@@ -12,7 +12,7 @@ Eventually, we introduce the restricted mean survival time as a model-free summa
 ## Notation and Basic Concepts {#sec-basics}
 
 Let $T \in \real^{+}$ denote a random variable for the time to event and $C \in \real^{+}$ a second random variable for the censoring time.
-In real-world applications $T$ and $C$ are never observed simultaneously.
+In real-world applications, $T$ and $C$ are never observed simultaneously.
 Instead, for an individual $i$ we only observe $t_i = \min(T_i, C_i)$.
 Furthermore, we record if the event has been observed for an individual or is censored using the event indicator $\delta_i = \mathbf{1} \{T_i \leq C_i\}$.
 Thus, ignoring potential covariates, the time-to-event outcome of a single observation consists of the tuple $(t_i,\, \delta_i)$.
@@ -20,7 +20,7 @@ This thesis focuses on two-sample settings in clinical trials.
 For this reason, we introduce the treatment indicator variable $Z \in \{0, 1\}$ where $Z = 1$ denotes the experimental and $Z = 0$ the control treatment group.
 Alternatively, the group associations may also be indicated using the subscript $j$ with the same attributions as for $Z$.
 Lastly, $\xvec_i \in \real^{p}$ is used for denoting a vector of $p$ covariates associated with an individual $i$.
-Besides the treatment assignment this vector might record other characteristics of interest such as the age of a patient.
+Besides the treatment assignment, this vector might record other characteristics of interest such as the age of a patient.
 Correspondingly, $\xmat \in \real^{n \times p}$ denotes the design matrix for a whole sample of size $n$.[^1]
 
 The random variable $T$ can be characterized by its *distribution function*
@@ -48,7 +48,7 @@ $$
 H(t) = \int_0^t h(u) \, du
 $$ {#eq-cumhaz}
 The cumulative hazard function can be interpreted as the "cumulative risk of an event by time $t$" [@collett2015, Chapter 1].
-Among practitioners the interpretation of the latter two quantities is often unclear and can lead to confusion.
+Among practitioners, the interpretation of the latter two quantities is often unclear and can lead to confusion.
 Their usefulness, however, lies in their interrelation with $f(t)$, $F(t)$ and $S(t)$, respectively.
 Using standard results from probability theory, the following results can be obtained, among others:
 $$
@@ -69,16 +69,16 @@ $$
 T_{j} \sim S_j \quad (j = 0, 1)
 $$
 As pointed out in the previous subsection, the distributional assumptions could also be expressed in terms of the hazard functions.
-Given these we can define the relative hazard between the experimental and the control group, more commonly known as the *hazard ratio*:
+Given these, we can define the relative hazard between the experimental and the control group, more commonly known as the *hazard ratio*:
 $$
 HR(t) = \frac{h_1(t)}{h_0(t)} \quad \text{for } h_0(t) > 0
 $$ {#eq-hr}
-Using this general definition it is clear that the hazard ratio is a function of time.
+Using this general definition, it is clear that the hazard ratio is a function of time.
 However, many of the standard statistical methods used in survival analysis are based on the assumption that the hazards are proportional over time, implying that the hazard ratio is independent of it:
 $$
 HR(t) = \frac{h_1(t)}{h_0(t)} = \theta \quad \forall \, t
 $$ {#eq-phr}
-Here, $\theta \in (0, \infty)$ is some constant highlighting this assumption, which is known as the *proportional hazards* assumption.
+Here, $\theta \in (0, \infty)$ is some constant highlighting this assumption, which is known as the *proportional hazards* (PH) assumption.
 This assumption may or may not hold, which can be illustrated using the Weibull distribution as a theoretical example.
 The hazard function of the Weibull distribution is [@kalbfleisch2002, Chapter 2.2]
 $$
@@ -86,7 +86,7 @@ h(t) = \lambda \alpha (\lambda t)^{\alpha - 1}
 \, ,
 $$ {#eq-wb-hazard}
 with *shape* parameter $\alpha$ and *scale* parameter $\lambda$.
-For the hazard ratio we then have:
+For the hazard ratio, we then have:
 $$
 \begin{split}
   \frac{h_1(t)}{h_0(t)} &=
@@ -95,16 +95,17 @@ $$
   \frac{t^{\alpha_1 - 1}}{t^{\alpha_0 - 1}}
 \end{split}
 $$
-Here, we can see that the Weibull distribution exhibits proportional hazards if the shape parameter $\alpha$ is the same for both populations.
+Here, we can see that the Weibull distribution exhibits proportional hazards if the shape parameter is the same for both populations, i.e. $\alpha_0 = \alpha_1 = \alpha$.
 In this case, the hazard ratio is given by $(\lambda_1 / \lambda_0)^\alpha$.
 If this is not the case, however, the hazards are non-proportional.
 @fig-nph illustrates those two situations, depicting the survival and hazard functions as well as the hazard ratio of the two groups with differently parametrized Weibull distributions.
 
 ```{r}
 #| label: fig-nph
-#| fig-cap: "Survival models with proportional (left) and non-proportional (right) hazards"
+#| fig-cap: "Weibull survival models of two populations with different parameter values. In the left column the shape parameters of the two populations are equal, resulting in a scenario with proportional hazards. In the right column the shape parameters differ, implying non-proportional hazards"
+#| fig-scap: "Weibull survival models of two populations with proportional (left) and non-proportional (right) hazards"
 #| fig-width: 10
-#| fig-height: 9
+#| fig-height: 10
 
 # Weibull survival functions (R parametrization)
 wb_haz = function(x, shape, scale) {
@@ -267,33 +268,32 @@ wrap_plots(
   plot_layout(ncol = 2, byrow = FALSE, axes = "collect_x")
 ```
 
-@fig-nph depicts theoretical scenarios only that might be considered idealized to some extent.
-Still, we can also use real-world data sets to contrast situations with hazards that are rather proportional or non-proportional over time.
-Such examples are given in @fig-nph2 where estimated survival and hazard functions are shown.
+We can also use real-world data sets to contrast situations with hazards that are rather proportional or non-proportional over time.
+Such examples are given in @fig-nph2 where the estimated survival and hazard functions are shown.
 The former are estimated using the nonparametric Kaplan-Meier estimator of the survival function, while the latter are derived from fitting flexible parametric models [@royston2002] with $(3, 2)$ degrees of freedom.
-Moreover, the time-varying hazard ratio derived from these estimates of the hazard functions are portrayed in the bottom row of the plot.
+Moreover, the time-varying hazard ratio derived from these estimates of the hazard functions is portrayed in the bottom row of the plot.
 In addition to that, the dashed line represents the estimate of the time-independent hazard ratio obtained from the Cox model [@cox1972].
 
-In the left column, we use the `diabetic` data set from the `{survival}` R package [@R-survival], which contains results from a trial of laser coagulation for the treatment of diabetic retinopathy.
+In the left column, we use the "diabetic" data set from the `{survival}` R package [@R-survival], which contains results from a trial of laser coagulation for the treatment of diabetic retinopathy.
 We can see that the survival curves do not cross a single time and diverge fairly evenly across time.
-Accordingly, the estimated hazard functions are proportional to most extent.
-Although the hazard ratio fluctuates somewhat in the initial phase of the study, it remains within a relatively small range overall, not deviating much from the fixed hazard ratio obtained from the Cox model.
+Accordingly, the estimated hazard functions are proportional to the greatest extent.
+Although the hazard ratio fluctuates somewhat in the initial phase of the study, it remains within a relatively small range overall, not deviating much from the constant hazard ratio obtained from the Cox model.
 
 On the other hand, the data set presented in the right column is reconstructed from a phase-III randomized controlled trial by @robert2015.
 Here, the population under investigation consisted of patients with advanced melanoma.
 The treatments analyzed and compared with each other were dacarbazine and nivolumab.
-In comparison to the `diabetic` data set, we can see that the estimated survival functions cross each other in the initial phase of the study multiple times.
+In comparison to the "diabetic" data set, we can see that the estimated survival functions cross each other in the initial phase of the study multiple times.
 After around 2.5 months we can observe an effect of the nivolumab therapy leading to a separation of the survival curves.
-From the profile of the estimated hazard functions we can also conclude that there is less support for assuming proportional hazards.
-While the hazard function of the dacarbazine group monotonically increases over time, we can see that for the nivolumab group it increases in the first 2.5 months but decreases afterwards.
-Also, the curve of the time-dependent hazard ratio exhibts greater variability.
+From the profile of the estimated hazard functions, we can also conclude that there is less support for assuming proportional hazards.
+While the hazard function of the dacarbazine group monotonically increases over time, we can see that, for the nivolumab group, it increases in the first 2.5 months but decreases afterward.
+Also, the curve of the time-dependent hazard ratio exhibits greater variability.
 
 ```{r}
 #| label: fig-nph2
 #| fig-scap: "Estimated survival functions with signs of proportional (left) and non-proportional (right) hazards"
-#| fig-cap: "Estimated survival functions for the R `diabetic` data set (left) and data reconstructed from @robert2015 (right). For the former the proportional hazards assumption can be considered plasuible, whereas the latter provides less support for making this assumption"
+#| fig-cap: 'Estimated survival functions for the R "diabetic" data set (left) and data reconstructed from @robert2015 (right). For the former the proportional hazards assumption can be considered plasuible, whereas the latter provides less support for making this assumption'
 #| fig-width: 10
-#| fig-height: 9
+#| fig-height: 10
 
 # FPM functions ----
 
@@ -504,9 +504,9 @@ wrap_plots(
   xlab("\nTime (months)")
 ```
 
-Among the statistical models that employ the proportional hazards assumption perhaps the best-known and most widely used one is the previously mentioned semiparametric *Cox proportional hazards model* [@cox1972]:
+Among the statistical models that employ the proportional hazards assumption, perhaps the best-known and most widely used one is the previously mentioned semiparametric *Cox proportional hazards model* [@cox1972]:
 $$
-h(t) = \exp(\beta Z) h_0(t)
+h(t \,|\, Z) = \exp(\beta Z) h_0(t)
 $$ {#eq-coxph}
 The Cox model is a regression model for covariate effects on the hazard scale.
 Here, we employ our previous notation, $h_0(t)$ being the hazard function of the control group and $Z$ being the treatment indicator with $Z = 1$ indicating an allocation to the experimental treatment group.
@@ -516,11 +516,11 @@ The interpretation of $h_0(t)$ would then also change to a more generic baseline
 The main reason for the popularity of the Cox model is its semiparametric nature:
 While an estimate of the hazard ratio ($\exp(\beta)$) is obtained, the baseline hazard $h_0(t)$ does not need to be specified or even estimated at all.
 This sets it apart from many parametric alternatives, such as accelerated failure time models, for which a strict assumption about the conditional distribution of $T$ needs to be made.
-Since deciding for a plausible parametric distribution for time-to-event data is a difficult task in many practical applications, especially when this decision needs to be made a priori, the Cox model and the hazard ratio have become the default choice for effect estimation in these settings.
+Since deciding on a plausible parametric distribution for time-to-event data is a difficult task in many practical applications, especially when this decision needs to be made a priori, the Cox model and the hazard ratio have become the default choice for effect estimation in these settings.
 Nonetheless, the strong assumption of proportional hazards persists, which is why some authors have become more skeptical about its usage for effect estimation [@royston2011].
 
 Another routine method used in survival analysis is the log-rank test [@peto1972].
-It is a non-parametric test for the testing problem
+It is a non-parametric test for the hypotheses
 $$
 H_0: S_1(t) = S_0(t) \; \text{for all } t \quad \text{vs.} \quad
 H_1: S_1(t) \neq S_0(t) \; \text{for at least one } t
@@ -534,31 +534,31 @@ Thus, while the log-rank test may still be applied, the interpretation of the as
 ## Restricted Mean Survival Time {#sec-rmst}
 
 We now address the restricted mean survival time (RMST) and its contrasts as alternative effect measures for the hazard ratio as it is defined in (@eq-phr).
-Mathematically, the RMST is the expectation of the transformation $f(T; t^*) = \min(T, t^*)$ of the random variable $T$ where $t^*$ is the restriction time that needs to be specified by the researcher.
+Mathematically, the RMST is the expectation of the transformation $f(T \,|\, t^*) = \min(T,\, t^*)$ of the random variable $T$ where $t^*$ is the restriction time that needs to be specified by the researcher.
 The RMST can be interpreted as the expected survival time from the time origin $0$ up to the restriction time $t^*$ [@royston2011].
-Using exemplary numbers @royston2011 provide a clinical interpretation of the RMST:
+Using exemplary numbers, @royston2011 provide a clinical interpretation of the RMST:
 "[Y]our life expectancy with X treatment and Z disease over the next 18 months is 9 months".
 Moreover, considering a two-sample comparison based on the RMST difference, they further extend this interpretation [@royston2011]:
 "[T]reatment A increases your life expectancy during the next 18 months by 2 months, compared with treatment B."
 The RMST can be calculated by integrating the survival function from time $0$ to $t^*$ [@royston2011], i.e.
 $$
-\mu(t^*) = E[\min(T, t^*)] = \int_0^{t^*} S(u) \,du
+\mu(t^*) = \expect[\min(T,\, t^*)] = \int_0^{t^*} S(u) \,du
 \, .
 $$ {#eq-rmst}
 The reason for considering a restricted version of the mean is right-censoring of the survival data.
-For the nonparametric Kaplan-Meier estimator of the survival function to reach $0$ and therefore being able to estimate an unrestricted mean, the largest event time needs to be uncensored, which is rarely the case.
+For the nonparametric Kaplan-Meier estimator of the survival function to reach $0$ and therefore be able to estimate an unrestricted mean, the largest event time needs to be uncensored, which is rarely the case.
 On the other hand, employing parametric models in survival analysis is often a difficult task.
 Even if we had a model with a decent in-sample fit, we cannot be sure whether the extrapolation of that model to the tail of the survival distribution is adequate [@royston2011].
 
-Using the definition (@eq-rmst) of the RMST actual effect measures can be obtained by either considering ratios $\mu_1(t^*) / \mu_0(t^*)$ or differences $\mu_1(t^*) - \mu_0(t^*)$ of the RMST, e.g. between two treatment groups [@uno2014].
-The main advantage of using the RMST and group contrasts thereof in comparison to the prevalent hazard ratio is that it is a model free effect measure and has a clear clinical interpretation, though this might be subject to discussion [@freidlin2019].
-To further enhance the understanding of the RMST @fig-rmst provides a visual demonstration of it based on survival functions of the exponential distribution.
+Using the definition (@eq-rmst) of the RMST, actual effect measures can be obtained by considering ratios $\mu_1(t^*) / \mu_0(t^*)$ or differences $\mu_1(t^*) - \mu_0(t^*)$ of the RMSTs, e.g. between two treatment groups [@uno2014].
+The main advantage of using the RMST and group contrasts thereof in comparison to the prevalent hazard ratio is that it is a model-free effect measure and has a clear clinical interpretation, though this might be subject to discussion [@freidlin2019].
+To further enhance the understanding of the RMST, @fig-rmst provides a visual demonstration of it based on survival functions of the exponential distribution.
 The left panel depicts the situation for a single sample while the right panel illustrates the two-sample RMST difference as an effect measure.
 
 ```{r}
 #| label: fig-rmst
-#| fig-cap: "Illustration of the RMST: one-sample RMST (left) and two-sample RMST difference (right)"
-#| fig-scap: "Illustration of the RMST"
+#| fig-cap: "Illustration of the RMST: The colored area under the survival curve (left panel) depicts the one-sample RMST. The grayed area between the two survival curves (right panel) illustrates the RMST difference between two populations"
+#| fig-scap: "Illustration of the RMST: one-sample RMST (left) and two-sample RMST difference (right)"
 #| fig-width: 10
 #| fig-height: 5
 
@@ -641,7 +641,7 @@ wrap_plots(p1, p2, ncol = 2) +
 ```
 
 Now, the question remains how to estimate $\mu(t^*)$ for an observed data set.
-Broadly, a point estimator for $\mu(t^*)$ can be obtained by integrating an estimator of the survival function:
+Broadly, a point estimator for $\mu(t^*)$ can be obtained by integrating an estimate of the survival function:
 $$
 \muhat(t^*) = \int_0^{t^*} \hat{S}(u) \, du
 $$
@@ -653,17 +653,17 @@ $$
   \prod_{t_j \leq t} \left(1 - \frac{d_j}{Y_j}\right) & \text{for } t \geq t_1
 \end{cases}
 $$
-Here, $t_j$ ($j = 1, 2, \ldots, m$) denote the ordered and distinct event times observed in the survival data.
+Here, $t_j$ ($j = 1, 2, \ldots, m$) denotes the ordered and distinct event times observed in the survival data.
 Moreover, $Y_j$ denotes the number of individuals at risk just prior to $t_j$ and $d_j$ the number of observed events at $t_j$. 
 The reasons for the usage of the Kaplan-Meier estimator for estimating the RMST are twofold.
 On the one hand, using a non-parametric estimator avoids making any possibly false assumptions about the shape of the survival curve.
-On the other hand, using this estimator closed-form solutions for both, the point and the variance estimator, are available and there is no need to rely on computational methods like numerical integration or resampling.
+On the other hand, using this estimator, closed-form solutions for both, the point and the variance estimator, are available and there is no need to rely on computational methods like numerical integration or resampling.
 Specifically, the point estimator utilizing the Kaplan-Meier estimator of the survival function can be written as [@hasegawa2020]
 $$
 \muhat(t^*) = \sum_{j=0}^D (t_{j+1} - t_j) \hat{S}(t_j) \, ,
 $$ {#eq-pointest}
-where like before $t_1 < t_2 < \ldots < t_D$ denote the ordered and distinct event times observed in the survival data and $t_{D+1} = t^*$.
-An estimator for the variance of (@eq-pointest) based on Greenwood's formula is given by [@hasegawa2020]
+where, like before, $t_1 < t_2 < \ldots < t_D$ denote the ordered and distinct event times observed in the survival data and $t_{D+1} = t^*$.
+An estimator for the variance of the point estimator (@eq-pointest) based on Greenwood's formula is given by [@hasegawa2020]
 $$
 \Varhat[\muhat(t^*)] = \sum_{j=1}^D 
 \left[ \sum_{i=j}^D (t_{i+1} - t_i) \hat{S}(t_i) \right]^2
